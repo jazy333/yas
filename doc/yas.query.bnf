@@ -1,0 +1,24 @@
+OR:       AND (‘|’ AND)*
+
+AND:       SIMPLE ([’&‘] SIMPLE)*
+
+SIMPLE:
+      ’-’ SIMPLE
+      ’(’ OR ‘)’
+      PREFIX
+
+PREFIX:       [STREAM] TEXT
+
+STREAM:       ~[SPECIAL | SPACE]+ ‘:’
+
+TEXT:
+      TERM
+      " TERM [SPACE+ TERM]* "
+
+TERM:       [~[SPECIAL | SPACE] | ESCAPE]+
+
+SPECIAL:       [’"’ ‘(’ ‘)’ ‘-’ ‘:’ ‘&’ ‘|’]
+
+SPACE:       [’\n’ ‘\r’ ‘\t’ ‘\v’ ‘\f’ ‘ ‘]
+
+ESCAPE:       ‘\’ [SPECIAL | SPACE]
