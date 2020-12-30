@@ -5,37 +5,37 @@
 #include <functional>
 
 namespace yas{
-    template< class Mutex>
-    class SegmentMutex{
+    template< typename Mutex>
+    class SegmentSharedMutex{
         protected:
         static  int default_num_slots_;
         int num_slots_;
         Mutex* slots_;
         public:
-        SegmentMutex():num_slots_(default_num_slots_){
+        SegmentSharedMutex():num_slots_(default_num_slots_){
             slots_=new Mutex[num_slots_];
         }
-        SegmentMutex(int num_slots):num_slots_(num_slots){
+        SegmentSharedMutex(int num_slots):num_slots_(num_slots){
             slots_=new Mutex[num_slots_];
         }
-        SegmentMutex(const SegmentMutex&)=delete;
-        SegmentMutex& operator=(const SegmentMutex&)=delete;
-        virtual ~SegmentMutex(){
+        SegmentSharedMutex(const SegmentSharedMutex&)=delete;
+        SegmentSharedMutex& operator=(const SegmentSharedMutex&)=delete;
+        virtual ~SegmentSharedMutex(){
             
             if(slots_){
                 delete [] slots_;
-                std::cout<<"~SegmentMutex"<<std::endl;
+                slots_=nullptr;
             }
             num_slots_=0;
         }
-        SegmentMutex( SegmentMutex&& mutex):num_slots_(0),slots_(nullptr){
+        SegmentSharedMutex( SegmentSharedMutex&& mutex):num_slots_(0),slots_(nullptr){
              slots_=mutex.slots_;
              num_slots_=mutex.num_slots_;
              mutex.slots_=nullptr;
              mutex.num_slots_=0;
         }
 
-        SegmentMutex& operator=(SegmentMutex&& mutex){
+        SegmentSharedMutex& operator=(SegmentSharedMutex&& mutex){
             if(this!=&mutex){
                 delete [] slots_;
                 slots_=nullptr;
@@ -70,35 +70,35 @@ namespace yas{
             return num_slots_;
         }
     };
-  template<typename Mutex> int SegmentMutex<Mutex>::default_num_slots_=20;
+  template<typename Mutex> int SegmentSharedMutex<Mutex>::default_num_slots_=20;
 
 
 
 
   template< typename Mutex,typename Type>
-    class SegmentHashMutex:protected SegmentMutex<Mutex>{
+    class SegmentHashSharedMutex:protected SegmentSharedMutex<Mutex>{
         private:
-        using SegmentMutex<Mutex>::slots_;
-        using SegmentMutex<Mutex>::num_slots_;
+        using SegmentSharedMutex<Mutex>::slots_;
+        using SegmentSharedMutex<Mutex>::num_slots_;
         int num_buckets_;
         using HASH_FUNC=std::function<uint64_t(Type,uint64_t)>;
         HASH_FUNC hash_;
         public:
         using key_type=Type;
-        SegmentHashMutex(int num_buckets,int num_slots,HASH_FUNC hash ):SegmentMutex<Mutex>(num_slots),num_buckets_(num_buckets),hash_(hash){
+        SegmentHashSharedMutex(int num_buckets,int num_slots,HASH_FUNC hash ):SegmentSharedMutex<Mutex>(num_slots),num_buckets_(num_buckets),hash_(hash){
         }
-        ~SegmentHashMutex()=default;
-        SegmentHashMutex(const SegmentHashMutex&)=delete;
-        SegmentHashMutex& operator=(const SegmentHashMutex&)=delete;
+        ~SegmentHashSharedMutex()=default;
+        SegmentHashSharedMutex(const SegmentHashSharedMutex&)=delete;
+        SegmentHashSharedMutex& operator=(const SegmentHashSharedMutex&)=delete;
 
-         SegmentHashMutex( SegmentHashMutex&& mutex):SegmentMutex<Mutex>::num_slots_(0),SegmentMutex<Mutex>::slots_(nullptr){
+         SegmentHashSharedMutex( SegmentHashSharedMutex&& mutex):SegmentSharedMutex<Mutex>::num_slots_(0),SegmentSharedMutex<Mutex>::slots_(nullptr){
              slots_=mutex.slots_;
-            num_slots_=mutex.num_slots_;
+             num_slots_=mutex.num_slots_;
              mutex.slots_=nullptr;
              mutex.num_slots_=0;
         }
 
-        SegmentHashMutex& operator=(SegmentHashMutex&& mutex){
+        SegmentHashSharedMutex& operator=(SegmentHashSharedMutex&& mutex){
             if(this!=&mutex){
                 delete [] slots_;
                 slots_=nullptr;
@@ -114,33 +114,37 @@ namespace yas{
         int lock(Type key){
             uint64_t bucket_index=hash_(key,num_buckets_);
             int slot=bucket_index%num_slots_;
-            SegmentMutex<Mutex>::lock(slot);
+            SegmentSharedMutex<Mutex>::lock(slot);
             return bucket_index;
         }
 
         int lock_shared(Type key){
             uint64_t bucket_index=hash_(key,num_buckets_);
             int slot=bucket_index%num_slots_;
-            SegmentMutex<Mutex>::lock_shared(slot);
+            SegmentSharedMutex<Mutex>::lock_shared(slot);
             return bucket_index;
         }
 
          int unlock(Type key){
             uint64_t bucket_index=hash_(key,num_buckets_);
             int slot=bucket_index%num_slots_;
-            SegmentMutex<Mutex>::unlock(slot);
+            SegmentSharedMutex<Mutex>::unlock(slot);
             return bucket_index;
         }
         
         int unlock_shared(Type key){
             uint64_t bucket_index=hash_(key,num_buckets_);
             int slot=bucket_index%num_slots_;
-            SegmentMutex<Mutex>::unlock_shared(slot);
+            SegmentSharedMutex<Mutex>::unlock_shared(slot);
             return bucket_index;
         }
 
         int get_num_buckets(){
             return num_buckets_;
+        }
+
+        void set_num_buckets(int num_buckets){
+            num_buckets_=num_buckets;
         }
 
         int get_num_slots(){
@@ -150,29 +154,20 @@ namespace yas{
 
 
     template<typename Mutex> 
-    class ScopedSegmentHashLock{
-        private:
-        Mutex* mutex_;
-        bool writable_;
-        using key_type=typename Mutex::key_type;
-        key_type key_;
-       
+    class ScopedSegmentHashSharedMutex{
         public:
-        ScopedSegmentHashLock(Mutex &mutex,key_type key,bool writable){
-            writable_=writable;
-            key_=key;
-            mutex_=&mutex;
+        using key_type=typename Mutex::key_type;
+        ScopedSegmentHashSharedMutex(Mutex &mutex,key_type key,bool writable):mutex_(&mutex),writable_(writable),key_(key),bucket_index_(-1){
             if(writable_)
-                mutex_->lock(key);
+                bucket_index_=mutex_->lock(key);
             else
             {
-                mutex_->lock_shared(key);
+                bucket_index_=mutex_->lock_shared(key);
             }
             
         }
 
-        ~ScopedSegmentHashLock(){
-            std::cout<<" ~ScopedSegmentHashLock"<<std::endl;
+        ~ScopedSegmentHashSharedMutex(){
             if(writable_)
                 mutex_->unlock(key_);
             else
@@ -181,5 +176,15 @@ namespace yas{
             }
             
         }
+
+        int get_bucket_index(){
+            return bucket_index_;
+        }
+
+        private:
+        Mutex* mutex_;
+        bool writable_;
+        key_type key_;
+        int bucket_index_;
     };
 }

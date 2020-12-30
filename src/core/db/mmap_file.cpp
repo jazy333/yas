@@ -177,10 +177,11 @@ int MMapFile::write(int64_t off, const void* buf, size_t size) {
 }
 
 int MMapFile::append(const void* buf, size_t size, int64_t* off) {
-  write(-1, buf, size);
-  if (off) {
+    if (off) {
     *off = file_size_;
   }
+  write(-1, buf, size);
+  
   return 0;
 }
 

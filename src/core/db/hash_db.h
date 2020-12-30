@@ -7,10 +7,26 @@
 
 #include "common/common.h"
 #include "common/const.h"
+#include "common/segment_mutex.h"
+#include "common/shared_mutex.h"
+#include "core/algorithm/murmur_hash2.h"
+
 #include "db.h"
 #include "mmap_file.h"
 
 namespace yas {
+
+     uint64_t primary_hash(std::string key,uint64_t buckets){
+      MurmurHash2 mh2;
+    return (mh2.hash64(key,20181220))%buckets;
+};
+
+    struct record_header{
+        int  type_;
+        uint64_t child_offset_;
+        size_t key_size_;
+        size_t value_size_;
+    };
 class HashDB : public DB {
  public:
   static constexpr  char META_MAGIC_DATA[8] = "YASHDB\n";
@@ -40,6 +56,7 @@ class HashDB : public DB {
   static constexpr int64_t MAX_NUM_BUCKETS = 1099511627689LL;
   static constexpr int32_t REBUILD_NONBLOCKING_MAX_TRIES = 3;
   static constexpr int64_t REBUILD_BLOCKING_ALLOWANCE = 65536;
+  static constexpr int64_t DEFAULT_NUM_BUCKETS = 1048583;
   enum UpdateMode {
     /** To do replace writing. */
     UPDATE_REPLACE = 0,
@@ -63,8 +80,15 @@ class HashDB : public DB {
 
  private:
   int init();
+  uint64_t read_bucket_index(int );
+  int write_bucket_index(int index,uint64_t offset);
+  int write_record(char type,const std::string&,const std::string& value,uint64_t* offset);
+  int delete_record(const std::string& key,uint64_t old_offset,uint64_t parent_offset);
+  int find_record(uint64_t bottom_offset,const std::string& key,uint64_t& parent_offset,uint64_t& current_offset,uint64_t& child_offset,std::string* value);
+  int write_child_fffset(uint64_t offset, uint64_t child_offset);
   int save_meta(bool);
   int load_meta();
+ 
   std::string path_;
   std::unique_ptr<File> file_;
   bool open_;
@@ -85,8 +109,8 @@ class HashDB : public DB {
   std::string opaque_;
   int64_t record_base_;
   bool lock_mem_buckets_;
-  pthread_rwlock_t mutex_;
-  // HashMutex record_mutex_;
+  SharedMutex mutex_;
+  SegmentHashSharedMutex<SharedMutex,std::string> record_mutex_;
   std::mutex file_mutex_;
 };
 }  // namespace yas

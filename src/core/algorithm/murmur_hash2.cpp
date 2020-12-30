@@ -1,7 +1,7 @@
 #include "murmur_hash2.h"
 
 namespace yas {
-uint32_t Murmurhash2::hash32(const std::string& in, uint32_t seed) {
+uint32_t MurmurHash2::hash32(const std::string& in, uint32_t seed) const{
   // 'm' and 'r' are mixing constants generated offline.
   // They're not really 'magic', they just happen to work well.
 
@@ -52,7 +52,7 @@ uint32_t Murmurhash2::hash32(const std::string& in, uint32_t seed) {
   return h;
 }
 
-uint64_t Murmurhash2::hash64(const std::string& in, uint64_t seed) {
+uint64_t MurmurHash2::hash64(const std::string& in, uint64_t seed) const{
   const uint64_t m = 0xc6a4a7935bd1e995ULL;
   const int r = 47;
 
@@ -101,7 +101,7 @@ uint64_t Murmurhash2::hash64(const std::string& in, uint64_t seed) {
   return h;
 }
 
-__int128_t Murmurhash2::hash128(const std::string& in, __int128_t seed) {
+__int128_t MurmurHash2::hash128(const std::string& in, __int128_t seed) const{
   return 0;
 }
 
