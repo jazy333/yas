@@ -1,7 +1,7 @@
 #pragma once
+#include <iostream>
 #include <memory>
 #include <string>
-#include <iostream>
 namespace yas {
 class File {
  public:
@@ -10,7 +10,7 @@ class File {
   virtual int close() = 0;
   virtual int read(int64_t off, void* buf, size_t size) = 0;
   virtual int read(int64_t off, std::string& buf, size_t size) {
-    buf.resize(size,0);
+    buf.resize(size, 0);
     return read(off, const_cast<char*>(buf.data()), size);
   }
   virtual int write(int64_t off, const void* buf, size_t size) = 0;

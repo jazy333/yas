@@ -10,26 +10,25 @@
 #include "common/segment_mutex.h"
 #include "common/shared_mutex.h"
 #include "core/algorithm/murmur_hash2.h"
-
 #include "db.h"
 #include "mmap_file.h"
 
 namespace yas {
 
-     uint64_t primary_hash(std::string key,uint64_t buckets){
-      MurmurHash2 mh2;
-    return (mh2.hash64(key,20181220))%buckets;
+uint64_t primary_hash(std::string key, uint64_t buckets) {
+  MurmurHash2 mh2;
+  return (mh2.hash64(key, 20181220)) % buckets;
 };
 
-    struct record_header{
-        int  type_;
-        uint64_t child_offset_;
-        size_t key_size_;
-        size_t value_size_;
-    };
+struct record_header {
+  int type_;
+  uint64_t child_offset_;
+  size_t key_size_;
+  size_t value_size_;
+};
 class HashDB : public DB {
  public:
-  static constexpr  char META_MAGIC_DATA[8] = "YASHDB\n";
+  static constexpr char META_MAGIC_DATA[8] = "YASHDB\n";
   static constexpr int32_t METADATA_SIZE = 128;
   static constexpr int32_t META_OFFSET_PKG_MAJOR_VERSION = 8;
   static constexpr int32_t META_OFFSET_PKG_MINOR_VERSION = 9;
@@ -80,15 +79,19 @@ class HashDB : public DB {
 
  private:
   int init();
-  uint64_t read_bucket_index(int );
-  int write_bucket_index(int index,uint64_t offset);
-  int write_record(char type,const std::string&,const std::string& value,uint64_t* offset);
-  int delete_record(const std::string& key,uint64_t old_offset,uint64_t parent_offset);
-  int find_record(uint64_t bottom_offset,const std::string& key,uint64_t& parent_offset,uint64_t& current_offset,uint64_t& child_offset,std::string* value);
-  int write_child_fffset(uint64_t offset, uint64_t child_offset);
+  int64_t read_bucket_index(int);
+  int write_child_fffset(int64_t offset, int64_t child_offset);
+  int write_bucket_index(int index, int64_t offset);
+  int write_record(char type, const std::string&, const std::string& value,
+                   int64_t* offset);
+  int delete_record(const std::string& key, int64_t old_offset,
+                    int64_t parent_offset);
+  int find_record(int64_t bottom_offset, const std::string& key,
+                  int64_t& parent_offset, int64_t& current_offset,
+                  int64_t& child_offset, std::string* value);
   int save_meta(bool);
   int load_meta();
- 
+
   std::string path_;
   std::unique_ptr<File> file_;
   bool open_;
@@ -110,7 +113,7 @@ class HashDB : public DB {
   int64_t record_base_;
   bool lock_mem_buckets_;
   SharedMutex mutex_;
-  SegmentHashSharedMutex<SharedMutex,std::string> record_mutex_;
+  SegmentHashSharedMutex<SharedMutex, std::string> record_mutex_;
   std::mutex file_mutex_;
 };
 }  // namespace yas

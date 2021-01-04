@@ -1,7 +1,6 @@
 #include "common.h"
 
 #include <unistd.h>
-
 #include <cerrno>
 #include <cstdint>
 
@@ -39,6 +38,5 @@ ssize_t pwrite_with_check(int fd, const void *buf, size_t count, off_t offset) {
   } while (io_bytes < count);
   return io_bytes;
 }
-
 
 }  // namespace yas
