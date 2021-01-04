@@ -22,10 +22,11 @@ uint64_t primary_hash(std::string key, uint64_t buckets) {
 
 struct record_header {
   int type_;
-  uint64_t child_offset_;
+  int32_t child_offset_;
   size_t key_size_;
   size_t value_size_;
 };
+
 class HashDB : public DB {
  public:
   static constexpr char META_MAGIC_DATA[8] = "YASHDB\n";
@@ -78,17 +79,19 @@ class HashDB : public DB {
   ~HashDB();
 
  private:
+  int do_process(int type, const std::string& key, const std::string& value);
   int init();
   int64_t read_bucket_index(int);
-  int write_child_fffset(int64_t offset, int64_t child_offset);
   int write_bucket_index(int index, int64_t offset);
-  int write_record(char type, const std::string&, const std::string& value,
-                   int64_t* offset);
-  int delete_record(const std::string& key, int64_t old_offset,
-                    int64_t parent_offset);
+  int write_child_fffset(int64_t offset, int64_t child_offset);
   int find_record(int64_t bottom_offset, const std::string& key,
                   int64_t& parent_offset, int64_t& current_offset,
                   int64_t& child_offset, std::string* value);
+  int append_record(char type, const std::string&, const std::string& value,
+                   int64_t* offset);
+  int delete_record(const std::string& key, int64_t old_offset,
+                    int64_t parent_offset,int64_t& current_offset);
+
   int save_meta(bool);
   int load_meta();
 

@@ -82,8 +82,12 @@ int HashDB::load_meta() {
   memcpy(&closure_flags_, meta + META_OFFSET_CLOSURE_FLAGS, 1);
   memcpy(&num_buckets_, meta + META_OFFSET_NUM_BUCKETS, 8);
   record_mutex_.set_num_buckets(num_buckets_);
-  /// num_records_.store(ReadFixNum(meta + META_OFFSET_NUM_RECORDS, 8));
-  // eff_data_size_.store(ReadFixNum(meta + META_OFFSET_EFF_DATA_SIZE, 8));
+  int64_t num_records = 0;
+  memcpy(&num_records, meta + META_OFFSET_NUM_RECORDS, sizeof(int64_t));
+  num_records_.store(num_records);
+  int64_t eff_data_size = 0;
+  memcpy(&eff_data_size, meta + META_OFFSET_EFF_DATA_SIZE, sizeof(int64_t));
+  eff_data_size_.store(eff_data_size);
   memcpy(&file_size_, meta + META_OFFSET_FILE_SIZE, 8);
   memcpy(&mod_time_, meta + META_OFFSET_MOD_TIME, 8);
   memcpy(&db_type_, meta + META_OFFSET_DB_TYPE, 4);
@@ -153,6 +157,7 @@ int64_t HashDB::read_bucket_index(int index) {
   memcpy(&new_offset, buf.data(), offset_width_);
   return new_offset;
 }
+
 int HashDB::write_bucket_index(int index, int64_t offset) {
   int64_t bucket_offset = METADATA_SIZE + index * offset_width_;
   return file_->write(bucket_offset, &offset, offset_width_);
@@ -171,6 +176,7 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
     const record_header* rh = (record_header*)(const_cast<char*>(buf.data()));
     cout << "rh keysize:" << rh->key_size_
          << ",child offset:" << rh->child_offset_ << endl;
+    int type = rh->type_;
     if (key.size() == rh->key_size_) {
       cout << "key size equals" << endl;
       string current_key;
@@ -182,6 +188,10 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
       cout << "current_key:" << current_key << endl;
       if (key == current_key) {
         child_offset = rh->child_offset_;
+        if (type == 1) {
+          current_offset = 0;
+          return status;
+        }
         if (value) {
           cout << "rh valuesize:" << rh->value_size_ << endl;
           status = file_->read(
@@ -189,7 +199,6 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
               rh->value_size_);
           cout << "value:" << *value << endl;
         }
-
         return status;
       }
       parent_offset = current_offset;
@@ -201,8 +210,8 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
   return status;
 }
 
-int HashDB::write_record(char type, const std::string& key,
-                         const std::string& value, int64_t* offset) {
+int HashDB::append_record(char type, const std::string& key,
+                          const std::string& value, int64_t* offset) {
   size_t base_size = sizeof(int) + offset_width_ + 2 * sizeof(int64_t) +
                      key.size() + value.size();
   const int32_t align = 1 << align_pow_;
@@ -231,8 +240,8 @@ int HashDB::write_record(char type, const std::string& key,
 }
 
 int HashDB::delete_record(const std::string& key, int64_t old_offset,
-                          int64_t parent_offset) {
-  int64_t current_offset = 0, child_offset = 0;
+                          int64_t parent_offset, int64_t& current_offset) {
+  int64_t child_offset = 0;
   int status = find_record(old_offset, key, parent_offset, current_offset,
                            child_offset, nullptr);
   if (status == 0 && current_offset != 0) {
@@ -249,9 +258,10 @@ int HashDB::write_child_fffset(int64_t offset, int64_t child_offset) {
 HashDB::HashDB()
     : file_(unique_ptr<File>(new MMapFile)),
       num_buckets_(DEFAULT_NUM_BUCKETS),
-      offset_width_(8),
+      offset_width_(4),
       align_pow_(8),
       record_mutex_(1, 128, primary_hash) {}
+
 int HashDB::open(const std::string& path) {
   std::cout << "db path:" << path << std::endl;
   file_->open(path, true);
@@ -265,8 +275,48 @@ int HashDB::open(const std::string& path) {
 }
 
 int HashDB::close() {
+  file_size_ = file_->size();
+  mod_time_ = time(nullptr);
+  save_meta(true);
   file_->close();
   return 0;
+}
+
+int HashDB::do_process(int type, const std::string& key,
+                       const std::string& value) {
+  ScopedSegmentHashSharedMutex<SegmentHashSharedMutex<SharedMutex, string>>
+      scoped_lock(record_mutex_, key, true);
+  int bucket_index = scoped_lock.get_bucket_index();
+  int64_t offset = read_bucket_index(bucket_index);
+  int64_t old_offset = offset;
+  int64_t parent_offset = 0;
+
+  int status = append_record(type, key, value, &offset);
+  std::cout << "status:" << status << ",offset:" << offset
+            << ",old offset:" << old_offset << ",bucket_index:" << bucket_index
+            << std::endl;
+  int64_t current_offset = -1;
+  if (status == 0) {
+    status = write_bucket_index(bucket_index, offset);
+    if (status == 0)
+      status = delete_record(key, old_offset, offset, current_offset);
+  }
+
+  if (status == 0) {
+    switch (type) {
+      case 0: {
+        if (current_offset == 0) num_records_.fetch_add(1);
+        break;
+      }
+      case 1: {
+        if (current_offset > 0) num_records_.fetch_sub(1);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return status;
 }
 
 int HashDB::get(const std::string& key, std::string& value) {
@@ -289,25 +339,12 @@ int HashDB::get(const std::string& key, std::string& value) {
 }
 
 int HashDB::set(const std::string& key, const std::string& value) {
-  ScopedSegmentHashSharedMutex<SegmentHashSharedMutex<SharedMutex, string>>
-      scoped_lock(record_mutex_, key, true);
-  int bucket_index = scoped_lock.get_bucket_index();
-  int64_t offset = read_bucket_index(bucket_index);
-  int64_t old_offset = offset;
-  int64_t parent_offset = 0;
-
-  int status = write_record(0, key, value, &offset);
-  std::cout << "status:" << status << ",offset:" << offset
-            << ",old offset:" << old_offset << ",bucket_index:" << bucket_index
-            << std::endl;
-  if (status == 0) {
-    status = write_bucket_index(bucket_index, offset);
-    if (status == 0) status = delete_record(key, old_offset, offset);
-  }
-  return status;
+  return do_process(0, key, value);
 }
 
-int HashDB::del(const std::string& key) { return 0; }
+int HashDB::del(const std::string& key) { return do_process(1, key, ""); }
+
 size_t HashDB::size() { return num_records_.load(); }
+
 HashDB::~HashDB() { close(); }
 }  // namespace yas
