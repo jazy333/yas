@@ -5,6 +5,8 @@
 #include <ctime>
 #include <iostream>
 
+#include "shared_lock.h"
+
 using namespace std;
 
 namespace yas {
@@ -589,18 +591,16 @@ int HashDB::Iterator::read_keys() {
 }
 
 int HashDB::Iterator::first() {
-  db_->mutex_.lock_shared();
+  SharedLock<SharedMutex> scope_shared_lock(db_->mutex_);
   keys_.clear();
   bucket_index_.store(0);
-  db_->mutex_.unlock_shared();
   return 0;
 }
 
 int HashDB::Iterator::next() {
-  db_->mutex_.lock_shared();
+  SharedLock<SharedMutex> scope_shared_lock(db_->mutex_);
   int status = read_keys();
   keys_.erase(keys_.begin());
-  db_->mutex_.unlock_shared();
   return status;
 }
 
