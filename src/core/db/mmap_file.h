@@ -13,6 +13,7 @@ class MMapFile : public File {
   int read(int64_t off, void* buf, size_t size) override;
   int write(int64_t off, const void* buf, size_t size) override;
   int append(const void* buf, size_t size, int64_t* off = nullptr) override;
+  int sync() override;
   int truncate(size_t size) override;
   int size(int64_t* size) override;
   int64_t size()  override;

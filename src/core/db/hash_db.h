@@ -4,6 +4,9 @@
 
 #include <atomic>
 #include <mutex>
+#include <string>
+#include <set>
+#include <memory>
 
 #include "common/common.h"
 #include "common/const.h"
@@ -58,10 +61,11 @@ class HashDB : public DB {
   static constexpr int64_t REBUILD_BLOCKING_ALLOWANCE = 65536;
   static constexpr int64_t DEFAULT_NUM_BUCKETS = 1048583;
   enum UpdateMode {
-    /** To do replace writing. */
-    UPDATE_REPLACE = 0,
     /** To do appending writing. */
-    UPDATE_APPENDING = 1,
+    UPDATE_APPENDING = 0,
+    /** To do replace writing. */
+    UPDATE_REPLACE = 1
+
   };
 
   enum ClosureFlag : uint8_t {
@@ -73,27 +77,56 @@ class HashDB : public DB {
   int open(const std::string& path) override;
   int close() override;
   int get(const std::string& key, std::string& value) override;
-  int set(const std::string& key, const std::string& value) override;
+  int set(const std::string& key, const std::string& value,
+          bool override = true) override;
   int del(const std::string& key) override;
+  int test(const std::string& key) override;
+  int sync() override;
+  int rebuild() override;
+  std::string path() override;
+  bool should_be_rebuilt() override;
+  std::string status() override;
   size_t size() override;
+  std::unique_ptr<DB::Iterator> make_iterator() override;
   ~HashDB();
 
+  class Iterator : public DB::Iterator {
+   public:
+    int first() override;
+    int next() override;
+    int last() override;
+    int get(std::string& key, std::string& value) override;
+    Iterator(HashDB* db);
+
+   private:
+    int read_keys();
+    HashDB* db_;
+    std::atomic<int64_t> bucket_index_;
+    std::set<std::string> keys_;
+  };
+
  private:
-  int do_process(int type, const std::string& key, const std::string& value);
+  int do_process(int type, const std::string& key, const std::string& value,
+                 bool override);
+  int do_read(int type, const std::string& key, std::string& value);
   int init();
   int64_t read_bucket_index(int);
   int write_bucket_index(int index, int64_t offset);
-  int write_child_fffset(int64_t offset, int64_t child_offset);
+  int write_child_offset(int64_t offset, int64_t child_offset);
+  int read_bucket_keys(int index,std::set<std::string>& keys);
   int find_record(int64_t bottom_offset, const std::string& key,
                   int64_t& parent_offset, int64_t& current_offset,
-                  int64_t& child_offset, std::string* value);
+                  int64_t& child_offset, std::string* value,
+                  size_t& old_value_size, bool& deleted);
   int append_record(char type, const std::string&, const std::string& value,
-                   int64_t* offset);
+                    int64_t* offset);
   int delete_record(const std::string& key, int64_t old_offset,
-                    int64_t parent_offset,int64_t& current_offset);
-
+                    int64_t parent_offset, int64_t& current_offset,
+                    size_t& old_value_size);
+  void set_record_base();
   int save_meta(bool);
   int load_meta();
+  int do_rebuild(HashDB* hdb, int64_t start_offset, int64_t last_valid_offset);
 
   std::string path_;
   std::unique_ptr<File> file_;

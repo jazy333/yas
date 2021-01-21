@@ -197,6 +197,22 @@ int MMapFile::truncate(size_t size) {
   return 0;
 }
 
+int MMapFile::sync() {
+  pthread_rwlock_wrlock(&rwlock_);
+  int status = 0;
+  if (fd_ < 0) return -1;
+  if (!writable_) return -1;
+
+  if (msync(map_, map_size_, MS_SYNC) != 0) {
+    status = -1;
+  }
+  if (fsync(fd_) != 0) {
+    status = -1;
+  }
+  pthread_rwlock_unlock(&rwlock_);
+  return status;
+}
+
 int MMapFile::size(int64_t* size) {
   *size = file_size_;
   return 0;

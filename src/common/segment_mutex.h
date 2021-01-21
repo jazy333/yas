@@ -72,7 +72,7 @@ template <typename Mutex>
 int SegmentSharedMutex<Mutex>::default_num_slots_ = 20;
 
 template <typename Mutex, typename Type>
-class SegmentHashSharedMutex : protected SegmentSharedMutex<Mutex> {
+class SegmentHashSharedMutex : public SegmentSharedMutex<Mutex> {
  private:
   using SegmentSharedMutex<Mutex>::slots_;
   using SegmentSharedMutex<Mutex>::num_slots_;
@@ -113,21 +113,59 @@ class SegmentHashSharedMutex : protected SegmentSharedMutex<Mutex> {
   }
 
   int lock(Type key) {
-    uint64_t bucket_index = hash_(key, num_buckets_);
-    int slot = bucket_index % num_slots_;
-    SegmentSharedMutex<Mutex>::lock(slot);
-    return bucket_index;
+    while (true) {
+      int old_num_buckets = num_buckets_;
+      uint64_t bucket_index = hash_(key, num_buckets_);
+      int slot = bucket_index % num_slots_;
+      SegmentSharedMutex<Mutex>::lock(slot);
+      if (num_buckets_ == old_num_buckets) return bucket_index;
+      SegmentSharedMutex<Mutex>::unlock(slot);
+    }
+    return -1;
+  }
+
+  int lock(uint64_t bucket_index) {
+    while (true) {
+      int old_num_buckets = num_buckets_;
+      int slot = bucket_index % num_slots_;
+      SegmentSharedMutex<Mutex>::lock(slot);
+      if (num_buckets_ == old_num_buckets) return bucket_index;
+      SegmentSharedMutex<Mutex>::unlock(slot);
+    }
+    return -1;
   }
 
   int lock_shared(Type key) {
-    uint64_t bucket_index = hash_(key, num_buckets_);
-    int slot = bucket_index % num_slots_;
-    SegmentSharedMutex<Mutex>::lock_shared(slot);
-    return bucket_index;
+    while (true) {
+      int old_num_buckets = num_buckets_;
+      uint64_t bucket_index = hash_(key, num_buckets_);
+      int slot = bucket_index % num_slots_;
+      SegmentSharedMutex<Mutex>::lock_shared(slot);
+      if (num_buckets_ == old_num_buckets) return bucket_index;
+      SegmentSharedMutex<Mutex>::unlock_shared(slot);
+    }
+    return -1;
+  }
+
+  int lock_shared(uint64_t bucket_index) {
+    while (true) {
+      int old_num_buckets = num_buckets_;
+      int slot = bucket_index % num_slots_;
+      SegmentSharedMutex<Mutex>::lock_shared(slot);
+      if (num_buckets_ == old_num_buckets) return bucket_index;
+      SegmentSharedMutex<Mutex>::unlock_shared(slot);
+    }
+    return -1;
   }
 
   int unlock(Type key) {
     uint64_t bucket_index = hash_(key, num_buckets_);
+    int slot = bucket_index % num_slots_;
+    SegmentSharedMutex<Mutex>::unlock(slot);
+    return bucket_index;
+  }
+
+  int unlock(uint64_t bucket_index) {
     int slot = bucket_index % num_slots_;
     SegmentSharedMutex<Mutex>::unlock(slot);
     return bucket_index;
@@ -138,6 +176,36 @@ class SegmentHashSharedMutex : protected SegmentSharedMutex<Mutex> {
     int slot = bucket_index % num_slots_;
     SegmentSharedMutex<Mutex>::unlock_shared(slot);
     return bucket_index;
+  }
+
+  int unlock_shared(uint64_t bucket_index) {
+    int slot = bucket_index % num_slots_;
+    SegmentSharedMutex<Mutex>::unlock_shared(slot);
+    return bucket_index;
+  }
+
+  void lock_all() {
+    for (int i = 0; i < num_slots_; ++i) {
+      SegmentSharedMutex<Mutex>::lock(i);
+    }
+  }
+
+  void unlock_all() {
+    for (int i = 0; i < num_slots_; ++i) {
+      SegmentSharedMutex<Mutex>::unlock(i);
+    }
+  }
+
+  void lock_shared_all() {
+    for (int i = 0; i < num_slots_; ++i) {
+      SegmentSharedMutex<Mutex>::lock_shared(i);
+    }
+  }
+
+  void unlock_shared_all() {
+    for (int i = 0; i < num_slots_; ++i) {
+      SegmentSharedMutex<Mutex>::unlock_shared(i);
+    }
   }
 
   int get_num_buckets() { return num_buckets_; }
@@ -160,11 +228,37 @@ class ScopedSegmentHashSharedMutex {
     }
   }
 
-  ~ScopedSegmentHashSharedMutex() {
+  ScopedSegmentHashSharedMutex(Mutex& mutex, int bucket_index, bool writable)
+      : mutex_(&mutex), writable_(writable), bucket_index_(bucket_index) {
     if (writable_)
-      mutex_->unlock(key_);
+      mutex_->lock(bucket_index_);
     else {
-      mutex_->unlock_shared(key_);
+      mutex_->lock_shared(bucket_index_);
+    }
+  }
+
+  ScopedSegmentHashSharedMutex(Mutex& mutex, bool writable)
+      : mutex_(&mutex), writable_(writable), bucket_index_(-1) {
+    if (writable_)
+      mutex_->lock_all();
+    else {
+      mutex_->lock_shared_all();
+    }
+  }
+
+  ~ScopedSegmentHashSharedMutex() {
+    if (bucket_index_ != -1) {
+      if (writable_)
+        mutex_->unlock(key_);
+      else {
+        mutex_->unlock_shared(key_);
+      }
+    } else {
+      if (writable_)
+        mutex_->unlock_all();
+      else {
+        mutex_->unlock_shared_all();
+      }
     }
   }
 
@@ -175,5 +269,5 @@ class ScopedSegmentHashSharedMutex {
   bool writable_;
   key_type key_;
   int bucket_index_;
-};
+};  // namespace yas
 }  // namespace yas

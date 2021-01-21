@@ -1,4 +1,5 @@
 //#include "murmur_hash2.h"
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -11,7 +12,7 @@
 
 using namespace yas;
 using namespace std;
-int main() {
+int main(int argc, char* argv[]) {
   // MurmurHash2 mh2;
   // mh2.hash64("test",20181220);
   cout << "hello yas" << endl;
@@ -30,24 +31,62 @@ int main() {
   mf->close();
   HashDB hdb;
   hdb.open("data/yas1.hdb");
+  cout << "=====================" << endl;
   int status = hdb.set("test2", "test for first key1");
-  cout << "set staus:" << status << endl;
+  cout << "set staus:" << status << ",size:" << hdb.size() << endl;
+  cout << "=====================" << endl;
   string value;
   hdb.get("test1", value);
   cout << "get value test1:" << value << endl;
+  cout << "=====================" << endl;
   hdb.get("test2", value);
   cout << "get value test2:" << value << endl;
+  cout << "=====================" << endl;
   status = hdb.get("key not exists", value);
   cout << "get status:" << status << endl;
-
+  cout << "=====================" << endl;
   status = hdb.del("test2");
-  cout << "del status:" << status << endl;
+  cout << "del status:" << status << ",size:" << hdb.size() << endl;
+  cout << "=====================" << endl;
   hdb.get("test1", value);
   cout << "get value test1:" << value << endl;
-
+  cout << "=====================" << endl;
   value.clear();
-  status=hdb.get("test2", value);
-  cout << "status:"<<status<<",get value test2:" << value << endl;
+  status = hdb.get("test2", value);
+  cout << "status:" << status << ",get value test2:" << value << endl;
+  cout << "=====================" << endl;
+  status = hdb.set("xxx", "sogou.com");
+  cout << "set status:" << status << ",size:" << hdb.size() << endl;
+  cout << "=====================" << endl;
+  status = hdb.set("yyy", "sogou.com1");
+  cout << "set status:" << status << ",size:" << hdb.size() << endl;
+
+  status=hdb.test("3418257432248451726");
+  cout<<"test 3418257432248451726 status:"<<status<<endl;
+
+  status=hdb.test("test2");
+  cout<<"test test2 status:"<<status<<endl;
+
+  #if 0
+  ifstream ifs;
+  ifs.open(argv[1]);
+  string line;
+
+  while (getline(ifs, line)) {
+    cout << "line:" << line << endl;
+    size_t start = line.find_first_of('\t');
+    string key = line.substr(0, start);
+    // string value = line.substr(start + 1);
+    //cout << "value size:" << value.size() << endl;
+    string value;
+    hdb.get(key, value);
+    cout << "bulk get key:" << key << ",value:" << value << endl;
+    // hdb.set(key, value);
+  }
+  ifs.close();
+  #endif
+
+  hdb.rebuild();
 
   hdb.close();
 

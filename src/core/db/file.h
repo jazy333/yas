@@ -22,6 +22,7 @@ class File {
     return append(buf.data(), buf.size(), off);
   }
   virtual int truncate(size_t size) = 0;
+  virtual int sync()=0;
   virtual int size(int64_t* size) = 0;
   virtual int64_t size() = 0;
   virtual std::unique_ptr<File> make() = 0;
