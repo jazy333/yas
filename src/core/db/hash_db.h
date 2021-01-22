@@ -97,6 +97,7 @@ class HashDB : public DB {
     int next() override;
     int last() override;
     int get(std::string& key, std::string& value) override;
+    void reset_bucket_index();
     Iterator(HashDB* db);
     ~Iterator();
 
@@ -129,6 +130,7 @@ class HashDB : public DB {
   int save_meta(bool);
   int load_meta();
   int do_rebuild(HashDB* hdb, int64_t start_offset, int64_t last_valid_offset);
+  void cancel_iterators();
 
   std::string path_;
   std::unique_ptr<File> file_;

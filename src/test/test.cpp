@@ -86,16 +86,20 @@ int main(int argc, char* argv[]) {
   ifs.close();
   #endif
 
-  //hdb.rebuild();
+  hdb.rebuild();
+  #if 0
+   //HashDB hdb1;
+   //hdb1.open("data/yas.hdb.1");
   auto iter=hdb.make_iterator();
   iter->first();
   do{
       string key,value;
       iter->get(key,value);
       cout<<"iter:"<<key<<",value:"<<value<<endl;
+     // hdb1.set(key,value);
   }while (iter->next()!=-1);
   
-
+#endif
   hdb.close();
 
   MurmurHash2 mh2;

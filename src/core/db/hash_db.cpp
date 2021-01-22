@@ -268,9 +268,10 @@ int HashDB::append_record(char type, const std::string& key,
                      key.size() + value.size();
   const int32_t align = 1 << align_pow_;
   size_t real_size = round(base_size, align);
-  char* buf = new char[real_size];
+  // char* buf = new char[real_size];
+  unique_ptr<char[]> arr(new char[real_size]);
   cout << "base_size:" << base_size << ",real_size:" << real_size << endl;
-  char* start = buf;
+  char* buf = arr.get();
   record_header* rh = (record_header*)buf;
   rh->type_ = type;
   rh->child_offset_ = *offset;
@@ -286,8 +287,8 @@ int HashDB::append_record(char type, const std::string& key,
   mempcpy(buf, value.c_str(), value_size);
   buf += value_size;
 
-  int status = file_->append(start, real_size, offset);
-  delete[] start;
+  int status = file_->append(arr.get(), real_size, offset);
+  // delete[] start;
   return status;
 }
 
@@ -351,6 +352,7 @@ int HashDB::close() {
     save_meta(true);
     file_->close();
   }
+  cancel_iterators();
   open_ = false;
   return 0;
 }
@@ -556,10 +558,7 @@ int HashDB::rebuild() {
       ScopedSegmentHashSharedMutex<SegmentHashSharedMutex<SharedMutex, string>>
           scoped_lock(record_mutex_, true);
       do_rebuild(&hdb, start_offset, last_valid_offset);
-      hdb.close();
-      file_->close();
-      rename(tmp_path.c_str(), path_.c_str());
-      open(path_);
+
       break;
     } else {
       do_rebuild(&hdb, start_offset, last_valid_offset);
@@ -567,8 +566,17 @@ int HashDB::rebuild() {
     start_offset = end_offset;
     count++;
   } while (start_offset != file_->size());
-
+  hdb.close();
+  file_->close();
+  rename(tmp_path.c_str(), path_.c_str());
+  open(path_);
   return 0;
+}
+
+void HashDB::cancel_iterators() {
+  for (auto iter : iters) {
+    iter->reset_bucket_index();
+  }
 }
 
 std::string HashDB::path() { return path_; }
@@ -596,13 +604,16 @@ HashDB::Iterator::~Iterator() {
 }
 
 int HashDB::Iterator::read_keys() {
-  if (keys_.size() > 0) return 0;
   if (bucket_index_ < 0) {
     return -1;
   }
+
+  if (keys_.size() > 0) return 0;
+
   int status = -1;
   while (true) {
     status = db_->read_bucket_keys(bucket_index_, keys_);
+    if (status < 0) return status;
     bucket_index_++;
     if (keys_.size() > 0) break;
   }
@@ -633,5 +644,7 @@ int HashDB::Iterator::get(std::string& key, std::string& value) {
   int status = db_->get(key, value);
   return status;
 }
+
+void HashDB::Iterator::reset_bucket_index() { bucket_index_.store(-1); }
 
 }  // namespace yas
