@@ -86,7 +86,15 @@ int main(int argc, char* argv[]) {
   ifs.close();
   #endif
 
-  hdb.rebuild();
+  //hdb.rebuild();
+  auto iter=hdb.make_iterator();
+  iter->first();
+  do{
+      string key,value;
+      iter->get(key,value);
+      cout<<"iter:"<<key<<",value:"<<value<<endl;
+  }while (iter->next()!=-1);
+  
 
   hdb.close();
 

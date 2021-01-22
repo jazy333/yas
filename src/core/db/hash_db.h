@@ -7,6 +7,7 @@
 #include <string>
 #include <set>
 #include <memory>
+#include <list>
 
 #include "common/common.h"
 #include "common/const.h"
@@ -97,6 +98,7 @@ class HashDB : public DB {
     int last() override;
     int get(std::string& key, std::string& value) override;
     Iterator(HashDB* db);
+    ~Iterator();
 
    private:
     int read_keys();
@@ -151,5 +153,6 @@ class HashDB : public DB {
   SharedMutex mutex_;
   SegmentHashSharedMutex<SharedMutex, std::string> record_mutex_;
   std::mutex file_mutex_;
+  std::list<Iterator*> iters;
 };
 }  // namespace yas

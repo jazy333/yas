@@ -5,7 +5,7 @@
 #include <ctime>
 #include <iostream>
 
-#include "shared_lock.h"
+#include "common/shared_lock.h"
 
 using namespace std;
 
@@ -168,11 +168,13 @@ int64_t HashDB::read_bucket_index(int index) {
 }
 
 int HashDB::read_bucket_keys(int index, std::set<string>& keys) {
-  if (index > num_buckets_) return -1;
+  int status = 0;
+
+  if (index >= num_buckets_) return -1;
   ScopedSegmentHashSharedMutex<SegmentHashSharedMutex<SharedMutex, string>>
       scoped_lock(record_mutex_, index, false);
   int64_t current_offset = read_bucket_index(index);
-  int status = 0;
+
   if (current_offset > 0) {
     while (current_offset > 0) {
       string buf;
@@ -194,8 +196,10 @@ int HashDB::read_bucket_keys(int index, std::set<string>& keys) {
         default:
           break;
       }
+      current_offset = rh->child_offset_;
     }
   }
+
   return status;
 }
 
@@ -340,6 +344,7 @@ int HashDB::open(const std::string& path) {
 }
 
 int HashDB::close() {
+  std::lock_guard<SharedMutex> lock(mutex_);
   if (open_) {
     file_size_ = file_->size();
     mod_time_ = time(nullptr);
@@ -529,7 +534,7 @@ int HashDB::do_rebuild(HashDB* hdb, int64_t start_offset,
 }
 
 int HashDB::rebuild() {
-  std::lock_guard<SharedMutex> lock(mutex_);
+  SharedLock<SharedMutex> lock(mutex_);
   int status = 0;
   HashDB hdb;
   string tmp_path = path_ + ".rebuild";
@@ -578,15 +583,29 @@ std::unique_ptr<DB::Iterator> HashDB::make_iterator() {
   return std::unique_ptr<Iterator>(new Iterator(this));
 }
 
-HashDB::Iterator::Iterator(HashDB* db) : db_(db), bucket_index_(-1) {}
+HashDB::Iterator::Iterator(HashDB* db) : db_(db), bucket_index_(-1) {
+  std::lock_guard<SharedMutex> lock(db_->mutex_);
+  db_->iters.emplace_back(this);
+}
+
+HashDB::Iterator::~Iterator() {
+  std::lock_guard<SharedMutex> lock(db_->mutex_);
+  if (db_) {
+    db_->iters.remove(this);
+  }
+}
 
 int HashDB::Iterator::read_keys() {
   if (keys_.size() > 0) return 0;
   if (bucket_index_ < 0) {
     return -1;
   }
-  int status = db_->read_bucket_keys(bucket_index_, keys_);
-  bucket_index_++;
+  int status = -1;
+  while (true) {
+    status = db_->read_bucket_keys(bucket_index_, keys_);
+    bucket_index_++;
+    if (keys_.size() > 0) break;
+  }
   return status;
 }
 
@@ -594,19 +613,21 @@ int HashDB::Iterator::first() {
   SharedLock<SharedMutex> scope_shared_lock(db_->mutex_);
   keys_.clear();
   bucket_index_.store(0);
+  read_keys();
   return 0;
 }
 
 int HashDB::Iterator::next() {
   SharedLock<SharedMutex> scope_shared_lock(db_->mutex_);
-  int status = read_keys();
   keys_.erase(keys_.begin());
+  int status = read_keys();
   return status;
 }
 
 int HashDB::Iterator::last() { return 0; }
 
 int HashDB::Iterator::get(std::string& key, std::string& value) {
+  if (keys_.empty()) return -1;
   auto it = keys_.begin();
   key = *it;
   int status = db_->get(key, value);
