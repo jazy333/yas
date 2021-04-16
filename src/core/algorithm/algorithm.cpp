@@ -54,9 +54,38 @@ int LevenshteinDistance(const string &a, const string &b)
 	return matrix[alen][blen];
 }
 
+
+void dfs(const vector<int>& a,vector<int>& one,vector<vector<int>>& result){
+	if(a.size()==one.size()){
+		result.push_back(one);
+		return;
+	}
+	for(auto v:a){
+		if(find(one.begin(),one.end(),v)!=one.end()){
+			continue;
+		}
+		one.push_back(v);
+		dfs(a,one,result);
+		one.pop_back();
+	}
+}
+
+void permute(const vector<int>& a,vector<vector<int>>& result){
+	vector<int> one;
+	dfs(a,one,result);
+}
+
 int main()
 {
 	string a = "a";
 	string b = "ab";
 	cout << "distance:" << LevenshteinDistance(a, b) << endl;
+	vector<vector<int>> result;
+	permute({1,2,3},result);
+	for(auto v1 :result){
+		for(auto v2:v1){
+			cout<<v2<<",";
+		}
+		cout<<endl;
+	}
 }
