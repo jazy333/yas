@@ -28,9 +28,19 @@ namespace yas {
     }
     virtual ~MemoryPoints() = default;
 
+    virtual void swap(int i, int j) {
+      value_type tmp = points[i];
+      points[i] = points[j];
+      points[j] = tmp;
+    }
+
+    virtual bool compare(int i, int j) {
+      return points[i][_sorted_dim] < points[j][_sorted_dim];
+    }
+
 
     void minmax(int from, int to, value_type& min, value_type& max) override {
-      if (from > to) {
+      if (from >= to) {
         return;
       }
 
@@ -51,7 +61,7 @@ namespace yas {
       }
 
     }
-    
+
     void minmax(value_type& min, value_type& max) override {
       return minmax(0, points.size(), min, max);
     }
@@ -87,5 +97,6 @@ namespace yas {
   private:
     std::vector<value_type> points;
     int offset;
+    int _sorted_dim;
   };
 }  // namespace yas

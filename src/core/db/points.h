@@ -1,12 +1,14 @@
 #pragma once
 #include "point.h"
+#include "intro_sorter.h"
+
 #include <vector>
 #include <bitset>
 #include <limits>
 
 namespace yas {
   template <class T, int D>
-  class Points {
+  class Points :public IntroSorter{
     class points_iterator;
   public:
     using value_type = Point<T, D>;

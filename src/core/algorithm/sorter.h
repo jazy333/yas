@@ -8,7 +8,7 @@ namespace yas {
         virtual ~Sorter() = default;
         virtual void sort(int i, int j) = 0;
         virtual void swap(int i, int j) = 0;
-        virtual int compare(int i, int j) = 0;
+        virtual bool compare(int i, int j) = 0;
 
         virtual void set_pivot(int i) {
             _pivot_index = i;
@@ -42,41 +42,41 @@ namespace yas {
         int binary_search(int i, int j, int k) {
             while (i < j) {
                 int mid = (i + j) >> 1;
-                if (compare(k, mid) < 0) {
+                if (compare(k, mid)) {
                     j = mid - 1;
                 }
                 else {
                     i = mid + 1;
                 }
             }
-            return compare(k, i) > 0 ? (i + 1) : i;
+            return compare(k, i) < 0 ? i : (i + 1);
 
         }
 
         void heapify(int from, int to) {
-            int parent=from;
+            int parent = from;
             int left = 2 * from + 1;
             int right = 2 * from + 2;
 
 
             while (left < to) {
 
-                if (right < to && compare(left, right) < 0) {
-                     left= right;
+                if (right < to && compare(left, right)) {
+                    left = right;
                 }
 
-                if (compare(parent,left) > 0)
-                    return; 
+                if (!compare(parent, left))
+                    return;
                 else {
                     swap(parent, left);
-                    parent=left;
+                    parent = left;
                     left = parent * 2;
                     right = left + 1;
                 }
-           }
+            }
         }
     private:
-        int _pivot_index;
+    int _pivot_index;
     };
     const int Sorter::BINARY_SORT_THRESHOLD = 16;
 }//namespace yas

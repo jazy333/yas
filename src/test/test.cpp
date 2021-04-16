@@ -41,7 +41,7 @@ public:
 
   void print() {
     copy(_data.begin(), _data.end(), ostream_iterator<int>(cout, ","));
-    cout<<endl;
+    cout << endl;
   }
 
   virtual void sort(int i, int j) override {
@@ -53,8 +53,8 @@ public:
     _data[i] = _data[j];
     _data[j] = tmp;
   }
-  virtual int compare(int i, int j) override {
-    return _data[i] - _data[j];
+  virtual bool compare(int i, int j) override {
+    return _data[i] < _data[j];
   }
 private:
   vector<int> _data;
@@ -72,7 +72,7 @@ public:
 
   void print() {
     copy(_data.begin(), _data.end(), ostream_iterator<int>(cout, ","));
-    cout<<endl;
+    cout << endl;
   }
 
   virtual void swap(int i, int j) override {
@@ -80,8 +80,8 @@ public:
     _data[i] = _data[j];
     _data[j] = tmp;
   }
-  virtual int compare(int i, int j) override {
-    return _data[i] - _data[j];
+  virtual bool compare(int i, int j) override {
+    return _data[i] < _data[j];
   }
 private:
   vector<int> _data;
@@ -93,12 +93,12 @@ int main(int argc, char* argv[]) {
   // MurmurHash2 mh2;
   // mh2.hash64("test",20181220);
 
-  TestSorter ts({ 1,2,3,1});
+  TestSorter ts({ 1,2,3,1 });
   ts.print();
   ts.sort();
   ts.print();
 
-  TestIntroSorter tis({1,34,5,6,6,44,333,15,15,15,51,5333,137,56456,8,2,4,7,0,100,100,100,200,399,1399});
+  TestIntroSorter tis({ 1,34,5,6,6,44,333,15,15,15,51,5333,137,56456,8,2,4,7,0,100,100,100,200,399,1399 });
   tis.print();
   tis.sort();
   tis.print();
