@@ -15,6 +15,7 @@
 #include "memory_points.h"
 #include "sorter.h"
 #include "intro_sorter.h"
+#include "bkd_tree.h"
 
 using namespace yas;
 using namespace std;
@@ -39,6 +40,9 @@ public:
     sort(0, _data.size());
   }
 
+  void select(int from,int to,int k){
+  }
+
   void print() {
     copy(_data.begin(), _data.end(), ostream_iterator<int>(cout, ","));
     cout << endl;
@@ -55,6 +59,10 @@ public:
   }
   virtual bool compare(int i, int j) override {
     return _data[i] < _data[j];
+  }
+
+  int byte_at(int i,int pos){
+    return 0;
   }
 private:
   vector<int> _data;
@@ -82,6 +90,10 @@ public:
   }
   virtual bool compare(int i, int j) override {
     return _data[i] < _data[j];
+  }
+
+  int byte_at(int i,int pos){
+    return 0;
   }
 private:
   vector<int> _data;

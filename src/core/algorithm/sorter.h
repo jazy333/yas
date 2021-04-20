@@ -7,8 +7,10 @@ namespace yas {
         Sorter() = default;
         virtual ~Sorter() = default;
         virtual void sort(int i, int j) = 0;
+        virtual void select(int from,int to,int k)=0;
         virtual void swap(int i, int j) = 0;
         virtual bool compare(int i, int j) = 0;
+        virtual int byte_at(int i,int pos)=0;
 
         virtual void set_pivot(int i) {
             _pivot_index = i;
@@ -76,7 +78,7 @@ namespace yas {
             }
         }
     private:
-    int _pivot_index;
+        int _pivot_index;
     };
     const int Sorter::BINARY_SORT_THRESHOLD = 16;
 }//namespace yas

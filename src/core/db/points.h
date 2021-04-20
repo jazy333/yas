@@ -8,7 +8,7 @@
 
 namespace yas {
   template <class T, int D>
-  class Points :public IntroSorter{
+  class Points :public IntroSorter {
     class points_iterator;
   public:
     using value_type = Point<T, D>;
@@ -19,9 +19,39 @@ namespace yas {
     virtual value_type read() = 0;
     virtual void write(const value_type& v) = 0;
     virtual value_type get(int index) = 0;
+    virtual ~Points() = default;
     virtual void minmax(int from, int to, value_type& min, value_type& max) = 0;
     virtual void minmax(value_type& min, value_type& max) = 0;
-    virtual ~Points() = default;
+    
+
+    int get_split_dimension(value_type& min, value_type& max, std::vector<int>& parent_splits) {
+      int max_splits = 0;
+      for (auto splits : parent_splits) {
+        if (splits > max_splits) {
+          max_splits = splits;
+        }
+      }
+
+      int dim = value_type::dim;
+
+      for (int i = 0;i < dim;++i) {
+        if (parent_splits[i] < max_splits / 2 && min[i] != max[i])
+          return i;
+      }
+
+      int split_dim = -1;
+      T max_dim_diff;
+      value_type diff = max - min;
+      for (int i = 0;i < dim;++i) {
+        if (diff[i] > max_dim_diff) {
+          max_dim_diff = diff[i];
+          split_dim = i;
+        }
+      }
+
+      return split_dim;
+    }
+
 
     void common_prefix_lengths(int from, int to, std::vector<int>& prefix_lengths) {
       // Compute common prefixes
@@ -97,16 +127,16 @@ namespace yas {
 
 
     int get_cardinality(std::vector<int>& prefix_lengths) {
-     return get_cardinality(0, size(), prefix_lengths);
+      return get_cardinality(0, size(), prefix_lengths);
     }
 
-    iterator begin()  {
-      return points_iterator(this,0);
+    iterator begin() {
+      return points_iterator(this, 0);
     }
 
-    iterator end()  {
+    iterator end() {
       size_t last;
-      return points_iterator(this,static_cast<int>(last));
+      return points_iterator(this, static_cast<int>(last));
     }
 
   private:
@@ -116,7 +146,7 @@ namespace yas {
       using difference_type = typename std::iterator<std::random_access_iterator_tag, value_type>::difference_type;
 
       points_iterator() : _cur(0) {}
-      points_iterator(Points*,int cur) :_cur(cur) {}
+      points_iterator(Points*, int cur) :_cur(cur) {}
       points_iterator(const points_iterator& rhs) : _cur(rhs._cur) {}
       inline points_iterator& operator=(const points_iterator& rhs) { _cur = rhs._cur; return *this; }
       inline points_iterator& operator+=(difference_type rhs) { _cur += rhs; return *this; }

@@ -3,6 +3,7 @@
 #include <initializer_list>
 #include <iterator>
 #include <iostream>
+#include <vector>
 #include <cstddef>
 #include <cstring>
 #include <sys/types.h>
@@ -75,8 +76,15 @@ namespace yas {
       return sizeof(T) * D;
     }
 
-    size_t one_dim_size() {
-      return sizeof(T);
+    int mismatch(const Point& p,int dim){
+      int index= (dim + 1) * bytes_per_dim -  1;
+      int i=bytes_per_dim-1;
+      for(;i>=0;--i){
+        index+=i;
+        if(point.bytes[index]!=p.point.bytes[index])
+          break;
+      }
+      return bytes_per_dim-i;
     }
 
     void prefix_lens_per_dim(const Point& p, const std::vector<int>& ends, std::vector<int>& prefix_lens) {

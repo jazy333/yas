@@ -1,5 +1,6 @@
 #include "intro_sorter.h"
 #include <cmath>
+#include <cstring>
 
 namespace yas {
 
@@ -59,5 +60,120 @@ namespace yas {
 
         quick_sort(from, pivot, depth);
         quick_sort(pivot + 1, to, depth);
+    }
+
+    void IntroSorter::build_histogram(int from, int to, int d) {
+        memset(histogram, 0, sizeof(histogram));
+        for (int i = from;i < to;++i) {
+            histogram[byte_at(i, d)]++;
+        }
+    }
+
+    void IntroSorter::partition(int from, int to, int bucket, int bucket_from, int  bucket_to, int d) {
+        int left = from, right = to - 1;
+        int bucket_left = bucket_from;
+        while (true) {
+            int byte_left = byte_at(left, d);
+            int byte_right = byte_at(right, d);
+            while (byte_left <= bucket && left < bucket_from) {
+                if (byte_left == bucket) {
+                    swap(left, bucket_left++);
+                }
+                else {
+                    left++;
+                }
+                byte_left = byte_at(left, d);
+            }
+
+            while (byte_right >= bucket && right > bucket_to) {
+                if (byte_right == bucket) {
+                    swap(right, bucket_left++);
+                }
+                else {
+                    right--;
+                }
+                byte_right = byte_at(right, d);
+            }
+
+            if (left<bucket_from && right > bucket_to) {
+                swap(left++, right--);
+            }
+            else
+                break;
+        }
+    }
+
+    void IntroSorter::radix_select(int from, int to, int k, int d, int l) {
+        build_histogram(from, to, d);
+        int bucket_from = from;
+        for (int i = 0;i < 257;++i) {
+            int bucket_to = bucket_from + histogram[i];
+            if (bucket_to > k) {
+                partition(from, to, i, bucket_from, bucket_to, d);
+                if (d + 1 < max_length) {
+                    select(from, to, k, d + 1, l + 1);
+                }
+                return;
+            }
+            bucket_from = bucket_to;
+        }
+    }
+
+
+    void IntroSorter::quick_select(int from, int to, int k, int depth) {
+
+        if (from == to - 1)
+            return;
+
+        int mid = (from + to) >> 1;
+        swap(mid, to - 1);
+        mid = to - 1;
+        int left = from, right = to - 2;
+        while (true) {
+            while (left < right && compare(left, mid)) {
+                left++;
+            }
+            while (right > left && compare(mid, right)) {
+                right--;
+            }
+
+            if (left < right) {
+                swap(left++, right--);
+            }
+            else {
+                break;
+            }
+        }
+
+        swap(left+1, mid);
+
+        if (k == left) {
+            return;
+        }
+        else if (k > left) {
+            quick_select(left + 1, to, k, depth--);
+        }
+        else {
+            quick_select(from, left, k, depth--);
+        }
+    }
+
+    void IntroSorter::intro_select(int from, int to, int k) {
+        quick_select(from, to, k, static_cast<int>(log2(to-from)));
+    }
+
+
+    void IntroSorter::select(int from, int to, int k, int d, int l) {
+        if (to - from<LENGTH_THRESHOLD || l>LEVEL_THRESHOLD) {
+            intro_select(from, to, k);
+        }
+        else {
+            radix_select(from, to, k, d, l);
+        }
+    }
+
+
+    void IntroSorter::select(int  from, int to, int k) {
+        select(from, to, k, 0, 0);
     }
 }
