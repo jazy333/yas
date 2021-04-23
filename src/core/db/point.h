@@ -14,6 +14,7 @@ namespace yas {
   public:
     static const int dim;
     static const int bytes_per_dim;
+    static const int bytes_length;
 
     Point() :docid(-1) {
     }
@@ -124,7 +125,7 @@ namespace yas {
 
   template <class T, int D> const int Point<T, D>::dim = D;
   template <class T, int D> const int Point<T, D>::bytes_per_dim = sizeof(T);
-
+  template <class T, int D> const int Point<T, D>::bytes_length = sizeof(T)*D;
 } //namespace yas                                                                                                                                                                      
                                                
                     
