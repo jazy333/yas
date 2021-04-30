@@ -153,6 +153,23 @@ int MMapFile::read(int64_t off, void* buf, size_t size) {
   return 0;
 }
 
+int MMapFile::read(void* buf, size_t size) {
+  pthread_rwlock_rdlock(&rwlock_);
+  off = lseek(fd_, 0, SEEK_CUR);
+  int64_t read_end = off + size;
+  if (read_end > file_size_) {
+    std::cout << "read exceed end:" << std::endl;
+  }
+
+  if (read_end > map_size_) {
+    read_with_check(fd_, buf, size);
+  } else {
+    std::memcpy(buf, map_ + off, size);
+  }
+  pthread_rwlock_unlock(&rwlock_);
+  return 0;
+}
+
 int MMapFile::write(int64_t off, const void* buf, size_t size) {
   pthread_rwlock_wrlock(&rwlock_);
   int64_t new_off = off;

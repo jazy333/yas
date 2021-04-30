@@ -1,7 +1,7 @@
 #pragma once
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace yas {
 class DB {
