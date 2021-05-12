@@ -19,10 +19,11 @@ MMapFile::MMapFile()
     : fd_(-1),
       file_size_(0),
       map_(nullptr),
+      map_size_(1 << 20LL),
       lock_size_(0),
       writable_(true),
-      open_options_(0),
-      map_size_(1 << 20LL) {
+      open_options_(0)
+       {
   pthread_rwlock_init(&rwlock_, nullptr);
 }
 
@@ -155,7 +156,7 @@ int MMapFile::read(int64_t off, void* buf, size_t size) {
 
 int MMapFile::read(void* buf, size_t size) {
   pthread_rwlock_rdlock(&rwlock_);
-  off = lseek(fd_, 0, SEEK_CUR);
+  int64_t off = lseek(fd_, 0, SEEK_CUR);
   int64_t read_end = off + size;
   if (read_end > file_size_) {
     std::cout << "read exceed end:" << std::endl;

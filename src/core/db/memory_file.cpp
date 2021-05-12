@@ -1,14 +1,17 @@
 #include "memory_file.h"
+
 #include <cstring>
+#include <string>
 
 namespace yas {
-MemoryFile::MemoryFile() {}
-MemoryFile::~MemoryFile() {
-  open_ = false;
-  writable_ = false;
+MemoryFile::MemoryFile() : writable_(false),open_(false),  offset_(0) {}
+MemoryFile::~MemoryFile() {}
+int MemoryFile::open(const std::string& path, bool writable) {
+  writable_ = writable;
+  open_ = true;
+  offset_ = 0;
+  return 0;
 }
-int MemoryFile::open(const std::string& path, bool writable)
-    : writable_(writable), open_(true), offset_(0) {}
 int MemoryFile::close() {
   open_ = false;
   writable_ = false;
@@ -36,7 +39,7 @@ int MemoryFile::write(int64_t off, const void* buf, size_t size) {
   }
   return size;
 }
-int MemoryFile::append(const void* buf, size_t size, int64_t* off = nullptr) {
+int MemoryFile::append(const void* buf, size_t size, int64_t* off) {
   data_.insert(data_.end(), (char*)buf, (char*)buf + size);
   return size;
 }
@@ -47,9 +50,14 @@ int MemoryFile::truncate(size_t size) {
   }
   return 0;
 }
-int MemoryFile::size(int64_t* size) { *size = data_.size() return 0; }
+int MemoryFile::size(int64_t* size) {
+  *size = data_.size();
+  return 0;
+}
 int64_t MemoryFile::size() { return data_.size(); }
 std::unique_ptr<File> MemoryFile::make() {
   return std::unique_ptr<File>(new MemoryFile());
 }
+
+int MemoryFile::sync() { return 0; }
 }  // namespace yas

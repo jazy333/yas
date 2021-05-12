@@ -1,4 +1,6 @@
 #pragma once
+#include "file.h"
+#include <vector>
 
 namespace yas {
 class MemoryFile : public File {
@@ -16,10 +18,11 @@ class MemoryFile : public File {
   int size(int64_t* size) override;
   int64_t size() override;
   std::unique_ptr<File> make() override;
+
  private:
- bool writable_;
- bool open_;
- off_t offset_;
+  bool writable_;
+  bool open_;
+  off_t offset_;
   std::vector<char> data_;
 };
 }  // namespace yas

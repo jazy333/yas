@@ -68,7 +68,7 @@ class Points : public IntroSorter {
     common_prefix_lengths(0, size(), prefix_lengths);
   }
 
-  int get_least_uniqe_dim(int from, int to, std::vector<int>& prefix_lengths) {
+  int get_least_unique_dim(int from, int to, std::vector<int>& prefix_lengths) {
     // Find the dimension that has the least number of unique bytes at
     // commonPrefixLengths[dim]
 
@@ -101,8 +101,8 @@ class Points : public IntroSorter {
     return sorted_dim;
   }
 
-  int get_least_uniqe_dim(std::vector<int>& prefix_lengths) {
-    return get_least_uniqe_dim(0, size(), prefix_lengths);
+  int get_least_unique_dim(std::vector<int>& prefix_lengths) {
+    return get_least_unique_dim(0, size(), prefix_lengths);
   }
 
   int get_cardinality(int from, int to, std::vector<int>& prefix_lengths) {

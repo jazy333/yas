@@ -25,11 +25,11 @@ class File {
   }
 
   template <class Type>
-  virtual int read_vint(Type& val) {
+  int read_vint(Type& val) {
     static_assert(
         (std::is_same<Type, long>::value || std::is_same<Type, int>::value ||
          std::is_same<Type, short>::value),
-        "variable length byte read only support long int short");
+        "variable length byte read only support:long,int,short");
     char one;
     size_t max = sizeof(Type) + 1;
     size_t count = 0;
@@ -48,13 +48,14 @@ class File {
   }
 
   template <class Type>
-  virtual int write_vint(Type val) {
+  int write_vint(Type val) {
     static_assert(
         (std::is_same<Type, long>::value || std::is_same<Type, int>::value ||
          std::is_same<Type, short>::value),
-        "variable length byte write only support long int short ");
+        "variable length byte write only support:long,int,short");
     char output[sizeof(Type) + 1];
-    for (int i = 0; val != 0; ++i) {
+    int i = 0;
+    for (; val != 0; ++i) {
       if (!(val & ~0x7f))
         output[i] = (val & 0x7f);
       else

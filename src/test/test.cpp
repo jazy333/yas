@@ -36,11 +36,11 @@ public:
   TestSorter(initializer_list<int> v) :_data(v) {
   }
 
-  void sort() {
-    sort(0, _data.size());
+  void sort(void* cookie) {
+    sort(0, _data.size(),cookie);
   }
 
-  void select(int from,int to,int k){
+  void select(int from,int to,int k,void* cookie){
   }
 
   void print() {
@@ -48,8 +48,8 @@ public:
     cout << endl;
   }
 
-  virtual void sort(int i, int j) override {
-    binary_sort(i, j);
+  virtual void sort(int i, int j,void* cookie) override {
+    binary_sort(i, j,cookie);
     //heap_sort(i,j);
   }
   virtual void swap(int i, int j) override {
@@ -57,11 +57,11 @@ public:
     _data[i] = _data[j];
     _data[j] = tmp;
   }
-  virtual bool compare(int i, int j) override {
+  virtual bool compare(int i, int j,void* cookie) override {
     return _data[i] < _data[j];
   }
 
-  int byte_at(int i,int pos){
+  int byte_at(int i,int pos,void* cookie){
     return 0;
   }
 private:
@@ -74,8 +74,8 @@ public:
   TestIntroSorter(initializer_list<int> v) :_data(v) {
   }
 
-  void sort() {
-    IntroSorter::sort(0, _data.size());
+  void sort(void* cookie) {
+    IntroSorter::sort(0, _data.size(),cookie);
   }
 
   void print() {
@@ -88,11 +88,11 @@ public:
     _data[i] = _data[j];
     _data[j] = tmp;
   }
-  virtual bool compare(int i, int j) override {
+  virtual bool compare(int i, int j,void* cookie) override {
     return _data[i] < _data[j];
   }
 
-  int byte_at(int i,int pos){
+  int byte_at(int i,int pos,void* cookie){
     return 0;
   }
 private:
@@ -107,12 +107,12 @@ int main(int argc, char* argv[]) {
 
   TestSorter ts({ 1,2,3,1 });
   ts.print();
-  ts.sort();
+  ts.sort(nullptr);
   ts.print();
 
   TestIntroSorter tis({ 1,34,5,6,6,44,333,15,15,15,51,5333,137,56456,8,2,4,7,0,100,100,100,200,399,1399 });
   tis.print();
-  tis.sort();
+  tis.sort(nullptr);
   tis.print();
 
   Point<int, 2> p({ 1,2 }, 1);
@@ -151,6 +151,15 @@ int main(int argc, char* argv[]) {
   cout << "prefix lens:" << endl;
   copy(prefix_lens.begin(), prefix_lens.end(), ostream_iterator<int>(cout, ","));
   cout << endl;
+
+  BkdTree<int,2 > bkd;
+  File* kdm=new MMapFile();
+  kdm->open("data/yas.kdm",true);
+  File* kdi=new MMapFile();
+  kdi->open("data/yas.kdi",true);
+  File* kdd=new MMapFile();
+  kdd->open("data/yas.kdd",true);
+  bkd.pack(&mps,kdm,kdi,kdd);
 
 #if 0
   for (auto iter = mps.begin();iter != mps.end();++iter) {

@@ -27,8 +27,9 @@ namespace yas {
       return points[index];
     }
 
-    virtual int byte_at(int i,int pos) override{
-      return points[i].get_byte(_sorted_dim,pos);
+    virtual int byte_at(int i,int pos,void* cookie) override{
+      int sorted_dim=*(static_cast<int*>(cookie));
+      return points[i].get_byte(sorted_dim,pos);
     }
     virtual ~MemoryPoints() = default;
 
@@ -38,8 +39,9 @@ namespace yas {
       points[j] = tmp;
     }
 
-    virtual bool compare(int i, int j) {
-      return points[i][_sorted_dim] < points[j][_sorted_dim];
+    virtual bool compare(int i, int j,void* cookie) {
+      int sorted_dim=*(static_cast<int*>(cookie));
+      return points[i][sorted_dim] < points[j][sorted_dim];
     }
 
     void minmax(int from, int to, value_type& min, value_type& max) override {
@@ -73,6 +75,5 @@ namespace yas {
   private:
     std::vector<value_type> points;
     int offset;
-    int _sorted_dim;
   };
 }  // namespace yas
