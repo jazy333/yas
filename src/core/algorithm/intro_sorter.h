@@ -23,7 +23,6 @@ class IntroSorter : public Sorter {
   void intro_select(int from, int to, int k, void* cookie);
   void select(int from, int to, int k, int d, int l, void* cookie);
   int histogram[257];
-  int max_length;
 };
 
 const int IntroSorter::LEVEL_THRESHOLD = 8;

@@ -17,21 +17,22 @@ class Point {
   static const int bytes_per_dim;
   static const int bytes_length;
 
-  Point() : docid(-1) {}
+  Point() : docid_(-1) {}
 
   Point(std::initializer_list<T> v, int docid) {
     assert(v.size() == D);
+    docid_=docid;
     std::copy(v.begin(), v.end(), std::begin(point.v));
   }
 
   Point(const Point& p) {
-    docid = p.docid;
+    docid_ = p.docid_;
     std::copy(std::begin(p.point.v), std::end(p.point.v), std::begin(point.v));
   }
 
   Point& operator=(const Point& p) {
     if (&p != this) {
-      docid = p.docid;
+      docid_ = p.docid_;
       std::copy(std::begin(p.point.v), std::end(p.point.v),
                 std::begin(point.v));
     }
@@ -40,7 +41,7 @@ class Point {
 
   virtual ~Point() = default;
 
-  int get_docid() { return docid; }
+  int get_docid() { return docid_; }
 
   T& operator[](int index) {
     assert(index < D && index >= 0);
@@ -66,13 +67,21 @@ class Point {
   u_char* bytes() { return point.bytes; }
 
   u_char get_byte(int dim, int pos) {
-    int index = (dim + 1) * bytes_per_dim - pos - 1;
+    int index = dim * bytes_per_dim + pos;
+    return point.bytes[index];
+  }
+
+  /*
+  *reverse get_byte
+  */
+  u_char get_byte_r(int dim, int pos) {
+    int index = (dim+1) * bytes_per_dim + pos-1;
     return point.bytes[index];
   }
 
   u_char* get_bytes_one_dim(int dim) {
     assert(dim < D);
-    return point.bytes + bytes_per_dim * D;
+    return point.bytes + bytes_per_dim * dim;
   }
 
   size_t bytes_size() { return sizeof(T) * D; }
@@ -113,12 +122,12 @@ class Point {
       os << p.point.v[D - 1];
     }
     os << "]#";
-    os << p.docid;
+    os << p.docid_;
     return os;
   }
 
  private:
-  int docid;
+  int docid_;
   union {
     T v[D];
     u_char bytes[sizeof(T) * D];

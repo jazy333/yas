@@ -23,6 +23,9 @@ class Points : public IntroSorter {
   virtual ~Points() = default;
   virtual void minmax(int from, int to, value_type& min, value_type& max) = 0;
   virtual void minmax(value_type& min, value_type& max) = 0;
+  virtual int max_length(){
+    return value_type::bytes_per_dim;
+  }
 
   int get_split_dimension(value_type& min, value_type& max,
                           std::vector<int>& parent_splits) {
@@ -82,7 +85,8 @@ class Points : public IntroSorter {
     for (int i = from; i < to; ++i) {
       for (int j = 0; j < value_type::dim; ++j) {
         if (prefix_lengths[j] != value_type::bytes_per_dim) {
-          u_char b = get(i).get_byte(j, prefix_lengths[j]);
+          int pos=value_type::bytes_per_dim-prefix_lengths[j]-1;
+          u_char b = get(i).get_byte(j, pos);
           bs[j][b] = true;
         }
       }

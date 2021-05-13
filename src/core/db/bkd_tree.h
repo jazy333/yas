@@ -100,9 +100,7 @@ class BkdTree {
   int build(values_type* storage, File* kdd,
             std::vector<std::shared_ptr<MemoryFile>>& nodes, bool is_left,
             int leaves_offset, int num_leaves, long min_block_fp, int from,
-            int to, value_type& min, value_type& max,
-            std::vector<T>& split_dimension_values,
-            std::vector<int>& split_dimensions, std::vector<int>& parent_splits,
+            int to, value_type& min, value_type& max,std::vector<int>& parent_splits,
             std::vector<off_t>& leaf_block_fps, value_type& last_split_value,
             std::vector<bool>& neg) {
     if (num_leaves == 1) {
@@ -112,7 +110,7 @@ class BkdTree {
       storage->common_prefix_lengths(from, to, common_prefix_lengths);
       int sorted_dim =
           storage->get_least_unique_dim(from, to, common_prefix_lengths);
-      storage->sort(from, to,&sorted_dim);
+      storage->sort(from, to, &sorted_dim);
       int leaf_cardinality =
           storage->get_cardinality(from, to, common_prefix_lengths);
       std::vector<int> docids;
@@ -130,7 +128,7 @@ class BkdTree {
       return 0;
     } else {
       /*left node format :|code|splitvalue|rightchild offset|
-       * right node format :leftchild offset|code|splitvalue|rightchild offset|
+       *right node format :leftchild offset|code|splitvalue|rightchild offset|
        */
       int split_dim, parent_index_len = 0;
       std::shared_ptr<MemoryFile> parent (new MemoryFile());
@@ -157,10 +155,8 @@ class BkdTree {
       int num_right_leaves = num_leaves - num_left_leaves;
       int mid = from + num_left_leaves * 512;
       int prefix_len = min.mismatch(max, split_dim);
-      storage->select(from, to, mid,&split_dim);
+      storage->select(from, to, mid, &split_dim);
       int right = leaves_offset + num_left_leaves;
-      int split = right - 1;
-      split_dimensions[split] = split_dim;
       value_type split_value = storage->get(mid);
       int split_prefix = split_value.mismatch(last_split_value, split_dim);
 
@@ -178,9 +174,7 @@ class BkdTree {
       last_split_value[split_dim] = split_value[split_dim];
 
       int code = (first_diff_byte_delta * (1 + value_type::bytes_per_dim) +
-                  split_prefix) *
-                     value_type::dim +
-                 split_dim;
+                  split_prefix) *value_type::dim +split_dim;
       // dump code
       parent_index_len += parent->write_vint(code);
 
@@ -202,15 +196,12 @@ class BkdTree {
       parent_splits[split_dim]++;
       int left_bytes =
           build(storage, kdd, nodes, true, leaves_offset, num_left_leaves,
-                left_block_fp, from, mid, min, max_split_value,
-                split_dimension_values, split_dimensions, parent_splits,
+                left_block_fp, from, mid, min, max_split_value, parent_splits,
                 leaf_block_fps, last_split_value, neg);
       neg[split_dim] = false;
-
       int right_bytes =
           build(storage, kdd, nodes, false, right, num_right_leaves,
-                left_block_fp, mid, to, min_split_value, max,
-                split_dimension_values, split_dimensions, parent_splits,
+                left_block_fp, mid, to, min_split_value, max, parent_splits,
                 leaf_block_fps, last_split_value, neg);
       // write left bytes
       if (num_left_leaves != 1) {
@@ -231,16 +222,13 @@ class BkdTree {
     int from = 0, to = storage->size();
     int num_leaves = (to - from) / 512 + 1;
     value_type min, max;
-    std::vector<T> split_dimension_values(num_leaves, T());
-    std::vector<int> split_dimensions(num_leaves, 0);
     std::vector<int> parent_splits(value_type::dim, 0);
     std::vector<off_t> leaf_block_fps(num_leaves + 1, 0);
     value_type last_split_value;
     std::vector<bool> neg(value_type::dim, false);
     std::vector<std::shared_ptr<MemoryFile>> nodes;
     build(storage, kdd, nodes, false, 0, num_leaves, 0, from, to, min, max,
-          split_dimension_values, split_dimensions, parent_splits,
-          leaf_block_fps, last_split_value, neg);
+          parent_splits, leaf_block_fps, last_split_value, neg);
   }
 
 #if 0
@@ -268,10 +256,9 @@ class BkdTree {
                            value_type& v) {
     for (int i = 0; i < value_type::dim; ++i) {
       kdd->write_vint(common_prefix_lengths[i]);
-      u_char* bytes = v.bytes();
-      int index =
-          (i + 1) * value_type::bytes_per_dim - common_prefix_lengths[i];
-      kdd->append(bytes + index, index);
+      u_char* bytes = v.get_bytes_one_dim(i);
+      int index =value_type::bytes_per_dim - common_prefix_lengths[i];
+      kdd->append(bytes + index, common_prefix_lengths[i]);
     }
   }
 
@@ -296,9 +283,11 @@ class BkdTree {
       int common_prefix_length = common_prefix_lengths[dim];
       int suffix_length = value_type::bytes_per_dim - common_prefix_length;
       if (suffix_length > 0) {
-        int index = dim * value_type::bytes_per_dim;
-        kdd->append(min.bytes() + index, suffix_length);
-        kdd->append(max.bytes() + index, suffix_length);
+        //int index = dim * value_type::bytes_per_dim;
+        u_char* min_dim_data=min.get_bytes_one_dim(dim);
+        u_char* max_dim_data=max.get_bytes_one_dim(dim);
+        kdd->append(min_dim_data, suffix_length);
+        kdd->append(max_dim_data, suffix_length);
       }
     }
   }
@@ -314,7 +303,7 @@ class BkdTree {
     int offset = 0;
     for (int i = from; i < to;) {
       // do run-length compression
-      char run = run_len(storage, from, from + std::min(to - from, 255), sorted_dim,
+      u_char run = run_len(storage, from, from + std::min(to - from, 255), sorted_dim,
                          common_prefix_lengths[sorted_dim]);
       value_type current = storage->get(i);
       u_char next =
@@ -326,8 +315,7 @@ class BkdTree {
         for (int k = 0; k < value_type::dim; ++k) {
           value_type one = storage->get(j);
           u_char* dim_data = one.get_bytes_one_dim(k);
-          kdd->append(dim_data,
-                      value_type::bytes_per_dim - common_prefix_lengths[k]);
+          kdd->append(dim_data,value_type::bytes_per_dim - common_prefix_lengths[k]);
         }
       }
       i += run;
@@ -354,8 +342,7 @@ class BkdTree {
         kdd->write_vint(cardinality);
         for (int j = 0; j < value_type::dim; ++j) {
           u_char* dim_data = target.get_bytes_one_dim(j);
-          kdd->append(dim_data,
-                      value_type::bytes_per_dim - common_prefix_lengths[j]);
+          kdd->append(dim_data,value_type::bytes_per_dim - common_prefix_lengths[j]);
         }
         cardinality = 1;
         target = value;
@@ -380,12 +367,17 @@ class BkdTree {
         high_cardinality_cost = 0;
         low_cardinality_cost = 1;
       } else {
-        // compute cost of run_len compression
+        /* compute cost of run_len compression
+        */
         int num_run_lens = 0;
         for (int i = 0; i < count;) {
-          // do run-length compression
-          int run = run_len(storage, from, to, sorted_dim,common_prefix_lengths[sorted_dim]);
-          num_run_lens++;
+          /*do run-length compression
+          *we don't need to check the pos,because  we found the sorted_dim wiht least unique,
+          *if prefix_length==bytes_per_dim,we should handle it in previous condition
+          */
+          int pos=value_type::bytes_per_dim-common_prefix_lengths[sorted_dim]-1;
+          int run = run_len(storage, from+i, to, sorted_dim,pos);
+          ++num_run_lens;
           i += run;
         }
         // Add cost of runLen compression,-1 delete the sort dim

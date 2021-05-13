@@ -110,7 +110,7 @@ void IntroSorter::radix_select(int from, int to, int k, int d, int l,
     int bucket_to = bucket_from + histogram[i];
     if (bucket_to > k) {
       partition(from, to, i, bucket_from, bucket_to,d, cookie);
-      if (d + 1 < max_length) {
+      if (d + 1 < max_length()) {
         select(from, to, k, d + 1, l + 1,   cookie);
       }
       return;
@@ -141,7 +141,7 @@ void IntroSorter::quick_select(int from, int to, int k, int depth, void* cookie)
     }
   }
 
-  swap(left + 1, mid);
+  swap(left, mid);
 
   if (k == left) {
     return;
@@ -158,9 +158,9 @@ void IntroSorter::intro_select(int from, int to, int k, void* cookie) {
 
 void IntroSorter::select(int from, int to, int k, int d, int l,  void* cookie) {
   if (to - from < LENGTH_THRESHOLD || l > LEVEL_THRESHOLD) {
-    intro_select(from, to, k,  cookie);
+    intro_select(from, to, k, cookie);
   } else {
-    radix_select(from, to, k, d, l,  cookie);
+    radix_select(from, to, k, d, l, cookie);
   }
 }
 

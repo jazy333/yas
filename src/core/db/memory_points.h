@@ -29,7 +29,7 @@ namespace yas {
 
     virtual int byte_at(int i,int pos,void* cookie) override{
       int sorted_dim=*(static_cast<int*>(cookie));
-      return points[i].get_byte(sorted_dim,pos);
+      return points[i].get_byte_r(sorted_dim,pos);
     }
     virtual ~MemoryPoints() = default;
 

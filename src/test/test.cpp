@@ -2,7 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-
+#include <random>
+#include <ctime>
 
 #include "common.h"
 #include "fnv_hash.h"
@@ -61,8 +62,12 @@ public:
     return _data[i] < _data[j];
   }
 
-  int byte_at(int i,int pos,void* cookie){
+  int byte_at(int i,int pos,void* cookie) override{
     return 0;
+  }
+
+  int max_length() override{
+    return sizeof(int);
   }
 private:
   vector<int> _data;
@@ -92,8 +97,12 @@ public:
     return _data[i] < _data[j];
   }
 
-  int byte_at(int i,int pos,void* cookie){
+  int byte_at(int i,int pos,void* cookie) override{
     return 0;
+  }
+
+  int max_length(){
+    return sizeof(int);
   }
 private:
   vector<int> _data;
@@ -135,7 +144,28 @@ int main(int argc, char* argv[]) {
   mps.write(p2);
   mps.write(p4);
   mps.write(p5);
-
+  std::default_random_engine random(time(nullptr));
+  std::uniform_int_distribution<int> dis1(0, 100);
+  for(int i=0;i<18;++i){
+    int x=dis1(random);
+    int y=dis1(random);
+    Point<int, 2> p({x,y},i);
+    mps.write(p);
+  }
+  int sorted_dim=1;
+  int mid=mps.size()/2;
+  cout<<"before select"<<endl;
+  for(int i=0;i<mps.size();++i){
+    cout<<mps.get(i)<<"||";
+  }
+  cout<<endl;
+  mps.select(0,mps.size(),mps.size()/2,&sorted_dim);
+  cout<<"mid after select :"<<mps.get(mid);
+  cout<<"after select"<<endl;
+  for(int i=0;i<mps.size();++i){
+    cout<<mps.get(i)<<"||";
+  }
+  cout<<endl;
   cout << "mps size:" << mps.size() << endl;
   Point<int, 2> min, max;
   mps.minmax(min, max);
