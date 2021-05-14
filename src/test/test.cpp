@@ -17,6 +17,7 @@
 #include "sorter.h"
 #include "intro_sorter.h"
 #include "bkd_tree.h"
+#include "sortable_bytes.h"
 
 using namespace yas;
 using namespace std;
@@ -114,6 +115,114 @@ int main(int argc, char* argv[]) {
   // MurmurHash2 mh2;
   // mh2.hash64("test",20181220);
 
+  long l1=123123131,l2=123123123123,l3=9983838838,l4=999913123131;
+  int  i1=-1,i2=1,i3=3,i4=-3;
+  double d1=0.11111134141,d2=-0.3333333334242,d3=-1.34324242,d4=9090909.1313131;
+  float f1=3.34,f2=4.321,f3=-0.89,f4=-1000.0;
+  char c4[4];
+  char c8[8];
+  sortable_bytes_encode(i1,c4);
+  for (int i = 0;i <4;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c4[i]&0xff);
+  }
+
+  
+  int i11;
+sortable_bytes_decode(c4,i11);
+cout<<"i11:"<<i11<<endl;
+
+sortable_bytes_encode(i2,c4);
+  for (int i = 0;i < 4;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c4[i]&0xff);
+  }
+
+sortable_bytes_decode(c4,i11);
+cout<<"i12:"<<i11<<endl;
+
+  sortable_bytes_encode(i3,c4);
+  for (int i = 0;i < 4;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c4[i]&0xff);
+  }
+sortable_bytes_decode(c4,i11);
+cout<<"i13:"<<i11<<endl;
+
+  sortable_bytes_encode(i4,c4);
+  for (int i = 0;i <4;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c4[i]&0xff);
+  }
+sortable_bytes_decode(c4,i11);
+cout<<"i14:"<<i11<<endl;
+
+sortable_bytes_encode(f1,c4);
+for (int i = 0;i <4;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c4[i]&0xff);
+  }
+  float f11;
+sortable_bytes_decode(c4,f11);
+cout<<"f11:"<<f11<<endl;
+
+
+  sortable_bytes_encode(f2,c4);
+  for (int i = 0;i <4;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c4[i]&0xff);
+  }
+
+sortable_bytes_decode(c4,f11);
+cout<<"f12:"<<f11<<endl;
+
+sortable_bytes_encode(f3,c4);
+  for (int i = 0;i <4;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c4[i]&0xff);
+  }
+
+sortable_bytes_decode(c4,f11);
+cout<<"f13:"<<f11<<endl;
+
+
+sortable_bytes_encode(l1,c8);
+for (int i = 0;i <8;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c8[i]&0xff);
+}
+long l11;
+sortable_bytes_decode(c8,l11);
+cout<<"l1:"<<l1<<endl;
+cout<<"l11:"<<l11<<endl;
+
+sortable_bytes_encode(l2,c8);
+for (int i = 0;i <8;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c8[i]&0xff);
+}
+l11;
+sortable_bytes_decode(c8,l11);
+cout<<"l2:"<<l2<<endl;
+cout<<"l11:"<<l11<<endl;
+
+sortable_bytes_encode(d1,c8);
+for (int i = 0;i <8;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c8[i]&0xff);
+}
+double d11;
+sortable_bytes_decode(c8,d11);
+cout<<"d1:"<<d1<<endl;
+cout<<"d11:"<<d11<<endl;
+
+sortable_bytes_encode(d2,c8);
+for (int i = 0;i <8;++i) {
+    //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
+    printf("i:%d,v:%x\n", i, c8[i]&0xff);
+  }
+sortable_bytes_decode(c8,d11);
+cout<<"d12:"<<d11<<endl;
   TestSorter ts({ 1,2,3,1 });
   ts.print();
   ts.sort(nullptr);
@@ -145,8 +254,8 @@ int main(int argc, char* argv[]) {
   mps.write(p4);
   mps.write(p5);
   std::default_random_engine random(time(nullptr));
-  std::uniform_int_distribution<int> dis1(0, 100);
-  for(int i=0;i<18;++i){
+  std::uniform_int_distribution<int> dis1(-100, 100);
+  for(int i=0;i<9;++i){
     int x=dis1(random);
     int y=dis1(random);
     Point<int, 2> p({x,y},i);

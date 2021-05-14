@@ -9,6 +9,8 @@
 #include <iterator>
 #include <vector>
 
+#include "sortable_bytes.h"
+
 namespace yas {
 template <class T, int D>
 class Point {

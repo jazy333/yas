@@ -127,10 +127,10 @@ void IntroSorter::quick_select(int from, int to, int k, int depth, void* cookie)
   mid = to - 1;
   int left = from, right = to - 2;
   while (true) {
-    while (left < right && compare(left, mid,  cookie)) {
+    while (compare(left, mid,  cookie)) {
       left++;
     }
-    while (right > left && compare(mid, right,  cookie)) {
+    while (right > left && !compare(right,mid ,cookie)) {
       right--;
     }
 
@@ -140,6 +140,7 @@ void IntroSorter::quick_select(int from, int to, int k, int depth, void* cookie)
       break;
     }
   }
+
 
   swap(left, mid);
 

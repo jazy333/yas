@@ -303,7 +303,7 @@ class BkdTree {
     int offset = 0;
     for (int i = from; i < to;) {
       // do run-length compression
-      u_char run = run_len(storage, from, from + std::min(to - from, 255), sorted_dim,
+      u_char run = run_len(storage, from, from + std::min(to - i, 255), sorted_dim,
                          common_prefix_lengths[sorted_dim]);
       value_type current = storage->get(i);
       u_char next =
@@ -312,8 +312,8 @@ class BkdTree {
       kdd->append(&run, 1);
 
       for (int j = i; j < i + run; j++) {
+        value_type one = storage->get(j);
         for (int k = 0; k < value_type::dim; ++k) {
-          value_type one = storage->get(j);
           u_char* dim_data = one.get_bytes_one_dim(k);
           kdd->append(dim_data,value_type::bytes_per_dim - common_prefix_lengths[k]);
         }

@@ -26,5 +26,5 @@ class IntroSorter : public Sorter {
 };
 
 const int IntroSorter::LEVEL_THRESHOLD = 8;
-const int IntroSorter::LENGTH_THRESHOLD = 100;
+const int IntroSorter::LENGTH_THRESHOLD = 10;
 }  // namespace yas
