@@ -257,7 +257,7 @@ cout<<"d12:"<<d11<<endl;
   mps.write(p5);
   std::default_random_engine random(time(nullptr));
   std::uniform_int_distribution<int> dis1(-100, 100);
-  for(int i=0;i<15;++i){
+  for(int i=0;i<2;++i){
     int x=dis1(random);
     int y=dis1(random);
     Point<int, 2> p({x,y},i);

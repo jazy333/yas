@@ -19,7 +19,12 @@ class Point {
   static const int bytes_per_dim;
   static const int bytes_length;
 
-  Point() : docid_(-1) {}
+  Point() : docid_(-1) {
+    for(int i=0;i<D;++i){
+      u_char* dim_data=point.bytes+i*bytes_per_dim;
+      sortable_bytes_encode(T(),dim_data);
+    }
+  }
 
   Point(std::initializer_list<T> v, int docid) {
     assert(v.size() == D);

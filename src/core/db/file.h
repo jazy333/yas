@@ -55,9 +55,11 @@ class File {
         "variable length byte write only support:long,int,short");
     char output[sizeof(Type) + 1];
     int i = 0;
-    for (; val != 0; ++i) {
-      if (!(val & ~0x7f))
-        output[i] = (val & 0x7f);
+    for (;;++i) {
+      if (!(val & ~0x7f)){
+        output[i++] = (val & 0x7f);
+        break;
+      }
       else
         output[i] = (val & 0x7f) | 0x80;
       val = val >> 7;
