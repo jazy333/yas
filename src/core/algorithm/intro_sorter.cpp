@@ -10,36 +10,36 @@ void IntroSorter::sort(int from, int to,void* cookie) {
 }
 
 int IntroSorter::median_of_three(int from, int median, int to,void* cookie) {
-  if (compare(from, median,cookie) < 0 && compare(median, to,cookie) < 0) {
+  if (compare(from, median,cookie) && compare(median, to,cookie)) {
     return median;
   }
 
-  if (compare(from, to,cookie) < 0 && compare(to, median,cookie) < 0) {
+  if (compare(from, to,cookie) && compare(to, median,cookie)) {
     return to;
   }
 
-  if (compare(median, from,cookie) < 0 && compare(from, to,cookie) < 0) {
+  if (compare(median, from,cookie)  && compare(from, to,cookie) ) {
     return from;
   }
 
-  if (compare(median, to,cookie) < 0 && compare(to, from,cookie) < 0) {
+  if (compare(median, to,cookie) && compare(to, from,cookie) ) {
     return to;
   }
 
-  if (compare(to, from,cookie) < 0 && compare(from, to,cookie) < 0) {
+  if (compare(to, from,cookie)  && compare(from, to,cookie) ) {
     return from;
   }
 
-  if (compare(to, median,cookie) < 0 && compare(median, from,cookie) < 0) {
+  if (compare(to, median,cookie)  && compare(median, from,cookie)) {
     return median;
   }
-  return 0;
+  return median;
 }
 
 int IntroSorter::partition(int from, int to,void* cookie) {
   int low = from;
-  for (int i = from; i < to; ++i) {
-    if (compare(i, to - 1,cookie) < 0) {
+  for (int i = from; i < to-1; ++i) {
+    if (compare(i, to - 1,cookie)) {
       swap(low, i);
       low++;
     }
@@ -49,7 +49,7 @@ int IntroSorter::partition(int from, int to,void* cookie) {
 }
 
 void IntroSorter::quick_sort(int from, int to, int depth,void* cookie) {
-  if (from - to < BINARY_SORT_THRESHOLD) {
+  if (to-from < BINARY_SORT_THRESHOLD) {
     return binary_sort(from, to,cookie);
   } else if (--depth < 0) {
     return heap_sort(from, to,cookie);
@@ -86,7 +86,7 @@ void IntroSorter::partition(int from, int to, int bucket, int bucket_from,
       byte_left = byte_at(left, d,cookie);
     }
 
-    while (byte_right >= bucket && right > bucket_to) {
+    while (byte_right >= bucket && right >= bucket_to) {
       if (byte_right == bucket) {
         swap(right, bucket_left++);
       } else {
@@ -95,7 +95,7 @@ void IntroSorter::partition(int from, int to, int bucket, int bucket_from,
       byte_right = byte_at(right, d,cookie);
     }
 
-    if (left < bucket_from && right > bucket_to) {
+    if (left < bucket_from && right >= bucket_to) {
       swap(left++, right--);
     } else
       break;
@@ -109,9 +109,9 @@ void IntroSorter::radix_select(int from, int to, int k, int d, int l,
   for (int i = 0; i < 257; ++i) {
     int bucket_to = bucket_from + histogram[i];
     if (bucket_to > k) {
-      partition(from, to, i, bucket_from, bucket_to,d, cookie);
+      partition(from, to, i, bucket_from, bucket_to, d, cookie);
       if (d + 1 < max_length()) {
-        select(from, to, k, d + 1, l + 1,   cookie);
+        select(bucket_from, bucket_to, k, d + 1, l + 1, cookie);
       }
       return;
     }

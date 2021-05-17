@@ -24,7 +24,13 @@ class Point {
   Point(std::initializer_list<T> v, int docid) {
     assert(v.size() == D);
     docid_=docid;
-    std::copy(v.begin(), v.end(), std::begin(point.v));
+    //std::copy(v.begin(), v.end(), std::begin(point.v));
+    int index=0;
+    for(auto p:v){
+      u_char* dim_data=point.bytes+index*bytes_per_dim;
+      sortable_bytes_encode(p,dim_data);
+      index++;
+    }
   }
 
   Point(const Point& p) {
@@ -45,15 +51,32 @@ class Point {
 
   int get_docid() { return docid_; }
 
-  T& operator[](int index) {
-    assert(index < D && index >= 0);
-    return point.v[index];
+  T get(int dim) const {
+    T d;
+    sortable_bytes_decode(point.bytes+dim*bytes_per_dim,d);
+    return d;
   }
 
+  void set(T d,int dim){
+    u_char* dim_data=point.bytes+dim*bytes_per_dim;
+    sortable_bytes_encode(d,dim_data);
+  }
+
+/*
+  T operator[](int index) {
+    assert(index < D && index >= 0);
+    T d;
+    sortable_bytes_decode(point.bytes+index*bytes_per_dim,d);
+    return d;
+  }
+*/
   Point operator-(const Point& p) {
     Point r;
     for (int i = 0; i < D; ++i) {
-      r[i] = point.v[i] - p.point.v[i];
+      T diff;
+      //r[i] = point.v[i] - p.point.v[i];
+      diff=get(i)-p.get(i);
+      r.set(diff,i);
     }
     return r;
   }
@@ -64,6 +87,11 @@ class Point {
 
   bool operator!=(const Point& p) {
     return memcmp(p.point.bytes, point.bytes, bytes_size()) != 0;
+  }
+
+  int compare(const Point& p,int dim){
+    int index=dim * bytes_per_dim ;
+    return memcmp(point.bytes+index,p.point.bytes+index,bytes_per_dim);
   }
 
   u_char* bytes() { return point.bytes; }
@@ -86,16 +114,21 @@ class Point {
     return point.bytes + bytes_per_dim * dim;
   }
 
+  u_char* get_bytes(int dim) {
+    assert(dim < D);
+    return point.bytes + bytes_per_dim * dim;
+  }
+
   size_t bytes_size() { return sizeof(T) * D; }
 
   int mismatch(const Point& p, int dim) {
-    int index = (dim + 1) * bytes_per_dim - 1;
-    int i = bytes_per_dim - 1;
-    for (; i >= 0; --i) {
+    int index = dim* bytes_per_dim;
+    int i = 0;
+    for (; i <bytes_per_dim; ++i) {
       index += i;
       if (point.bytes[index] != p.point.bytes[index]) break;
     }
-    return bytes_per_dim - i;
+    return i;
   }
 
   void prefix_lens_per_dim(const Point& p, const std::vector<int>& ends,
@@ -104,7 +137,7 @@ class Point {
     for (int i = 0; i < D; ++i) {
       int j = 0, end = ends[i];
       for (; j < end; ++j) {
-        int index = (i + 1) * bytes_per_dim - j - 1;
+        int index = (i) * bytes_per_dim +j;
         if (point.bytes[index] != p.point.bytes[index]) {
           break;
         }
@@ -115,13 +148,22 @@ class Point {
 
   friend std::ostream& operator<<(std::ostream& os, const Point<T, D>& p) {
     os << '[';
-    if (D == 1)
+    if (D == 1){
       std::copy(std::begin(p.point.v), std::end(p.point.v),
                 std::ostream_iterator<T>(os, ""));
+      T d;
+      sortable_bytes_decode(p.point.bytes,d);
+      os<<d;
+    }
     else {
-      std::copy(std::begin(p.point.v), std::end(p.point.v) - 1,
-                std::ostream_iterator<T>(os, ","));
-      os << p.point.v[D - 1];
+      for(int i=0;i<D;++i){
+        T d;
+        int index=i*bytes_per_dim;
+        sortable_bytes_decode(p.point.bytes+index,d);
+        os<<d;
+        if(i!=D-1)
+        os<<",";
+      }
     }
     os << "]#";
     os << p.docid_;

@@ -171,7 +171,7 @@ class BkdTree {
         }
       }
 
-      last_split_value[split_dim] = split_value[split_dim];
+      last_split_value.set(split_value.get(split_dim),split_dim);
 
       int code = (first_diff_byte_delta * (1 + value_type::bytes_per_dim) +
                   split_prefix) *value_type::dim +split_dim;
@@ -191,8 +191,8 @@ class BkdTree {
 
       value_type min_split_value = min;
       value_type max_split_value = max;
-      min_split_value[split_dim] = split_value[split_dim];
-      max_split_value[split_dim] = split_value[split_dim];
+      min_split_value.set(split_value.get(split_dim),split_dim);
+      max_split_value.set(split_value.get(split_dim),split_dim);
       parent_splits[split_dim]++;
       int left_bytes =
           build(storage, kdd, nodes, true, leaves_offset, num_left_leaves,
@@ -258,7 +258,7 @@ class BkdTree {
       kdd->write_vint(common_prefix_lengths[i]);
       u_char* bytes = v.get_bytes_one_dim(i);
       int index =value_type::bytes_per_dim - common_prefix_lengths[i];
-      kdd->append(bytes + index, common_prefix_lengths[i]);
+      kdd->append(bytes, common_prefix_lengths[i]);
     }
   }
 
@@ -286,8 +286,8 @@ class BkdTree {
         //int index = dim * value_type::bytes_per_dim;
         u_char* min_dim_data=min.get_bytes_one_dim(dim);
         u_char* max_dim_data=max.get_bytes_one_dim(dim);
-        kdd->append(min_dim_data, suffix_length);
-        kdd->append(max_dim_data, suffix_length);
+        kdd->append(min_dim_data+common_prefix_length, suffix_length);
+        kdd->append(max_dim_data+common_prefix_length, suffix_length);
       }
     }
   }
@@ -315,7 +315,7 @@ class BkdTree {
         value_type one = storage->get(j);
         for (int k = 0; k < value_type::dim; ++k) {
           u_char* dim_data = one.get_bytes_one_dim(k);
-          kdd->append(dim_data,value_type::bytes_per_dim - common_prefix_lengths[k]);
+          kdd->append(dim_data+common_prefix_lengths[k],value_type::bytes_per_dim - common_prefix_lengths[k]);
         }
       }
       i += run;
@@ -342,7 +342,7 @@ class BkdTree {
         kdd->write_vint(cardinality);
         for (int j = 0; j < value_type::dim; ++j) {
           u_char* dim_data = target.get_bytes_one_dim(j);
-          kdd->append(dim_data,value_type::bytes_per_dim - common_prefix_lengths[j]);
+          kdd->append(dim_data+common_prefix_lengths[j],value_type::bytes_per_dim - common_prefix_lengths[j]);
         }
         cardinality = 1;
         target = value;

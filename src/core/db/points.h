@@ -39,15 +39,15 @@ class Points : public IntroSorter {
     int dim = value_type::dim;
 
     for (int i = 0; i < dim; ++i) {
-      if (parent_splits[i] < max_splits / 2 && min[i] != max[i]) return i;
+      if (parent_splits[i] < max_splits / 2 && min.get(i) != max.get(i)) return i;
     }
 
     int split_dim = -1;
     T max_dim_diff;
     value_type diff = max - min;
     for (int i = 0; i < dim; ++i) {
-      if (diff[i] > max_dim_diff) {
-        max_dim_diff = diff[i];
+      if (diff.get(i)> max_dim_diff) {
+        max_dim_diff = diff.get(i);
         split_dim = i;
       }
     }
@@ -85,7 +85,7 @@ class Points : public IntroSorter {
     for (int i = from; i < to; ++i) {
       for (int j = 0; j < value_type::dim; ++j) {
         if (prefix_lengths[j] != value_type::bytes_per_dim) {
-          int pos=value_type::bytes_per_dim-prefix_lengths[j]-1;
+          int pos=prefix_lengths[j]+1;
           u_char b = get(i).get_byte(j, pos);
           bs[j][b] = true;
         }

@@ -21,9 +21,8 @@ class Sorter {
 
   virtual void binary_sort(int from, int to, void* cookie) {
     for (int i = from + 1; i < to; ++i) {
-      int j = i - 1;
       int loc = binary_search(from, i, i, cookie);
-      for (int k = i; k > loc; k--) {
+      for (int k = i; k >loc; k--) {
         swap(k, k - 1);
       }
     }
@@ -50,7 +49,7 @@ class Sorter {
         i = mid + 1;
       }
     }
-    return compare(k, i, cookie) < 0 ? i : (i + 1);
+    return compare(k, i, cookie)  ? i : (i + 1);
   }
 
   void heapify(int from, int to, void* cookie) {
@@ -59,17 +58,17 @@ class Sorter {
     int right = 2 * from + 2;
 
     while (left < to) {
-      if (right < to && compare(left, right, cookie)) {
+      if (right < to && compare(left,right, cookie)) {
         left = right;
       }
 
-      if (!compare(parent, left, cookie))
+      if (compare(left,parent,cookie))
         return;
       else {
         swap(parent, left);
         parent = left;
-        left = parent * 2;
-        right = left + 1;
+        left = parent * 2+1;
+        right = parent*2 + 2;
       }
     }
   }

@@ -29,7 +29,7 @@ namespace yas {
 
     virtual int byte_at(int i,int pos,void* cookie) override{
       int sorted_dim=*(static_cast<int*>(cookie));
-      return points[i].get_byte_r(sorted_dim,pos);
+      return points[i].get_byte(sorted_dim,pos);
     }
     virtual ~MemoryPoints() = default;
 
@@ -41,7 +41,7 @@ namespace yas {
 
     virtual bool compare(int i, int j,void* cookie) {
       int sorted_dim=*(static_cast<int*>(cookie));
-      return points[i][sorted_dim] < points[j][sorted_dim];
+      return points[i].get(sorted_dim) < points[j].get(sorted_dim);
     }
 
     void minmax(int from, int to, value_type& min, value_type& max) override {
@@ -55,12 +55,12 @@ namespace yas {
       for (int i = from + 1;i < to;++i) {
         value_type v = points[i];
         for (int j = 0;j < dim;++j) {
-          if (min[j] > v[j]) {
-            min[j] = v[j];
+          if (min.compare(v,j)>0) {
+            min.set(v.get(j),j);
           }
 
-          if (max[j] < v[j]) {
-            max[j] = v[j];
+          if (max.compare(v,j)<0) {
+            max.set(v.get(j),j);
           }
         }
       }

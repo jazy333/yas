@@ -119,8 +119,8 @@ int main(int argc, char* argv[]) {
   int  i1=-1,i2=1,i3=3,i4=-3;
   double d1=0.11111134141,d2=-0.3333333334242,d3=-1.34324242,d4=9090909.1313131;
   float f1=3.34,f2=4.321,f3=-0.89,f4=-1000.0;
-  char c4[4];
-  char c8[8];
+  u_char c4[4];
+  u_char c8[8];
   sortable_bytes_encode(i1,c4);
   for (int i = 0;i <4;++i) {
     //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
@@ -231,11 +231,13 @@ cout<<"d12:"<<d11<<endl;
   TestIntroSorter tis({ 1,34,5,6,6,44,333,15,15,15,51,5333,137,56456,8,2,4,7,0,100,100,100,200,399,1399 });
   tis.print();
   tis.sort(nullptr);
+  //tis.heap_sort(0,25,0);
+  //tis.quick_sort(0,25,0);
   tis.print();
 
   Point<int, 2> p({ 1,2 }, 1);
   Point<int, 3> p3({ 1,2,3 }, 2);
-  cout << "sizeof point 2 int:" << sizeof(p) << ",0:" << p[0] << ",1:" << p[1] << endl;
+  cout << "sizeof point 2 int:" << sizeof(p) << ",0:" << p.get(0) << ",1:" << p.get(1) << endl;
   u_char* bytes = p.bytes();
   for (int i = 0;i < p.bytes_size();++i) {
     //cout<<"index "<<i<<":"<<"byte:"<<hex<<bytes[i]<<endl;
@@ -243,7 +245,7 @@ cout<<"d12:"<<d11<<endl;
   }
 
   Point<int, 2> p2 = p;
-  cout << "sizeof point2 2 int:" << sizeof(p) << ",0:" << p2[0] << ",1:" << p2[1] << endl;
+  cout << "sizeof point2 2 int:" << sizeof(p) << ",0:" << p2.get(0)<< ",1:" << p2.get(1) << endl;
 
   Point<int, 2> p4({ 3,4 }, 2);
   cout << "p4:" << p4 << endl;
@@ -255,7 +257,7 @@ cout<<"d12:"<<d11<<endl;
   mps.write(p5);
   std::default_random_engine random(time(nullptr));
   std::uniform_int_distribution<int> dis1(-100, 100);
-  for(int i=0;i<9;++i){
+  for(int i=0;i<15;++i){
     int x=dis1(random);
     int y=dis1(random);
     Point<int, 2> p({x,y},i);
