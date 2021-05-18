@@ -183,7 +183,7 @@ class BkdTree {
         // write split value
         parent_index_len += split_suffix;
         u_char* svb = split_value.get_bytes_one_dim(split_dim);
-        parent->append(svb+split_prefix ,split_suffix);
+        parent->append(svb+split_prefix+1 ,split_suffix-1);
       }
 
       bool last_neg = neg[split_dim];
@@ -277,7 +277,7 @@ class BkdTree {
   void write_minmax(values_type* storage, File* kdd, int from, int to,
                     const std::vector<int>& common_prefix_lengths) {
     value_type min, max;
-    storage->minmax(min, max);
+    storage->minmax(from,to,min, max);
 
     for (int dim = 0; dim < value_type::dim; ++dim) {
       int common_prefix_length = common_prefix_lengths[dim];
@@ -298,23 +298,25 @@ class BkdTree {
     if (value_type::dim != 1) {
       write_minmax(storage, kdd, from, to, common_prefix_lengths);
     }
+
+    int run_len_pos=common_prefix_lengths[sorted_dim];
     // sorted dim has another prefix, ++
     common_prefix_lengths[sorted_dim]++;
     int offset = 0;
     for (int i = from; i < to;) {
       // do run-length compression
       u_char run = run_len(storage, from, from + std::min(to - i, 255), sorted_dim,
-                         common_prefix_lengths[sorted_dim]);
+                         run_len_pos);
       value_type current = storage->get(i);
       u_char next =
-          current.get_byte(sorted_dim, common_prefix_lengths[sorted_dim]);
+          current.get_byte(sorted_dim, run_len_pos);
       kdd->append(&next, 1);
       kdd->append(&run, 1);
 
       for (int j = i; j < i + run; j++) {
         value_type one = storage->get(j);
         for (int k = 0; k < value_type::dim; ++k) {
-          u_char* dim_data = one.get_bytes_one_dim(k);
+          u_char* dim_data = one.get_bytes(k);
           kdd->append(dim_data+common_prefix_lengths[k],value_type::bytes_per_dim - common_prefix_lengths[k]);
         }
       }

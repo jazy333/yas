@@ -130,8 +130,7 @@ class Point {
     int index = dim* bytes_per_dim;
     int i = 0;
     for (; i <bytes_per_dim; ++i) {
-      index += i;
-      if (point.bytes[index] != p.point.bytes[index]) break;
+      if (point.bytes[index+i] != p.point.bytes[index+i]) break;
     }
     return i;
   }
