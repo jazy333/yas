@@ -301,6 +301,7 @@ cout<<"d12:"<<d11<<endl;
   File* kdd=new MMapFile();
   kdd->open("data/yas.kdd",true);
   bkd.pack(&mps,kdm,kdi,kdd);
+  bkd.intersect(min,max,kdi,kdd);
 
 #if 0
   for (auto iter = mps.begin();iter != mps.end();++iter) {

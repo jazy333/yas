@@ -5,41 +5,41 @@
 
 namespace yas {
 
-void IntroSorter::sort(int from, int to,void* cookie) {
-  quick_sort(from, to, 2 * static_cast<int>(log2(to - from)),cookie);
+void IntroSorter::sort(int from, int to, void* cookie) {
+  quick_sort(from, to, 2 * static_cast<int>(log2(to - from)), cookie);
 }
 
-int IntroSorter::median_of_three(int from, int median, int to,void* cookie) {
-  if (compare(from, median,cookie) && compare(median, to,cookie)) {
+int IntroSorter::median_of_three(int from, int median, int to, void* cookie) {
+  if (compare(from, median, cookie) && compare(median, to, cookie)) {
     return median;
   }
 
-  if (compare(from, to,cookie) && compare(to, median,cookie)) {
+  if (compare(from, to, cookie) && compare(to, median, cookie)) {
     return to;
   }
 
-  if (compare(median, from,cookie)  && compare(from, to,cookie) ) {
+  if (compare(median, from, cookie) && compare(from, to, cookie)) {
     return from;
   }
 
-  if (compare(median, to,cookie) && compare(to, from,cookie) ) {
+  if (compare(median, to, cookie) && compare(to, from, cookie)) {
     return to;
   }
 
-  if (compare(to, from,cookie)  && compare(from, to,cookie) ) {
+  if (compare(to, from, cookie) && compare(from, to, cookie)) {
     return from;
   }
 
-  if (compare(to, median,cookie)  && compare(median, from,cookie)) {
+  if (compare(to, median, cookie) && compare(median, from, cookie)) {
     return median;
   }
   return median;
 }
 
-int IntroSorter::partition(int from, int to,void* cookie) {
+int IntroSorter::partition(int from, int to, void* cookie) {
   int low = from;
-  for (int i = from; i < to-1; ++i) {
-    if (compare(i, to - 1,cookie)) {
+  for (int i = from; i < to - 1; ++i) {
+    if (compare(i, to - 1, cookie)) {
       swap(low, i);
       low++;
     }
@@ -48,42 +48,42 @@ int IntroSorter::partition(int from, int to,void* cookie) {
   return low;
 }
 
-void IntroSorter::quick_sort(int from, int to, int depth,void* cookie) {
-  if (to-from < BINARY_SORT_THRESHOLD) {
-    return binary_sort(from, to,cookie);
+void IntroSorter::quick_sort(int from, int to, int depth, void* cookie) {
+  if (to - from < BINARY_SORT_THRESHOLD) {
+    return binary_sort(from, to, cookie);
   } else if (--depth < 0) {
-    return heap_sort(from, to,cookie);
+    return heap_sort(from, to, cookie);
   }
 
-  int median = median_of_three(from, (from + to) / 2, to - 1,cookie);
+  int median = median_of_three(from, (from + to) / 2, to - 1, cookie);
   swap(median, to - 1);
-  int pivot = partition(from, to,cookie);
+  int pivot = partition(from, to, cookie);
 
-  quick_sort(from, pivot, depth,cookie);
-  quick_sort(pivot + 1, to, depth,cookie);
+  quick_sort(from, pivot, depth, cookie);
+  quick_sort(pivot + 1, to, depth, cookie);
 }
 
-void IntroSorter::build_histogram(int from, int to, int d,void* cookie) {
+void IntroSorter::build_histogram(int from, int to, int d, void* cookie) {
   memset(histogram, 0, sizeof(histogram));
   for (int i = from; i < to; ++i) {
-    histogram[byte_at(i, d,cookie)]++;
+    histogram[byte_at(i, d, cookie)]++;
   }
 }
 
 void IntroSorter::partition(int from, int to, int bucket, int bucket_from,
-                            int bucket_to, int d,void* cookie) {
+                            int bucket_to, int d, void* cookie) {
   int left = from, right = to - 1;
   int bucket_left = bucket_from;
   while (true) {
-    int byte_left = byte_at(left, d,cookie);
-    int byte_right = byte_at(right, d,cookie);
+    int byte_left = byte_at(left, d, cookie);
+    int byte_right = byte_at(right, d, cookie);
     while (byte_left <= bucket && left < bucket_from) {
       if (byte_left == bucket) {
         swap(left, bucket_left++);
       } else {
         left++;
       }
-      byte_left = byte_at(left, d,cookie);
+      byte_left = byte_at(left, d, cookie);
     }
 
     while (byte_right >= bucket && right >= bucket_to) {
@@ -92,7 +92,7 @@ void IntroSorter::partition(int from, int to, int bucket, int bucket_from,
       } else {
         right--;
       }
-      byte_right = byte_at(right, d,cookie);
+      byte_right = byte_at(right, d, cookie);
     }
 
     if (left < bucket_from && right >= bucket_to) {
@@ -104,7 +104,7 @@ void IntroSorter::partition(int from, int to, int bucket, int bucket_from,
 
 void IntroSorter::radix_select(int from, int to, int k, int d, int l,
                                void* cookie) {
-  build_histogram(from, to, d,cookie);
+  build_histogram(from, to, d, cookie);
   int bucket_from = from;
   for (int i = 0; i < 257; ++i) {
     int bucket_to = bucket_from + histogram[i];
@@ -119,7 +119,8 @@ void IntroSorter::radix_select(int from, int to, int k, int d, int l,
   }
 }
 
-void IntroSorter::quick_select(int from, int to, int k, int depth, void* cookie) {
+void IntroSorter::quick_select(int from, int to, int k, int depth,
+                               void* cookie) {
   if (from == to - 1) return;
 
   int mid = (from + to) >> 1;
@@ -127,10 +128,10 @@ void IntroSorter::quick_select(int from, int to, int k, int depth, void* cookie)
   mid = to - 1;
   int left = from, right = to - 2;
   while (true) {
-    while (compare(left, mid,  cookie)) {
+    while (compare(left, mid, cookie)) {
       left++;
     }
-    while (right > left && !compare(right,mid ,cookie)) {
+    while (right > left && !compare(right, mid, cookie)) {
       right--;
     }
 
@@ -141,13 +142,12 @@ void IntroSorter::quick_select(int from, int to, int k, int depth, void* cookie)
     }
   }
 
-
   swap(left, mid);
 
   if (k == left) {
     return;
   } else if (k > left) {
-    quick_select(left + 1, to, k, depth--,cookie);
+    quick_select(left + 1, to, k, depth--, cookie);
   } else {
     quick_select(from, left, k, depth--, cookie);
   }
@@ -157,7 +157,7 @@ void IntroSorter::intro_select(int from, int to, int k, void* cookie) {
   quick_select(from, to, k, static_cast<int>(log2(to - from)), cookie);
 }
 
-void IntroSorter::select(int from, int to, int k, int d, int l,  void* cookie) {
+void IntroSorter::select(int from, int to, int k, int d, int l, void* cookie) {
   if (to - from < LENGTH_THRESHOLD || l > LEVEL_THRESHOLD) {
     intro_select(from, to, k, cookie);
   } else {
@@ -165,7 +165,7 @@ void IntroSorter::select(int from, int to, int k, int d, int l,  void* cookie) {
   }
 }
 
-void IntroSorter::select(int from, int to, int k, void* cookie){
+void IntroSorter::select(int from, int to, int k, void* cookie) {
   select(from, to, k, 0, 0, cookie);
 }
 }  // namespace yas

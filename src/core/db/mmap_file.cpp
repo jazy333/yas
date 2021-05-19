@@ -1,5 +1,6 @@
 
 
+#define _LARGEFILE64_SOURCE
 #include "mmap_file.h"
 
 #include <fcntl.h>
@@ -22,8 +23,7 @@ MMapFile::MMapFile()
       map_size_(1 << 20LL),
       lock_size_(0),
       writable_(true),
-      open_options_(0)
-       {
+      open_options_(0) {
   pthread_rwlock_init(&rwlock_, nullptr);
 }
 
@@ -143,6 +143,7 @@ int MMapFile::read(int64_t off, void* buf, size_t size) {
   int64_t read_end = off + size;
   if (read_end > file_size_) {
     std::cout << "read exceed end:" << std::endl;
+    return -1;
   }
 
   if (read_end > map_size_) {
@@ -151,12 +152,12 @@ int MMapFile::read(int64_t off, void* buf, size_t size) {
     std::memcpy(buf, map_ + off, size);
   }
   pthread_rwlock_unlock(&rwlock_);
-  return 0;
+  return size;
 }
 
 int MMapFile::read(void* buf, size_t size) {
   pthread_rwlock_rdlock(&rwlock_);
-  int64_t off = lseek(fd_, 0, SEEK_CUR);
+  loff_t off = lseek64(fd_, 0, SEEK_CUR);
   int64_t read_end = off + size;
   if (read_end > file_size_) {
     std::cout << "read exceed end:" << std::endl;
@@ -168,7 +169,7 @@ int MMapFile::read(void* buf, size_t size) {
     std::memcpy(buf, map_ + off, size);
   }
   pthread_rwlock_unlock(&rwlock_);
-  return 0;
+  return size;
 }
 
 int MMapFile::write(int64_t off, const void* buf, size_t size) {
@@ -191,7 +192,7 @@ int MMapFile::write(int64_t off, const void* buf, size_t size) {
   } else
     std::memcpy(map_ + off, buf, size);
   pthread_rwlock_unlock(&rwlock_);
-  return 0;
+  return size;
 }
 
 int MMapFile::append(const void* buf, size_t size, int64_t* off) {
@@ -200,7 +201,7 @@ int MMapFile::append(const void* buf, size_t size, int64_t* off) {
   }
   write(-1, buf, size);
 
-  return 0;
+  return size;
 }
 
 int MMapFile::truncate(size_t size) {
@@ -236,7 +237,11 @@ int MMapFile::size(int64_t* size) {
   return 0;
 }
 
-int64_t MMapFile::size() { return file_size_; }
+off64_t MMapFile::seek(off64_t offset) {
+  return lseek64(fd_, offset, SEEK_SET);
+}
+
+size_t MMapFile::size() { return file_size_; }
 
 std::unique_ptr<File> MMapFile::make() {
   return std::unique_ptr<File>(new MMapFile());

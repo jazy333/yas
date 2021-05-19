@@ -17,7 +17,8 @@ class MMapFile : public File {
   int sync() override;
   int truncate(size_t size) override;
   int size(int64_t* size) override;
-  int64_t size()  override;
+  size_t size()  override;
+  off64_t seek(off64_t offset) override;
   std::unique_ptr<File> make()  override;
 
  private:

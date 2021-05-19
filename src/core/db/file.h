@@ -25,7 +25,7 @@ class File {
   }
 
   template <class Type>
-  int read_vint(Type& val) {
+  int read_vint(loff_t off, Type& val) {
     static_assert(
         (std::is_same<Type, long>::value || std::is_same<Type, int>::value ||
          std::is_same<Type, short>::value),
@@ -35,7 +35,7 @@ class File {
     size_t count = 0;
     val = 0;
     while (count < max) {
-      int ret = read(&one, 1);
+      int ret = read(off + count, &one, 1);
       if (ret == 1) {
         val |= (one & 0x7f) << (count * 7);
         if (!(one & 0x80)) break;
@@ -44,7 +44,7 @@ class File {
       }
       ++count;
     }
-    return count;
+    return count+1;
   }
 
   template <class Type>
@@ -55,12 +55,11 @@ class File {
         "variable length byte write only support:long,int,short");
     char output[sizeof(Type) + 1];
     int i = 0;
-    for (;;++i) {
-      if (!(val & ~0x7f)){
+    for (;; ++i) {
+      if (!(val & ~0x7f)) {
         output[i++] = (val & 0x7f);
         break;
-      }
-      else
+      } else
         output[i] = (val & 0x7f) | 0x80;
       val = val >> 7;
     }
@@ -73,7 +72,8 @@ class File {
   virtual int truncate(size_t size) = 0;
   virtual int sync() { return 0; }
   virtual int size(int64_t* size) = 0;
-  virtual int64_t size() = 0;
+  virtual size_t size() = 0;
+  virtual off64_t seek(off64_t offset) = 0;
   virtual std::unique_ptr<File> make() = 0;
 };
 }  // namespace yas

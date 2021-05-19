@@ -20,20 +20,20 @@ class Point {
   static const int bytes_length;
 
   Point() : docid_(-1) {
-    for(int i=0;i<D;++i){
-      u_char* dim_data=point.bytes+i*bytes_per_dim;
-      sortable_bytes_encode(T(),dim_data);
+    for (int i = 0; i < D; ++i) {
+      u_char* dim_data = point.bytes + i * bytes_per_dim;
+      sortable_bytes_encode(T(), dim_data);
     }
   }
 
   Point(std::initializer_list<T> v, int docid) {
     assert(v.size() == D);
-    docid_=docid;
-    //std::copy(v.begin(), v.end(), std::begin(point.v));
-    int index=0;
-    for(auto p:v){
-      u_char* dim_data=point.bytes+index*bytes_per_dim;
-      sortable_bytes_encode(p,dim_data);
+    docid_ = docid;
+    // std::copy(v.begin(), v.end(), std::begin(point.v));
+    int index = 0;
+    for (auto p : v) {
+      u_char* dim_data = point.bytes + index * bytes_per_dim;
+      sortable_bytes_encode(p, dim_data);
       index++;
     }
   }
@@ -58,30 +58,30 @@ class Point {
 
   T get(int dim) const {
     T d;
-    sortable_bytes_decode(point.bytes+dim*bytes_per_dim,d);
+    sortable_bytes_decode(point.bytes + dim * bytes_per_dim, d);
     return d;
   }
 
-  void set(T d,int dim){
-    u_char* dim_data=point.bytes+dim*bytes_per_dim;
-    sortable_bytes_encode(d,dim_data);
+  void set(T d, int dim) {
+    u_char* dim_data = point.bytes + dim * bytes_per_dim;
+    sortable_bytes_encode(d, dim_data);
   }
 
-/*
-  T operator[](int index) {
-    assert(index < D && index >= 0);
-    T d;
-    sortable_bytes_decode(point.bytes+index*bytes_per_dim,d);
-    return d;
-  }
-*/
+  /*
+    T operator[](int index) {
+      assert(index < D && index >= 0);
+      T d;
+      sortable_bytes_decode(point.bytes+index*bytes_per_dim,d);
+      return d;
+    }
+  */
   Point operator-(const Point& p) {
     Point r;
     for (int i = 0; i < D; ++i) {
       T diff;
-      //r[i] = point.v[i] - p.point.v[i];
-      diff=get(i)-p.get(i);
-      r.set(diff,i);
+      // r[i] = point.v[i] - p.point.v[i];
+      diff = get(i) - p.get(i);
+      r.set(diff, i);
     }
     return r;
   }
@@ -94,9 +94,9 @@ class Point {
     return memcmp(p.point.bytes, point.bytes, bytes_size()) != 0;
   }
 
-  int compare(const Point& p,int dim){
-    int index=dim * bytes_per_dim ;
-    return memcmp(point.bytes+index,p.point.bytes+index,bytes_per_dim);
+  int compare(const Point& p, int dim) {
+    int index = dim * bytes_per_dim;
+    return memcmp(point.bytes + index, p.point.bytes + index, bytes_per_dim);
   }
 
   u_char* bytes() { return point.bytes; }
@@ -107,10 +107,10 @@ class Point {
   }
 
   /*
-  *reverse get_byte
-  */
+   *reverse get_byte
+   */
   u_char get_byte_r(int dim, int pos) {
-    int index = (dim+1) * bytes_per_dim + pos-1;
+    int index = (dim + 1) * bytes_per_dim + pos - 1;
     return point.bytes[index];
   }
 
@@ -127,10 +127,10 @@ class Point {
   size_t bytes_size() { return sizeof(T) * D; }
 
   int mismatch(const Point& p, int dim) {
-    int index = dim* bytes_per_dim;
+    int index = dim * bytes_per_dim;
     int i = 0;
-    for (; i <bytes_per_dim; ++i) {
-      if (point.bytes[index+i] != p.point.bytes[index+i]) break;
+    for (; i < bytes_per_dim; ++i) {
+      if (point.bytes[index + i] != p.point.bytes[index + i]) break;
     }
     return i;
   }
@@ -141,7 +141,7 @@ class Point {
     for (int i = 0; i < D; ++i) {
       int j = 0, end = ends[i];
       for (; j < end; ++j) {
-        int index = (i) * bytes_per_dim +j;
+        int index = (i)*bytes_per_dim + j;
         if (point.bytes[index] != p.point.bytes[index]) {
           break;
         }
@@ -152,21 +152,19 @@ class Point {
 
   friend std::ostream& operator<<(std::ostream& os, const Point<T, D>& p) {
     os << '[';
-    if (D == 1){
+    if (D == 1) {
       std::copy(std::begin(p.point.v), std::end(p.point.v),
                 std::ostream_iterator<T>(os, ""));
       T d;
-      sortable_bytes_decode(p.point.bytes,d);
-      os<<d;
-    }
-    else {
-      for(int i=0;i<D;++i){
+      sortable_bytes_decode(p.point.bytes, d);
+      os << d;
+    } else {
+      for (int i = 0; i < D; ++i) {
         T d;
-        int index=i*bytes_per_dim;
-        sortable_bytes_decode(p.point.bytes+index,d);
-        os<<d;
-        if(i!=D-1)
-        os<<",";
+        int index = i * bytes_per_dim;
+        sortable_bytes_decode(p.point.bytes + index, d);
+        os << d;
+        if (i != D - 1) os << ",";
       }
     }
     os << "]#";
