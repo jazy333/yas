@@ -31,7 +31,7 @@ class BkdTree {
           kdi_(kdi),
           kdd_(kdd) {
       _left_fps.resize(tree_depth(num_leaves)+1, 0);
-      _right_chilren.resize(tree_depth(num_leaves)+1,0);
+      _right_children.resize(tree_depth(num_leaves)+1,0);
       _split_dims.resize(tree_depth(num_leaves)+1,0);
       _split_values.resize(tree_depth(num_leaves)+1,value_type());
       neg_.resize(tree_depth(num_leaves)+1,std::vector<bool>(value_type::dim,false));
@@ -48,9 +48,10 @@ class BkdTree {
     File* kdd_;
     std::vector<value_type> _split_values;
     std::vector<long> _left_fps;
-    std::vector<int> _right_chilren;
+    std::vector<int> _right_children;
     std::vector<std::vector<bool>> neg_;
     std::vector<int> _split_dims;
+    std::vector<int> docids_;
     value_type _low;
     value_type _high;
     bool is_leaf() { return node_id_ >= _num_leaves; }
@@ -61,7 +62,7 @@ class BkdTree {
     }
 
     void push_right() {
-      index_cur_fp_ = _right_chilren[level_];
+      index_cur_fp_ = _right_children[level_];
       level_++;
       node_id_ = node_id_ * 2 + 1;
       read_index_node(false);
@@ -70,6 +71,7 @@ class BkdTree {
     void pop() {
       node_id_ /= 2;
       level_--;
+      _split_dim=_split_dims[level_];
     }
 
     int tree_depth(int num_leaves){
@@ -136,7 +138,7 @@ class BkdTree {
           int ret = kdi_->read_vint(index_cur_fp_, left_bytes);
           index_cur_fp_ += ret;
         }
-        _right_chilren[level_] = index_cur_fp_ + left_bytes;
+        _right_children[level_] = index_cur_fp_ + left_bytes;
       }
       return 0;
     }
@@ -291,6 +293,9 @@ class BkdTree {
     is._low = low;
     is._high = high;
     do_intersect(_min, _max, is);
+    std::cout<<"dump intersect docids:"<<std::endl;
+    std::copy(is.docids_.begin(),is.docids_.end(),std::ostream_iterator<int>(std::cout,","));
+    std::cout<<std::endl;
   }
 
  private:
@@ -304,7 +309,44 @@ class BkdTree {
     return num_left;
   }
 
-  void write_docids(File* kdd, std::vector<int>& docids) {}
+  void write_docids(File* kdd, std::vector<int>& docids) {
+    int count=docids.size();
+    if(count==0)
+      return;
+    kdd->write_vint(count);
+    bool sorted=true;
+    int pre=docids[0];
+    int min=docids[0];
+    for(int i=1;i<docids.size();++i){
+      if(pre>docids[i]){
+        sorted=false;
+      }
+      if (min>docids[i]){
+        min=docids[i];
+      }
+      pre=docids[i];
+    }
+
+    if(sorted){
+      char magic=0;
+      kdd->append(&magic,1);
+      int pre=0;
+      for(int i=0;i<docids.size();++i){
+        int delta=docids[i]-pre;
+        kdd->write_vint(delta);
+        pre=docids[i];
+      }
+    }else{
+      char magic=1;
+      kdd->append(&magic,1);
+      kdd->write_vint(min);
+      for(int i=0;i<docids.size();++i){
+        int diff=docids[i]-min;
+        kdd->write_vint(diff);
+      }
+    }
+
+  }
 
   void write_common_prefix(File* kdd, std::vector<int>& common_prefix_lengths,
                            value_type& v) {
@@ -533,6 +575,42 @@ class BkdTree {
 #endif
 
   void read_docids(IntersectState& is){
+    long fp=is._right_children[is.level_];
+    int count=0;
+    int ret=is.kdd_->read_vint(fp,count);
+    fp+=ret;
+    char magic;
+    ret=is.kdd_->read(fp,&magic,1);
+    fp+=ret;
+    switch(magic){
+      case 0:{
+        int pre=0;
+        for(int i=0;i<count;++i){
+          int delta=0;
+          ret=is.kdd_->read_vint(fp,delta);
+          fp+=ret;
+          pre+=delta;
+          is.docids_.push_back(pre);
+        }
+        break;
+      }
+      case 1:{
+        int min;
+        ret=is.kdd_->read_vint(fp,min);
+        fp+=ret;
+        for(int i=0;i<count;++i){
+          int diff=0;
+          ret=is.kdd_->read_vint(fp,diff);
+          fp+=ret;
+          is.docids_.push_back(min+diff);
+        }
+        break;
+      }
+      default:{
+        break;
+      }
+    }
+    is._right_children[is.level_]=fp;
   }
 
   void add_all(IntersectState& is) {

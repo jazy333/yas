@@ -246,13 +246,13 @@ cout<<"d12:"<<d11<<endl;
 
   Point<int, 2> p2 = p;
   cout << "sizeof point2 2 int:" << sizeof(p) << ",0:" << p2.get(0)<< ",1:" << p2.get(1) << endl;
-
   Point<int, 2> p4({ 3,4 }, 2);
   cout << "p4:" << p4 << endl;
   Point<int, 2> p5({ 0,257 }, 4);
+  Point<int,2> p7({9,3},6);
   MemoryPoints<int, 2> mps;
   mps.write(p);
-  mps.write(p2);
+  mps.write(p7);
   mps.write(p4);
   mps.write(p5);
   std::default_random_engine random(time(nullptr));
@@ -260,7 +260,7 @@ cout<<"d12:"<<d11<<endl;
   for(int i=0;i<2;++i){
     int x=dis1(random);
     int y=dis1(random);
-    Point<int, 2> p({x,y},i);
+    Point<int, 2> p({x,y},i+200);
     mps.write(p);
   }
   int sorted_dim=1;
