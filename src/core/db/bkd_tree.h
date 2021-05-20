@@ -52,6 +52,7 @@ class BkdTree {
     std::vector<std::vector<bool>> neg_;
     std::vector<int> _split_dims;
     std::vector<int> docids_;
+    std::vector<value_type> docvalues_;
     value_type _low;
     value_type _high;
     bool is_leaf() { return node_id_ >= _num_leaves; }
@@ -356,8 +357,7 @@ class BkdTree {
                            value_type& v) {
     for (int i = 0; i < value_type::dim; ++i) {
       kdd->write_vint(common_prefix_lengths[i]);
-      u_char* bytes = v.get_bytes_one_dim(i);
-      // int index =value_type::bytes_per_dim - common_prefix_lengths[i];
+      u_char* bytes = v.get_bytes(i);
       kdd->append(bytes, common_prefix_lengths[i]);
     }
   }
@@ -506,77 +506,123 @@ class BkdTree {
       }
     }
   }
-#if 0
-        void read_minmax(std::vector<int>& common_prefixs,value_type& min,value_type& max){
-            for (int dim = 0; dim < value_type::dim; dim++) {
-                int prefix = common_prefixs[dim];
-                _kdd->read(min, dim * value_type::bytes_per_dim + prefix, value_type::bytes_per_dim - prefix);
-                _kdd->read(max, dim * value_type::bytes_per_dim + prefix, value_type::bytes_per_dim - prefix);
-            }
-        }
 
-        void read_low_cardinality_docvalues( std::vector<int>& common_prefixes,int count){
-            int i;
-            for (i = 0; i < count;) {
-                int length=0; 
-                _kdd->read_vint(length);
-                for(int dim = 0; dim < value_tyep::dim; dim++) {
-                    int prefix = common_prefixes[dim];
-                    in.readBytes(scratchPackedValue, dim*config.bytesPerDim + prefix, config.bytesPerDim - prefix);
-                }
-                scratchIterator.reset(i, length);
-                visitor.visit(scratchIterator, scratchPackedValue);
-                i += length;
-            }
-   
-        }
+  void read_common_prefixes(IntersectState& is,std::vector<int>& common_prefixes,value_type& v){
+    long fp=is._left_fp[is.level_];
+    for(int i=0;i<value_type::dim;++i){
+      int prefix;
+      int ret=is.kdd_->read_vint(prefix);
+      fp+=ret;
+      common_prefixes.push_back(prefix);
+      u_char* dim_start=v.get_bytes(i);
+      ret=is.kdd_->read(fp,dim_start,prefix);
+      fp+=ret;
+    }
+    is._left_fp[is.level_]=fp;
+  }
 
-        void read_high_cardinaliy_docvalues( std::vector<int>& common_prefixes,int sorted_dim,int count){
-            // the byte at `compressedByteOffset` is compressed using run-length compression,
-            // other suffix bytes are stored verbatim
-            int offset = sorted_dim * value_type::bytes_per_dim + common_prefixes[sorted_dim];
-            common_prefixes[sorted_dim]++;
-            int i;
-            for (i = 0; i < count; ) {
-                scratchPackedValue[compressedByteOffset] = in.readByte();
-                char run_len;
-                 _kdd->read(&run_len,1);
-                for (int j = 0; j < run_len; ++j) {
-                    for(int dim = 0; dim < value_type::dim; dim++) {
-                        int prefix = common_prefixes[sorted_dim];
-                        in.readBytes(scratchPackedValue, dim*config.bytesPerDim + prefix, config.bytesPerDim - prefix);
-                    }
-                    visitor.visit(scratchIterator.docIDs[i+j], scratchPackedValue);
-                }
-                i += run_len;
-            }
-    
-        }
+  void read_minmax(IntersectState& is,std::vector<int>& common_prefixes,value_type& min,value_type& max){
+    long fp=is._left_fp[is.level_];
+    for (int dim = 0; dim < value_type::dim; dim++) {
+      int prefix = common_prefixes[dim];
+      u_char* min_dim_start=min.get_bytes(dim);
+      u_char* max_dim_start=max.get_bytes(dim);
+      int ret=is.kdd_->read(fp, min_dim_start+prefix, value_type::bytes_per_dim - prefix);
+      fp+=ret;
+      ret=is.kdd_->read(fp,max_dim_start+prefix,value_type::bytes_per_dim - prefix);
+      fp+=ret;
+    }
+    is._left_fp[is.level_]=fp;
+  }
 
-        void read_docvalues(){
-            std::vector<int> common_prefixes;
-            read_common_prefixs(common_prefixes);
-            int count==0;
-            _kdd->read_vint(count);
-            int sorted_dim=0;
-            _kdd->read_vint(sorete_dim);
-            value_type min,max;
-            switch (sorted_dim){
-            case  -1:{
-                break;
-            }
-            case -2:{
-                read_minmax(common_prefixes,min,max);
-                read_low_cardinality_docvalues(common_prefixes);
-                break;
-            }
-            default:
-                read_minmax(common_prefixes,min,max);
-                read_high_cardinaliy_dovvalues(common_prefixes,sorted_dim);
-                break;
-            }
+
+  void read_uniq_doc_values(IntersectState& is,int count,value_type& uniq){
+    for(int i=0;i<count;++i){
+      is.docvalues_.push_back(uniq);
+    }
+  }
+
+  void read_low_cardinality_doc_values(IntersectState& is,std::vector<int>& common_prefixes,int count,value_type& incomplete_value){
+    long fp=is._left_fp[is.level_];
+    int i;
+    for (i = 0; i < count;) {
+      int length=0; 
+      int ret=is.kdd_->read_vint(fp,length);
+      fp+=ret;
+      value_type value=incomplete_value;
+      for(int dim = 0; dim < value_type::dim; dim++) {
+        int prefix = common_prefixes[dim];
+        u_char* dim_start=value.get_bytes(dim);
+        ret=is.kdd_->read(fp, dim_start+prefix, value_type::bytes_per_dim - prefix);
+        fp+=ret;
+      }
+      for(int i=0;i<length;++i){
+        is.docvalues_.push_back(value);
+      }
+    i += length;
+    }
+   is._left_fp[is.level_]=fp;   
+  }
+
+  void read_high_cardinaliy_doc_values( IntersectState& is,std::vector<int>& common_prefixes,int sorted_dim,int count,value_type& incomplete_value){
+    // the byte at `offset` is compressed using run-length compression,
+    // other suffix bytes are stored verbatim
+     long fp=is._left_fp[is.level_];
+    int offset = common_prefixes[sorted_dim];
+    common_prefixes[sorted_dim]++;
+    int i;
+    for (i = 0; i < count; ) {
+      value_type v=incomplete_value;
+      char magic;
+      int ret=is.kdd_->read(fp,&magic,1);
+      fp+=ret;
+      u_char* dim_start=v.get_bytes(sorted_dim);
+      dim_start[offset]=magic;
+      char run_len;
+      ret=is.kdd_->read(fp,&run_len,1);
+      fp+=ret;
+      for (int j = 0; j < run_len; ++j) {
+        for(int dim = 0; dim < value_type::dim; dim++) {
+          u_char* dim_start=v.get_bytes(dim);
+          int prefix = common_prefixes[sorted_dim];
+          ret=is.kdd_->read(fp,dim_start,dim_start+prefix, value_type::bytes_per_dim- prefix);
+          fp+=ret;
         }
-#endif
+        is.docvalues_.push_back(v);
+      }
+      i += run_len;
+    }
+    is._left_fp[is.level_]=fp;
+  }
+
+  void read_doc_values(IntersectState& is){
+    std::vector<int> common_prefixes;
+    value_type incomplete_value;
+    read_common_prefixes(is,common_prefixes,incomplete_value);
+    long fp=is._left_fp[is.level_];
+    int count=0;
+    int ret=is.kdd_->read_vint(fp,count);
+    ret+=fp;
+    int sorted_dim=0;
+    ret=is.kdd_->read_vint(fp,sorted_dim);
+    value_type min=incomplete_value,max=incomplete_value;
+    switch (sorted_dim){
+      case  -1:{
+        read_uniq_doc_values(is,count,incomplete_value);
+        break;
+      }
+      case -2:{
+        read_minmax(common_prefixes,min,max);
+        read_low_cardinality_doc_values(is,common_prefixes,count,incomplete_value);
+        break;
+      }
+      default:{
+        read_minmax(common_prefixes,min,max);
+        read_high_cardinaliy_doc_values(is,common_prefixes,sorted_dim,count,incomplete_value);
+        break;
+      }
+    }
+  }
 
   void read_docids(IntersectState& is){
     long fp=is._left_fps[is.level_];
