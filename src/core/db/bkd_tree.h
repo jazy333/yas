@@ -255,10 +255,14 @@ class BkdTree {
       // write left bytes
       if (num_left_leaves != 1) {
         parent_index_len += parent->write_vint(left_bytes);
-      } else if (num_right_leaves == 1) {  // write right leaf fp
+      }
+      // write right leaf fp
+      if (num_right_leaves == 1) {  
         long left_block_fp = leaf_block_fps[right];
         long delta = left_block_fp - min_block_fp;
         // dump delta
+        std::shared_ptr<MemoryFile> parent(new MemoryFile());
+        nodes.push_back(parent);
         parent_index_len += parent->write_vint(delta);
       }
       parent_splits[split_dim]--;
@@ -279,7 +283,7 @@ class BkdTree {
     std::vector<std::shared_ptr<File>> nodes;
     build(storage, kdd, nodes, false, 0, num_leaves, 0, from, to, min, max,
           parent_splits, leaf_block_fps, last_split_value, neg);
-
+    storage->minmax(min_,max_);
     //int ret=kdm->write_vint();
     for(auto& node:nodes){
       std::string content;
@@ -292,7 +296,7 @@ class BkdTree {
     IntersectState is(3,0,kdi,kdd);
     is._low = low;
     is._high = high;
-    do_intersect(_min, _max, is);
+    do_intersect(min_, max_, is);
     std::cout<<"dump intersect docids:"<<std::endl;
     std::copy(is.docids_.begin(),is.docids_.end(),std::ostream_iterator<int>(std::cout,","));
     std::cout<<std::endl;
@@ -575,7 +579,7 @@ class BkdTree {
 #endif
 
   void read_docids(IntersectState& is){
-    long fp=is._right_children[is.level_];
+    long fp=is._left_fps[is.level_];
     int count=0;
     int ret=is.kdd_->read_vint(fp,count);
     fp+=ret;
@@ -610,7 +614,7 @@ class BkdTree {
         break;
       }
     }
-    is._right_children[is.level_]=fp;
+    is._left_fps[is.level_]=fp;
   }
 
   void add_all(IntersectState& is) {
@@ -651,7 +655,7 @@ class BkdTree {
 
   int _depth;
   int _num_leaves;
-  value_type _min;
-  value_type _max;
+  value_type min_;
+  value_type max_;
 };
 }  // namespace yas

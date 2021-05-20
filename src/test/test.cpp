@@ -250,11 +250,16 @@ cout<<"d12:"<<d11<<endl;
   cout << "p4:" << p4 << endl;
   Point<int, 2> p5({ 0,257 }, 4);
   Point<int,2> p7({9,3},6);
+  Point<int,2> p8({-40,-58},200);
+  Point<int,2> p9({-92,-32},201);
   MemoryPoints<int, 2> mps;
   mps.write(p);
   mps.write(p7);
   mps.write(p4);
   mps.write(p5);
+  mps.write(p8);
+  mps.write(p9);
+  #if 0
   std::default_random_engine random(time(nullptr));
   std::uniform_int_distribution<int> dis1(-100, 100);
   for(int i=0;i<2;++i){
@@ -263,6 +268,7 @@ cout<<"d12:"<<d11<<endl;
     Point<int, 2> p({x,y},i+200);
     mps.write(p);
   }
+  #endif
   int sorted_dim=1;
   int mid=mps.size()/2;
   cout<<"before select"<<endl;
