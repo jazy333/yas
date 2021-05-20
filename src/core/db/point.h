@@ -94,6 +94,34 @@ class Point {
     return memcmp(p.point.bytes, point.bytes, bytes_size()) != 0;
   }
 
+  bool operator<=(const Point& p) {
+    for (int i = 0; i < dim; ++i) {
+      if (p.get(i) < get(i)) return false;
+    }
+    return true;
+  }
+
+  bool operator>=(const Point& p) {
+    for (int i = 0; i < dim; ++i) {
+      if (p.get(i) > get(i)) return false;
+    }
+    return true;
+  }
+
+  bool operator<(const Point& p) {
+    for (int i = 0; i < dim; ++i) {
+      if (p.get(i) <= get(i)) return false;
+    }
+    return true;
+  }
+
+  bool operator>(const Point& p) {
+    for (int i = 0; i < dim; ++i) {
+      if (p.get(i) >= get(i)) return false;
+    }
+    return true;
+  }
+
   int compare(const Point& p, int dim) {
     int index = dim * bytes_per_dim;
     return memcmp(point.bytes + index, p.point.bytes + index, bytes_per_dim);

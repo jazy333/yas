@@ -536,13 +536,16 @@ class BkdTree {
   }
 
 
-  void read_uniq_doc_values(IntersectState& is,int count,value_type& uniq){
+  void read_uniq_doc_values(IntersectState& is,int count,value_type& uniq,std::vector<int>& docids){
+    if(uniq<is.min_||uniq>is.max_){
+      return;
+    }
     for(int i=0;i<count;++i){
-      is.docvalues_.push_back(uniq);
+      is.docids_.push_back(docids[i]);
     }
   }
 
-  void read_low_cardinality_doc_values(IntersectState& is,std::vector<int>& common_prefixes,int count,value_type& incomplete_value){
+  void read_low_cardinality_doc_values(IntersectState& is,std::vector<int>& common_prefixes,int count,value_type& incomplete_value,std::vector<int>& docids){
     long fp=is._left_fp[is.level_];
     int i;
     for (i = 0; i < count;) {
@@ -556,15 +559,18 @@ class BkdTree {
         ret=is.kdd_->read(fp, dim_start+prefix, value_type::bytes_per_dim - prefix);
         fp+=ret;
       }
-      for(int i=0;i<length;++i){
-        is.docvalues_.push_back(value);
+      for(int j=0;j<length;++j){
+        //is.docvalues_.push_back(value);
+        if(value>=is.min_&&value<=is.max_){
+          is.docids_.push_back(docids[i]);
+        }
       }
     i += length;
     }
    is._left_fp[is.level_]=fp;   
   }
 
-  void read_high_cardinaliy_doc_values( IntersectState& is,std::vector<int>& common_prefixes,int sorted_dim,int count,value_type& incomplete_value){
+  void read_high_cardinaliy_doc_values( IntersectState& is,std::vector<int>& common_prefixes,int sorted_dim,int count,value_type& incomplete_value,std::vector<int>& docids){
     // the byte at `offset` is compressed using run-length compression,
     // other suffix bytes are stored verbatim
      long fp=is._left_fp[is.level_];
@@ -588,14 +594,19 @@ class BkdTree {
           ret=is.kdd_->read(fp,dim_start,dim_start+prefix, value_type::bytes_per_dim- prefix);
           fp+=ret;
         }
-        is.docvalues_.push_back(v);
+        if(v>=is.min_&&v<=is.max_){
+          //is.docvalues_.push_back(v);
+          is.docids_.push_back(docids[i]);
+        }
       }
       i += run_len;
     }
     is._left_fp[is.level_]=fp;
   }
 
-  void read_doc_values(IntersectState& is){
+  
+
+  void read_doc_values(IntersectState& is,std::vector<int>& docids){
     std::vector<int> common_prefixes;
     value_type incomplete_value;
     read_common_prefixes(is,common_prefixes,incomplete_value);
@@ -608,23 +619,23 @@ class BkdTree {
     value_type min=incomplete_value,max=incomplete_value;
     switch (sorted_dim){
       case  -1:{
-        read_uniq_doc_values(is,count,incomplete_value);
+        read_uniq_doc_values(is,count,incomplete_value,docids);
         break;
       }
       case -2:{
         read_minmax(common_prefixes,min,max);
-        read_low_cardinality_doc_values(is,common_prefixes,count,incomplete_value);
+        read_low_cardinality_doc_values(is,common_prefixes,count,incomplete_value,docids);
         break;
       }
       default:{
         read_minmax(common_prefixes,min,max);
-        read_high_cardinaliy_doc_values(is,common_prefixes,sorted_dim,count,incomplete_value);
+        read_high_cardinaliy_doc_values(is,common_prefixes,sorted_dim,count,incomplete_value,docids);
         break;
       }
     }
   }
 
-  void read_docids(IntersectState& is){
+  void read_docids(IntersectState& is,std::vector<int>& docids){
     long fp=is._left_fps[is.level_];
     int count=0;
     int ret=is.kdd_->read_vint(fp,count);
@@ -640,7 +651,7 @@ class BkdTree {
           ret=is.kdd_->read_vint(fp,delta);
           fp+=ret;
           pre+=delta;
-          is.docids_.push_back(pre);
+          docids.push_back(pre);
         }
         break;
       }
@@ -652,7 +663,7 @@ class BkdTree {
           int diff=0;
           ret=is.kdd_->read_vint(fp,diff);
           fp+=ret;
-          is.docids_.push_back(min+diff);
+          docids.push_back(min+diff);
         }
         break;
       }
@@ -665,7 +676,7 @@ class BkdTree {
 
   void add_all(IntersectState& is) {
     if (is.is_leaf()) {
-      read_docids(is);
+      read_docids(is,is.docids_);
     } else {
       is.push_left();
       add_all(is);
@@ -674,6 +685,13 @@ class BkdTree {
       add_all(is);
       is.pop();
     }
+  }
+
+  
+  void interfect_one_block(IntersectState& is){
+    std::vector<int> docids;
+    read_docids(is,docids);
+    read_doc_values(is,docids);
   }
 
   void do_intersect(value_type& min, value_type& max, IntersectState& is) {
