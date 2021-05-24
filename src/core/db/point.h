@@ -3,6 +3,7 @@
 #include <sys/types.h>
 
 #include <cstddef>
+#include <cassert>
 #include <cstring>
 #include <initializer_list>
 #include <iostream>

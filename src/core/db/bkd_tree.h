@@ -78,6 +78,9 @@ class BkdTree {
 
     int tree_depth(int num_leaves) { return log2(num_leaves) + 2; }
 
+    /*
+     *exclude 0,include 1,cross 2
+     */
     int relation(value_type& min, value_type& max) {
       bool include = true;
       for (int i = 0; i < value_type::dim; ++i) {
@@ -382,8 +385,8 @@ class BkdTree {
       int suffix_length = value_type::bytes_per_dim - common_prefix_length;
       if (suffix_length > 0) {
         // int index = dim * value_type::bytes_per_dim;
-        u_char* min_dim_data = min.get_bytes_one_dim(dim);
-        u_char* max_dim_data = max.get_bytes_one_dim(dim);
+        u_char* min_dim_data = min.get_bytes(dim);
+        u_char* max_dim_data = max.get_bytes(dim);
         kdd->append(min_dim_data + common_prefix_length, suffix_length);
         kdd->append(max_dim_data + common_prefix_length, suffix_length);
       }
@@ -507,22 +510,22 @@ class BkdTree {
 
   void read_common_prefixes(IntersectState& is,
                             std::vector<int>& common_prefixes, value_type& v) {
-    long fp = is._left_fp[is.level_];
+    long fp = is._left_fps[is.level_];
     for (int i = 0; i < value_type::dim; ++i) {
       int prefix;
-      int ret = is.kdd_->read_vint(prefix);
+      int ret = is.kdd_->read_vint(fp, prefix);
       fp += ret;
       common_prefixes.push_back(prefix);
       u_char* dim_start = v.get_bytes(i);
       ret = is.kdd_->read(fp, dim_start, prefix);
       fp += ret;
     }
-    is._left_fp[is.level_] = fp;
+    is._left_fps[is.level_] = fp;
   }
 
   void read_minmax(IntersectState& is, std::vector<int>& common_prefixes,
                    value_type& min, value_type& max) {
-    long fp = is._left_fp[is.level_];
+    long fp = is._left_fps[is.level_];
     for (int dim = 0; dim < value_type::dim; dim++) {
       int prefix = common_prefixes[dim];
       u_char* min_dim_start = min.get_bytes(dim);
@@ -534,12 +537,12 @@ class BkdTree {
                           value_type::bytes_per_dim - prefix);
       fp += ret;
     }
-    is._left_fp[is.level_] = fp;
+    is._left_fps[is.level_] = fp;
   }
 
   void read_uniq_doc_values(IntersectState& is, int count, value_type& uniq,
                             std::vector<int>& docids) {
-    if (uniq < is.min_ || uniq > is.max_) {
+    if (uniq < is._low || uniq > is._high) {
       return;
     }
     for (int i = 0; i < count; ++i) {
@@ -551,7 +554,7 @@ class BkdTree {
                                        std::vector<int>& common_prefixes,
                                        int count, value_type& incomplete_value,
                                        std::vector<int>& docids) {
-    long fp = is._left_fp[is.level_];
+    long fp = is._left_fps[is.level_];
     int i;
     for (i = 0; i < count;) {
       int length = 0;
@@ -567,13 +570,13 @@ class BkdTree {
       }
       for (int j = 0; j < length; ++j) {
         // is.docvalues_.push_back(value);
-        if (value >= is.min_ && value <= is.max_) {
+        if (value >= is._low && value <= is._high) {
           is.docids_.push_back(docids[i]);
         }
       }
       i += length;
     }
-    is._left_fp[is.level_] = fp;
+    is._left_fps[is.level_] = fp;
   }
 
   void read_high_cardinaliy_doc_values(IntersectState& is,
@@ -583,7 +586,7 @@ class BkdTree {
                                        std::vector<int>& docids) {
     // the byte at `offset` is compressed using run-length compression,
     // other suffix bytes are stored verbatim
-    long fp = is._left_fp[is.level_];
+    long fp = is._left_fps[is.level_];
     int offset = common_prefixes[sorted_dim];
     common_prefixes[sorted_dim]++;
     int i;
@@ -600,31 +603,30 @@ class BkdTree {
       for (int j = 0; j < run_len; ++j) {
         for (int dim = 0; dim < value_type::dim; dim++) {
           u_char* dim_start = v.get_bytes(dim);
-          int prefix = common_prefixes[sorted_dim];
-          ret = is.kdd_->read(fp, dim_start, dim_start + prefix,
+          int prefix = common_prefixes[dim];
+          ret = is.kdd_->read(fp, dim_start + prefix,
                               value_type::bytes_per_dim - prefix);
           fp += ret;
         }
-        if (v >= is.min_ && v <= is.max_) {
-          // is.docvalues_.push_back(v);
+        if (v >= is._low && v <= is._high) {
           is.docids_.push_back(docids[i]);
         }
       }
       i += run_len;
     }
-    is._left_fp[is.level_] = fp;
+    is._left_fps[is.level_] = fp;
   }
 
   void read_doc_values(IntersectState& is, std::vector<int>& docids) {
     std::vector<int> common_prefixes;
     value_type incomplete_value;
     read_common_prefixes(is, common_prefixes, incomplete_value);
-    long fp = is._left_fp[is.level_];
-    int count = 0;
-    int ret = is.kdd_->read_vint(fp, count);
-    ret += fp;
-    int sorted_dim = 0;
-    ret = is.kdd_->read_vint(fp, sorted_dim);
+    long fp = is._left_fps[is.level_];
+    int count = docids.size();
+    char sorted_dim = 0;
+    int ret = is.kdd_->read(fp, &sorted_dim,1);
+    fp += ret;
+    is._left_fps[is.level_] = fp;
     value_type min = incomplete_value, max = incomplete_value;
     switch (sorted_dim) {
       case -1: {
@@ -632,13 +634,13 @@ class BkdTree {
         break;
       }
       case -2: {
-        read_minmax(common_prefixes, min, max);
+        read_minmax(is, common_prefixes, min, max);
         read_low_cardinality_doc_values(is, common_prefixes, count,
                                         incomplete_value, docids);
         break;
       }
       default: {
-        read_minmax(common_prefixes, min, max);
+        read_minmax(is, common_prefixes, min, max);
         read_high_cardinaliy_doc_values(is, common_prefixes, sorted_dim, count,
                                         incomplete_value, docids);
         break;
@@ -711,9 +713,10 @@ class BkdTree {
     } else if (rel == 1) {
       add_all(is);
     } else if (is.is_leaf()) {
+      interfect_one_block(is);
     } else {
       int split_dim = is._split_dim;
-      T split_dim_value = is._split_dim_value;
+      T split_dim_value = is._split_values[is.level_].get(split_dim);
       value_type split_value = max;
       split_value.set(split_dim_value, split_dim);
       is.push_left();
