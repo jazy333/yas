@@ -238,6 +238,7 @@ int main(int argc, char* argv[]) {
   Point<int, 2> p7({9, 3}, 6);
   Point<int, 2> p8({-40, -58}, 200);
   Point<int, 2> p9({-92, -32}, 201);
+  Point<int, 2> p10({3, 4}, 202);
   MemoryPoints<int, 2> mps;
   mps.write(p);
   mps.write(p7);
@@ -245,6 +246,7 @@ int main(int argc, char* argv[]) {
   mps.write(p5);
   mps.write(p8);
   mps.write(p9);
+  mps.write(p10);
 #if 0
   std::default_random_engine random(time(nullptr));
   std::uniform_int_distribution<int> dis1(-100, 100);
@@ -286,17 +288,25 @@ int main(int argc, char* argv[]) {
        ostream_iterator<int>(cout, ","));
   cout << endl;
 
-  BkdTree<int, 2> bkd;
+  BkdTree<int, 2> bkd_out;
   File* kdm = new MMapFile();
   kdm->open("data/yas.kdm", true);
   File* kdi = new MMapFile();
   kdi->open("data/yas.kdi", true);
   File* kdd = new MMapFile();
   kdd->open("data/yas.kdd", true);
-  bkd.pack(&mps, kdm, kdi, kdd);
+  int field_id=1;
+  bkd_out.pack(field_id,&mps, kdm, kdi, kdd);
+  //kdm end
+  kdm->write_vint(0);
+  kdm->close();
+
   Point<int,2> low({1,1},-1);
   Point<int,2> high({5,5},-1);
-  bkd.intersect(low, high, kdi, kdd);
+  File* kdm_in=new MMapFile();
+  kdm_in->open("data/yas.kdm", false);
+  BkdTree<int, 2> bkd_in(kdm_in,kdi,kdd);
+  bkd_in.intersect(field_id,low, high, kdi, kdd);
 
 #if 0
   for (auto iter = mps.begin();iter != mps.end();++iter) {

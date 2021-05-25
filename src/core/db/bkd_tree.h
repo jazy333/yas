@@ -3,6 +3,7 @@
 #include <cmath>
 #include <memory>
 #include <numeric>
+#include <unordered_map>
 #include <vector>
 
 #include "file.h"
@@ -17,6 +18,32 @@ class BkdTree {
   using values_type = Points<T, D>;
   using value_type = typename Points<T, D>::value_type;
   BkdTree() = default;
+  BkdTree(File* kdm, File* kdi, File* kdd)
+      : kdm_(kdm), kdi_(kdi), kdd_(kdd), readable_(true) {
+    /*
+     *meta format:filed id|num dims|max count per leaf|bytes per dim|num
+     *leaves|min | max|count | kdd fp|kdi fp
+     */
+    loff_t off = 0;
+    while (true) {
+      MetaFieldInfo mfi;
+      int ret = kdm_->read_vint(mfi.field_id_, &off);
+      if (mfi.field_id_ == 0) break;
+      ret = kdm_->read_vint(mfi.num_dims_, &off);
+      ret = kdm_->read_vint(mfi.max_count_per_leaf_, &off);
+      ret = kdm_->read_vint(mfi.bytes_per_dim_, &off);
+      ret = kdm_->read_vint(mfi.num_leaves_, &off);
+      u_char* min_data = mfi.min_.bytes();
+      u_char* max_data = mfi.max_.bytes();
+      int bytes_len = mfi.num_dims_ * mfi.bytes_per_dim_;
+      ret = kdm_->read(min_data, bytes_len, &off);
+      ret = kdm_->read(max_data, bytes_len, &off);
+      ret = kdm_->read_vint(mfi.count_, &off);
+      ret = kdm_->read_vint(mfi.data_fp_, &off);
+      ret = kdm_->read_vint(mfi.index_fp_, &off);
+      kdm_infos_[mfi.field_id_] = mfi;
+    }
+  }
 
   virtual ~BkdTree() {}
 
@@ -147,6 +174,19 @@ class BkdTree {
     }
   };
 
+  struct MetaFieldInfo {
+    int field_id_;
+    int num_dims_;
+    int max_count_per_leaf_;
+    int bytes_per_dim_;
+    int num_leaves_;
+    value_type min_;
+    value_type max_;
+    int count_;
+    long data_fp_;
+    long index_fp_;
+  };
+
   int build(values_type* storage, File* kdd,
             std::vector<std::shared_ptr<File>>& nodes, bool is_left,
             int leaves_offset, int num_leaves, long min_block_fp, int from,
@@ -274,10 +314,12 @@ class BkdTree {
     }
   }
 
-  void pack(values_type* storage, File* kdm, File* kdi, File* kdd) {
+  void pack(int filed_id, values_type* storage, File* kdm, File* kdi,
+            File* kdd) {
     int from = 0, to = storage->size();
     int count_per_leaf = 2;
     int num_leaves = (to - from + 1) / count_per_leaf;
+    long data_fp = kdd->size(), index_fp = kdi->size();
     value_type min, max;
     std::vector<int> parent_splits(value_type::dim, 0);
     std::vector<off_t> leaf_block_fps(num_leaves + 1, 0);
@@ -286,8 +328,21 @@ class BkdTree {
     std::vector<std::shared_ptr<File>> nodes;
     build(storage, kdd, nodes, false, 0, num_leaves, 0, from, to, min, max,
           parent_splits, leaf_block_fps, last_split_value, neg);
-    storage->minmax(min_, max_);
-    // int ret=kdm->write_vint();
+    storage->minmax(min, max);
+
+    /*
+     *meta format:filed id|num dims|max count per leaf|bytes per dim|num
+     *leaves|min | max|count | kdd fp|kdi fp
+     */
+    int ret = kdm->write_vint(filed_id);
+    ret = kdm->write_vint(value_type::dim);
+    ret = kdm->write_vint(count_per_leaf);
+    ret = kdm->write_vint(value_type::bytes_per_dim);
+    ret = kdm->write_vint(num_leaves);
+    ret = kdm->append(min.bytes(), value_type::bytes_length);
+    ret = kdm->append(max.bytes(), value_type::bytes_length);
+    ret = kdm->write_vint(data_fp);
+    ret = kdm->write_vint(index_fp);
     for (auto& node : nodes) {
       std::string content;
       node->read(content, node->size());
@@ -295,11 +350,19 @@ class BkdTree {
     }
   }
 
-  void intersect(value_type low, value_type high, File* kdi, File* kdd) {
-    IntersectState is(3, 0, kdi, kdd);
+  void intersect(int field_id, value_type low, value_type high, File* kdi,
+                 File* kdd) {
+    MetaFieldInfo mfi;
+    if (kdm_infos_.count(field_id) == 1) {
+      mfi = kdm_infos_[field_id];
+    } else {
+      return;
+    }
+
+    IntersectState is(mfi.num_leaves_, mfi.index_fp_, kdi, kdd);
     is._low = low;
     is._high = high;
-    do_intersect(min_, max_, is);
+    do_intersect(mfi.min_, mfi.max_, is);
     std::cout << "dump intersect docids:" << std::endl;
     std::copy(is.docids_.begin(), is.docids_.end(),
               std::ostream_iterator<int>(std::cout, ","));
@@ -624,7 +687,7 @@ class BkdTree {
     long fp = is._left_fps[is.level_];
     int count = docids.size();
     char sorted_dim = 0;
-    int ret = is.kdd_->read(fp, &sorted_dim,1);
+    int ret = is.kdd_->read(fp, &sorted_dim, 1);
     fp += ret;
     is._left_fps[is.level_] = fp;
     value_type min = incomplete_value, max = incomplete_value;
@@ -730,9 +793,10 @@ class BkdTree {
     }
   }
 
-  int _depth;
-  int _num_leaves;
-  value_type min_;
-  value_type max_;
+  File* kdm_;
+  File* kdi_;
+  File* kdd_;
+  bool readable_;
+  std::unordered_map<int, MetaFieldInfo> kdm_infos_;
 };
 }  // namespace yas

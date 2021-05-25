@@ -10,6 +10,14 @@ class File {
   virtual int open(const std::string& path, bool writable) = 0;
   virtual int close() = 0;
   virtual int read(int64_t off, void* buf, size_t size) = 0;
+  virtual int read(void* buf, size_t size, loff_t* off) {
+    if (!off) return -1;
+    int ret = read(*off, buf, size);
+    if (ret != -1) {
+     *off += ret;
+    }
+    return ret;
+  }
   virtual int read(int64_t off, std::string& buf, size_t size) {
     buf.resize(size, 0);
     return read(off, const_cast<char*>(buf.data()), size);
@@ -31,7 +39,7 @@ class File {
          std::is_same<Type, short>::value),
         "variable length byte read only support:long,int,short");
     char one;
-    size_t max = sizeof(Type) + 1;
+    size_t max = sizeof(Type) + 2;
     size_t count = 0;
     val = 0;
     while (count < max) {
@@ -44,7 +52,33 @@ class File {
       }
       ++count;
     }
-    return count+1;
+    return count + 1;
+  }
+
+  template <class Type>
+  int read_vint(Type& val, loff_t* off) {
+    static_assert(
+        (std::is_same<Type, long>::value || std::is_same<Type, int>::value ||
+         std::is_same<Type, short>::value),
+        "variable length byte read only support:long,int,short");
+    if (off == nullptr) return -1;
+    char one;
+    size_t max = sizeof(Type) + 2;
+    size_t count = 0;
+    val = 0;
+    while (count < max) {
+      int ret = -1;
+      if (off) ret = read(*off + count, &one, 1);
+      if (ret == 1) {
+        val |= (one & 0x7f) << (count * 7);
+        if (!(one & 0x80)) break;
+      } else {
+        return ret;
+      }
+      ++count;
+    }
+    *off += (count + 1);
+    return count + 1;
   }
 
   template <class Type>
@@ -53,7 +87,7 @@ class File {
         (std::is_same<Type, long>::value || std::is_same<Type, int>::value ||
          std::is_same<Type, short>::value),
         "variable length byte write only support:long,int,short");
-    char output[sizeof(Type) + 1];
+    char output[sizeof(Type) + 2];
     int i = 0;
     for (;; ++i) {
       if (!(val & ~0x7f)) {
