@@ -14,7 +14,7 @@ class File {
     if (!off) return -1;
     int ret = read(*off, buf, size);
     if (ret != -1) {
-     *off += ret;
+      *off += ret;
     }
     return ret;
   }

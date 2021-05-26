@@ -17,6 +17,7 @@ class BkdTree {
  public:
   using values_type = Points<T, D>;
   using value_type = typename Points<T, D>::value_type;
+  static const int max_count_per_leaf;
   BkdTree() = default;
   BkdTree(File* kdm, File* kdi, File* kdd)
       : kdm_(kdm), kdi_(kdi), kdd_(kdd), readable_(true) {
@@ -134,7 +135,7 @@ class BkdTree {
         long fp;
         int ret = kdi_->read_vint(index_cur_fp_, fp);
         index_cur_fp_ += ret;
-        _left_fps[level_] = fp;
+        _left_fps[level_] += fp;
       }
 
       if (is_leaf()) {
@@ -142,26 +143,28 @@ class BkdTree {
       } else {
         int code = 0;
         int ret = kdi_->read_vint(index_cur_fp_, code);
+        
         index_cur_fp_ += ret;
         _split_dim = code % value_type::dim;
-
         code /= value_type::dim;
         int prefix = code % (1 + value_type::bytes_per_dim);
         int suffix = value_type::bytes_per_dim - prefix;
         _split_values[level_] = _split_values[level_ - 1];
-
+       
         if (suffix > 0) {
+          /*
           int delta = code / (1 + value_type::bytes_per_dim);
           if (neg_[level_][_split_dim]) {
             delta = -delta;
           }
           int old = _split_values[level_].get_byte(_split_dim, prefix);
+
+          dim_start[prefix] = old + delta;*/
           u_char* dim_start = _split_values[level_].get_bytes(_split_dim);
-          dim_start[prefix] = old + delta;
-          int ret =
-              kdi_->read(index_cur_fp_, dim_start + prefix + 1, suffix - 1);
+          int ret = kdi_->read(index_cur_fp_, dim_start + prefix, suffix);
           index_cur_fp_ += ret;
         }
+       
 
         int left_bytes = 0;
         if (node_id_ * 2 < _num_leaves) {
@@ -193,6 +196,7 @@ class BkdTree {
             int to, value_type& min, value_type& max,
             std::vector<int>& parent_splits, std::vector<off_t>& leaf_block_fps,
             value_type& last_split_value, std::vector<bool>& neg) {
+    
     if (num_leaves == 1) {
       leaf_block_fps[leaves_offset] = kdd->size();
       int count = to - from;
@@ -243,14 +247,16 @@ class BkdTree {
 
       int num_left_leaves = get_number_left_leaves(num_leaves);
       int num_right_leaves = num_leaves - num_left_leaves;
-      int mid = from + num_left_leaves * 2;
+      int mid = from + num_left_leaves * max_count_per_leaf;
       int prefix_len = min.mismatch(max, split_dim);
       storage->select(from, to, mid, &split_dim);
+     
       int right = leaves_offset + num_left_leaves;
       value_type split_value = storage->get(mid);
       int split_prefix = split_value.mismatch(last_split_value, split_dim);
 
       int first_diff_byte_delta = 0;
+      /*
       if (split_prefix < value_type::bytes_per_dim) {
         // split_value.bytes
         first_diff_byte_delta =
@@ -259,23 +265,22 @@ class BkdTree {
         if (neg[split_dim]) {
           first_diff_byte_delta = -first_diff_byte_delta;
         }
-      }
+      }*/
+      T last_split_dim_value=last_split_value.get(split_dim);
+      T split_dim_value = split_value.get(split_dim);
+      last_split_value.set(split_dim_value, split_dim);
 
-      last_split_value.set(split_value.get(split_dim), split_dim);
-
-      int code = (first_diff_byte_delta * (1 + value_type::bytes_per_dim) +
-                  split_prefix) *
-                     value_type::dim +
-                 split_dim;
+      int code = (split_prefix)*value_type::dim + split_dim;
+      
       // dump code
       parent_index_len += parent->write_vint(code);
 
       int split_suffix = value_type::bytes_per_dim - split_prefix;
-      if (split_suffix > 1) {
+      if (split_suffix > 0) {
         // write split value
-        u_char* svb = split_value.get_bytes_one_dim(split_dim);
-        parent->append(svb + split_prefix + 1, split_suffix - 1);
-        parent_index_len += split_suffix - 1;
+        u_char* svb = split_value.get_bytes(split_dim);
+        parent->append(svb + split_prefix, split_suffix);
+        parent_index_len += split_suffix;
       }
 
       bool last_neg = neg[split_dim];
@@ -295,21 +300,22 @@ class BkdTree {
           build(storage, kdd, nodes, false, right, num_right_leaves,
                 left_block_fp, mid, to, min_split_value, max, parent_splits,
                 leaf_block_fps, last_split_value, neg);
-      // write left bytes
+      // write left bytes if current is not the last level
       if (num_left_leaves != 1) {
         parent_index_len += parent->write_vint(left_bytes);
       }
-      // write right leaf fp
+      // write right leaf fp if there is a right leave
       if (num_right_leaves == 1) {
-        long left_block_fp = leaf_block_fps[right];
-        long delta = left_block_fp - min_block_fp;
-        // dump delta
+        long right_min_block_fp = left_block_fp;
+        long right_left_block_fp = leaf_block_fps[right];
+        long delta = right_left_block_fp - right_min_block_fp;
         std::shared_ptr<MemoryFile> parent(new MemoryFile());
         nodes.push_back(parent);
         parent_index_len += parent->write_vint(delta);
       }
       parent_splits[split_dim]--;
       neg[split_dim] = last_neg;
+      last_split_value.set(last_split_dim_value, split_dim);
       return left_bytes + right_bytes + parent_index_len;
     }
   }
@@ -317,8 +323,7 @@ class BkdTree {
   void pack(int filed_id, values_type* storage, File* kdm, File* kdi,
             File* kdd) {
     int from = 0, to = storage->size();
-    int count_per_leaf = 2;
-    int num_leaves = (to - from + 1) / count_per_leaf;
+    int num_leaves = (to - from + 1) / max_count_per_leaf;
     long data_fp = kdd->size(), index_fp = kdi->size();
     value_type min, max;
     std::vector<int> parent_splits(value_type::dim, 0);
@@ -336,11 +341,12 @@ class BkdTree {
      */
     int ret = kdm->write_vint(filed_id);
     ret = kdm->write_vint(value_type::dim);
-    ret = kdm->write_vint(count_per_leaf);
+    ret = kdm->write_vint(max_count_per_leaf);
     ret = kdm->write_vint(value_type::bytes_per_dim);
     ret = kdm->write_vint(num_leaves);
     ret = kdm->append(min.bytes(), value_type::bytes_length);
     ret = kdm->append(max.bytes(), value_type::bytes_length);
+    ret = kdm->write_vint(to);
     ret = kdm->write_vint(data_fp);
     ret = kdm->write_vint(index_fp);
     for (auto& node : nodes) {
@@ -352,6 +358,10 @@ class BkdTree {
 
   void intersect(int field_id, value_type low, value_type high, File* kdi,
                  File* kdd) {
+    if (!readable_) {
+      return;
+    }
+
     MetaFieldInfo mfi;
     if (kdm_infos_.count(field_id) == 1) {
       mfi = kdm_infos_[field_id];
@@ -605,7 +615,7 @@ class BkdTree {
 
   void read_uniq_doc_values(IntersectState& is, int count, value_type& uniq,
                             std::vector<int>& docids) {
-    if (uniq < is._low || uniq > is._high) {
+    if (!(uniq >= is._low && uniq <= is._high)) {
       return;
     }
     for (int i = 0; i < count; ++i) {
@@ -631,8 +641,8 @@ class BkdTree {
                             value_type::bytes_per_dim - prefix);
         fp += ret;
       }
+     
       for (int j = 0; j < length; ++j) {
-        // is.docvalues_.push_back(value);
         if (value >= is._low && value <= is._high) {
           is.docids_.push_back(docids[i]);
         }
@@ -719,6 +729,7 @@ class BkdTree {
     char magic;
     ret = is.kdd_->read(fp, &magic, 1);
     fp += ret;
+  
     switch (magic) {
       case 0: {
         int pre = 0;
@@ -747,6 +758,7 @@ class BkdTree {
         break;
       }
     }
+    
     is._left_fps[is.level_] = fp;
   }
 
@@ -799,4 +811,6 @@ class BkdTree {
   bool readable_;
   std::unordered_map<int, MetaFieldInfo> kdm_infos_;
 };
+template <class T, int D>
+const int BkdTree<T, D>::max_count_per_leaf = 2;
 }  // namespace yas

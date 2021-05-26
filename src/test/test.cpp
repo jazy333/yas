@@ -239,6 +239,13 @@ int main(int argc, char* argv[]) {
   Point<int, 2> p8({-40, -58}, 200);
   Point<int, 2> p9({-92, -32}, 201);
   Point<int, 2> p10({3, 4}, 202);
+  Point<int, 2> p11({9, -8}, 200);
+  Point<int, 2> p12({10, 6}, 201);
+  Point<int, 2> p13({4, -10}, 202);
+  Point<int, 2> p14({-2, -2}, 203);
+  Point<int, 2> p15({-6, -1}, 204);
+  Point<int, 2> p16({-4, -1}, 205);
+  //[9,-8]#200||[10,6]#201||[4,-10]#202||[-2,-2]#203||[-6,-1]#204||[-4,-1]#205||
   MemoryPoints<int, 2> mps;
   mps.write(p);
   mps.write(p7);
@@ -247,13 +254,19 @@ int main(int argc, char* argv[]) {
   mps.write(p8);
   mps.write(p9);
   mps.write(p10);
-#if 0
+  mps.write(p11);
+  mps.write(p12);
+  mps.write(p13);
+  mps.write(p14);
+  mps.write(p15);
+  mps.write(p16);
+#if 1
   std::default_random_engine random(time(nullptr));
-  std::uniform_int_distribution<int> dis1(-100, 100);
-  for(int i=0;i<2;++i){
-    int x=dis1(random);
-    int y=dis1(random);
-    Point<int, 2> p({x,y},i+200);
+  std::uniform_int_distribution<int> dis1(-10, 10);
+  for (int i = 0; i < 1111; ++i) {
+    int x = dis1(random);
+    int y = dis1(random);
+    Point<int, 2> p({x, y}, i + 200);
     mps.write(p);
   }
 #endif
@@ -295,18 +308,26 @@ int main(int argc, char* argv[]) {
   kdi->open("data/yas.kdi", true);
   File* kdd = new MMapFile();
   kdd->open("data/yas.kdd", true);
-  int field_id=1;
-  bkd_out.pack(field_id,&mps, kdm, kdi, kdd);
-  //kdm end
+  int field_id = 1;
+  bkd_out.pack(field_id, &mps, kdm, kdi, kdd);
+  // kdm end
   kdm->write_vint(0);
   kdm->close();
 
-  Point<int,2> low({1,1},-1);
-  Point<int,2> high({5,5},-1);
-  File* kdm_in=new MMapFile();
+  Point<int, 2> low({1, 1}, -1);
+  Point<int, 2> high({5, 5}, -1);
+  File* kdm_in = new MMapFile();
   kdm_in->open("data/yas.kdm", false);
-  BkdTree<int, 2> bkd_in(kdm_in,kdi,kdd);
-  bkd_in.intersect(field_id,low, high, kdi, kdd);
+  BkdTree<int, 2> bkd_in(kdm_in, kdi, kdd);
+  bkd_in.intersect(field_id, low, high, kdi, kdd);
+  cout << "expect result:";
+  for (int i = 0; i < mps.size(); ++i) {
+    Point<int, 2> cur = mps.get(i);
+    if (cur <= high && cur >= low) {
+      cout << cur.get_docid() << ",";
+    }
+  }
+  cout << endl;
 
 #if 0
   for (auto iter = mps.begin();iter != mps.end();++iter) {
