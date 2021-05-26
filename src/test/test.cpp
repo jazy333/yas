@@ -319,7 +319,13 @@ int main(int argc, char* argv[]) {
   File* kdm_in = new MMapFile();
   kdm_in->open("data/yas.kdm", false);
   BkdTree<int, 2> bkd_in(kdm_in, kdi, kdd);
-  bkd_in.intersect(field_id, low, high, kdi, kdd);
+  vector<int> result_docids;
+  bkd_in.intersect(field_id, low, high, kdi, kdd, result_docids);
+  cout << "interfect result:";
+  for (int i = 0; i < result_docids.size(); ++i) {
+    cout << result_docids[i] << ",";
+  }
+  cout << endl;
   cout << "expect result:";
   for (int i = 0; i < mps.size(); ++i) {
     Point<int, 2> cur = mps.get(i);
@@ -327,6 +333,7 @@ int main(int argc, char* argv[]) {
       cout << cur.get_docid() << ",";
     }
   }
+
   cout << endl;
 
 #if 0

@@ -69,7 +69,6 @@ class BkdTree {
     int level_;
     int node_id_;
     int _split_dim;
-    T _split_dim_value;
     int _num_leaves;
     loff_t index_init_fp_;
     loff_t index_cur_fp_;
@@ -143,28 +142,19 @@ class BkdTree {
       } else {
         int code = 0;
         int ret = kdi_->read_vint(index_cur_fp_, code);
-        
+
         index_cur_fp_ += ret;
         _split_dim = code % value_type::dim;
         code /= value_type::dim;
         int prefix = code % (1 + value_type::bytes_per_dim);
         int suffix = value_type::bytes_per_dim - prefix;
         _split_values[level_] = _split_values[level_ - 1];
-       
-        if (suffix > 0) {
-          /*
-          int delta = code / (1 + value_type::bytes_per_dim);
-          if (neg_[level_][_split_dim]) {
-            delta = -delta;
-          }
-          int old = _split_values[level_].get_byte(_split_dim, prefix);
 
-          dim_start[prefix] = old + delta;*/
+        if (suffix > 0) {
           u_char* dim_start = _split_values[level_].get_bytes(_split_dim);
           int ret = kdi_->read(index_cur_fp_, dim_start + prefix, suffix);
           index_cur_fp_ += ret;
         }
-       
 
         int left_bytes = 0;
         if (node_id_ * 2 < _num_leaves) {
@@ -196,7 +186,6 @@ class BkdTree {
             int to, value_type& min, value_type& max,
             std::vector<int>& parent_splits, std::vector<off_t>& leaf_block_fps,
             value_type& last_split_value, std::vector<bool>& neg) {
-    
     if (num_leaves == 1) {
       leaf_block_fps[leaves_offset] = kdd->size();
       int count = to - from;
@@ -250,28 +239,19 @@ class BkdTree {
       int mid = from + num_left_leaves * max_count_per_leaf;
       int prefix_len = min.mismatch(max, split_dim);
       storage->select(from, to, mid, &split_dim);
-     
+
       int right = leaves_offset + num_left_leaves;
       value_type split_value = storage->get(mid);
       int split_prefix = split_value.mismatch(last_split_value, split_dim);
 
       int first_diff_byte_delta = 0;
-      /*
-      if (split_prefix < value_type::bytes_per_dim) {
-        // split_value.bytes
-        first_diff_byte_delta =
-            split_value.get_byte(split_dim, split_prefix) -
-            last_split_value.get_byte(split_dim, split_prefix);
-        if (neg[split_dim]) {
-          first_diff_byte_delta = -first_diff_byte_delta;
-        }
-      }*/
-      T last_split_dim_value=last_split_value.get(split_dim);
+
+      T last_split_dim_value = last_split_value.get(split_dim);
       T split_dim_value = split_value.get(split_dim);
       last_split_value.set(split_dim_value, split_dim);
 
       int code = (split_prefix)*value_type::dim + split_dim;
-      
+
       // dump code
       parent_index_len += parent->write_vint(code);
 
@@ -357,7 +337,7 @@ class BkdTree {
   }
 
   void intersect(int field_id, value_type low, value_type high, File* kdi,
-                 File* kdd) {
+                 File* kdd, std::vector<int>& docids) {
     if (!readable_) {
       return;
     }
@@ -373,10 +353,7 @@ class BkdTree {
     is._low = low;
     is._high = high;
     do_intersect(mfi.min_, mfi.max_, is);
-    std::cout << "dump intersect docids:" << std::endl;
-    std::copy(is.docids_.begin(), is.docids_.end(),
-              std::ostream_iterator<int>(std::cout, ","));
-    std::cout << std::endl;
+    docids = std::move(is.docids_);
   }
 
  private:
@@ -641,7 +618,7 @@ class BkdTree {
                             value_type::bytes_per_dim - prefix);
         fp += ret;
       }
-     
+
       for (int j = 0; j < length; ++j) {
         if (value >= is._low && value <= is._high) {
           is.docids_.push_back(docids[i]);
@@ -729,7 +706,7 @@ class BkdTree {
     char magic;
     ret = is.kdd_->read(fp, &magic, 1);
     fp += ret;
-  
+
     switch (magic) {
       case 0: {
         int pre = 0;
@@ -758,7 +735,7 @@ class BkdTree {
         break;
       }
     }
-    
+
     is._left_fps[is.level_] = fp;
   }
 
