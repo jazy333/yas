@@ -84,4 +84,12 @@ int gcd(int a, int b) {
 
 int lcm(int a, int b) { return (a * b) / gcd(a, b); }
 
+uint32_t asmbits(const uint32_t v) {
+  if (v == 0)
+    return 0;
+  uint32_t answer;
+  __asm__("bsr %1, %0;" : "=r"(answer) : "r"(v));
+  return answer + 1;
+}
+
 }  // namespace yas

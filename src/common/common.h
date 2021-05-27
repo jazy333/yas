@@ -8,5 +8,6 @@ ssize_t write_with_check(int fd, const void *buf, size_t count);
 inline int round(int len, int align) { return ((len - 1) / align + 1) * align; }
 int gcd(int a,int b);
 int lcm(int a,int b);
+inline uint32_t asmbits(const uint32_t v);
 
 }  // namespace yas

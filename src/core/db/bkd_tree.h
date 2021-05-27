@@ -684,13 +684,13 @@ class BkdTree {
         break;
       }
       case -2: {
-        read_minmax(is, common_prefixes, min, max);
+        if (value_type::dim != 1) read_minmax(is, common_prefixes, min, max);
         read_low_cardinality_doc_values(is, common_prefixes, count,
                                         incomplete_value, docids);
         break;
       }
       default: {
-        read_minmax(is, common_prefixes, min, max);
+        if (value_type::dim != 1) read_minmax(is, common_prefixes, min, max);
         read_high_cardinaliy_doc_values(is, common_prefixes, sorted_dim, count,
                                         incomplete_value, docids);
         break;
@@ -752,7 +752,7 @@ class BkdTree {
     }
   }
 
-  void interfect_one_block(IntersectState& is) {
+  void intersect_one_block(IntersectState& is) {
     std::vector<int> docids;
     read_docids(is, docids);
     read_doc_values(is, docids);
@@ -765,7 +765,7 @@ class BkdTree {
     } else if (rel == 1) {
       add_all(is);
     } else if (is.is_leaf()) {
-      interfect_one_block(is);
+      intersect_one_block(is);
     } else {
       int split_dim = is._split_dim;
       T split_dim_value = is._split_values[is.level_].get(split_dim);
