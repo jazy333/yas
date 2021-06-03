@@ -1,32 +1,32 @@
 #include "variable_byte_compression.h"
 
 namespace yas {
-int VariableByteCompression::compress(const std::string& in, std::string& out) {
-  size_t outputSize = 0;
+void VariableByteCompression::compress(const uint32_t* in, size_t in_size,
+                                       uint8_t* out, size_t& out_size) {
+  uint32_t value = *in;
   // While more than 7 bits of data are left, occupy the last output byte
   // and set the next byte flag
   while (value > 127) {
     //|128: Set the next byte flag
-    output[outputSize] = ((uint8_t)(value & 127)) | 128;
+    out[out_size] = ((uint8_t)(value & 127)) | 128;
     // Remove the seveFn bits we just wrote
     value >>= 7;
-    outputSize++;
+    out_size++;
   }
-  output[outputSize++] = ((uint8_t)value) & 127;
-  return outputSize;
+  out[out_size++] = ((uint8_t)value) & 127;
 }
 
-
-int VariableByteCompression::decompress(const std::string& in,
-                                        std::string& out) {
-  int_t ret = 0;
-  for (size_t i = 0; i < inputSize; i++) {
-    ret |= (input[i] & 127) << (7 * i);
+uint32_t* VariableByteCompression::decompress(const uint8_t* in, size_t in_size,
+                                              uint32_t* out, size_t& out_size) {
+  uint32_t ret = 0;
+  for (size_t i = 0; i < in_size; i++) {
+    ret |= (in[i] & 127) << (7 * i);
     // If the next-byte flag is set
-    if (!(input[i] & 128)) {
+    if (!(in[i] & 128)) {
       break;
     }
   }
-  return ret;
+  *out = ret;
+  return nullptr;
 }
 }  // namespace yas
