@@ -1,5 +1,6 @@
 #pragma once
 #include <sys/types.h>
+#include <cstdint>
 namespace yas {
 ssize_t pread_with_check(int fd, void *buf, size_t count, off_t offset);
 ssize_t pwrite_with_check(int fd, const void *buf, size_t count, off_t offset);

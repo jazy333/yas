@@ -1,324 +1,205 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+#include "elias_fano_compression.h"
 
-// EliasFanoCompression: quasi-succinct compression of sorted integers in C#
+#include <cmath>
+#include <mutex>
+// EliasFanoCompression: quasi-succinct compression of sorted integers in CPP
 //
-// Elias-Fano encoding is quasi succinct, which means it is almost as good as the best theoretical possible compression scheme for sorted integers.
-// While it can be used to compress any sorted list of integers, we will use it for compressing posting lists of inverted indexes.
-// Based on a research paper by Sebastiano Vigna: http://vigna.di.unimi.it/ftp/papers/QuasiSuccinctIndices.pdf
+// Elias-Fano encoding is quasi succinct, which means it is almost as good as
+// the best theoretical possible compression scheme for sorted integers. While
+// it can be used to compress any sorted list of integers, we will use it for
+// compressing posting lists of inverted indexes. Based on a research paper by
+// Sebastiano Vigna:
+// http://vigna.di.unimi.it/ftp/papers/QuasiSuccinctIndices.pdf
 //
-// Copyright (C) 2016 Wolf Garbe
-// Version: 1.0
-// Author: Wolf Garbe <wolf.garbe@faroo.com>
-// Maintainer: Wolf Garbe <wolf.garbe@faroo.com>
-// URL: http://blog.faroo.com/2016/08/22/elias-fano_quasi-succinct_compression_of_sorted_integers_in_csharp
-// Description: http://blog.faroo.com/2016/08/22/elias-fano_quasi-succinct_compression_of_sorted_integers_in_csharp
-//
-// License:
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License,
-// version 3.0 (LGPL-3.0) as published by the Free Software Foundation.
-// http://www.opensource.org/licenses/LGPL-3.0
 
-static class EliasFanoCompression
-{
-public
-    static Random rnd = new Random(500);
-
-    // generates a sorted list of n integers with no duplicates within range
-public
-    static List<uint> generatePostingList(int n, int range)
-    {
-        if ((n < 1) || (n > range) || (range < 1))
-            Console.WriteLine("n within 1...range and range>0!");
-
-        List<uint> postingList = new List<uint>(n);
-
-        // hashset fits in RAM && enough gaps (n*1.1<range)
-        if ((n <= 10000000) && (n * 1.1 < range))
-        {
-            // fast for sparse lists, in dense lists many loops because difficult for random to hit remaining gaps, hashset required (RAM), sorting required
-            HashSet<uint> hs = new HashSet<uint>();
-            while (hs.Count < n)
-            {
-                uint docID = (uint)rnd.Next(1, range);
-
-                // make sure docid are unique!
-                // strictly positive delta, no zero allowed (we dont allow a zero for the docid because then the delta for the first docid in a posting list could be zero)
-                if (hs.Add(docID))
-                    postingList.Add(docID);
-            }
-            postingList.Sort();
-        }
-        else
-        {
-            // slow for sparse lists as it loops through whole range, fast for dense lists, no hashset required, no sorting required
-            for (uint i = 1; i <= range; i++)
-            {
-                // derived from: if ( rnd.Next(range)<n) postingList.Add(i);
-                // adjusting probabilities so that exact number n is generated
-                if (rnd.Next(range - (int)i) < (n - postingList.Count))
-                {
-                    postingList.Add(i);
-                }
-            }
-        }
-
-        return postingList;
-    }
-
-public
-    static void EliasFanoCompress(List<uint> postingList, byte[] compressedBuffer, ref int compressedBufferPointer2)
-    {
-        // Elias Fano Coding
-        // compress sorted integers: Given n and u we have a monotone sequence 0 ≤ x0, x1, x2, ... , xn-1 ≤ u
-        // at most 2 + log(u / n) bits per element
-        // Quasi-succinct: less than half a bit away from succinct bound!
-        // https://en.wikipedia.org/wiki/Unary_coding
-        // http://vigna.di.unimi.it/ftp/papers/QuasiSuccinctIndices.pdf
-        // http://shonan.nii.ac.jp/seminar/029/wp-content/uploads/sites/12/2013/07/Sebastiano_Shonan.pdf
-        // http://www.di.unipi.it/~ottavian/files/elias_fano_sigir14.pdf
-        // http://hpc.isti.cnr.it/hpcworkshop2014/PartitionedEliasFanoIndexes.pdf
-
-        Stopwatch sw = Stopwatch.StartNew();
-
-        uint lastDocID = 0;
-
-        ulong buffer1 = 0;
-        int bufferLength1 = 0;
-        ulong buffer2 = 0;
-        int bufferLength2 = 0;
-
-        uint largestblockID = (uint)postingList[postingList.Count - 1];
-        double averageDelta = (double)largestblockID / (double)postingList.Count;
-        double averageDeltaLog = Math.Log(averageDelta, 2);
-        int lowBitsLength = (int)Math.Floor(averageDeltaLog);
-        if (lowBitsLength < 0)
-            lowBitsLength = 0;
-        ulong lowBitsMask = (((ulong)1 << lowBitsLength) - 1);
-
-        int compressedBufferPointer1 = 0;
-
-        // +6 : for docid number, lowerBitsLength and ceiling
-        compressedBufferPointer2 = lowBitsLength * postingList.Count / 8 + 6;
-
-        // store postingList.Count for decompression: LSB first
-        compressedBuffer[compressedBufferPointer1++] = (byte)(postingList.Count & 255);
-        compressedBuffer[compressedBufferPointer1++] = (byte)((postingList.Count >> 8) & 255);
-        compressedBuffer[compressedBufferPointer1++] = (byte)((postingList.Count >> 16) & 255);
-        compressedBuffer[compressedBufferPointer1++] = (byte)((postingList.Count >> 24) & 255);
-
-        // store lowerBitsLength for decompression
-        compressedBuffer[compressedBufferPointer1++] = (byte)lowBitsLength;
-
-        foreach (uint docID in postingList)
-        {
-            // docID strictly monotone/increasing numbers, docIdDelta strictly positive, no zero allowed
-            uint docIdDelta = (docID - lastDocID - 1);
-
-            // low bits
-            // Store the lower l= log(u / n) bits explicitly
-            // binary packing/bit packing
-
-            buffer1 <<= lowBitsLength;
-            buffer1 |= (docIdDelta & lowBitsMask);
-            bufferLength1 += lowBitsLength;
-
-            // flush buffer to compressedBuffer
-            while (bufferLength1 > 7)
-            {
-                bufferLength1 -= 8;
-                compressedBuffer[compressedBufferPointer1++] = (byte)(buffer1 >> bufferLength1);
-            }
-
-            // high bits
-            // Store high bits as a sequence of unary coded gaps
-            // 0=1, 1=01, 2=001, 3=0001, ...
-            // https://en.wikipedia.org/wiki/Unary_coding
-
-            // length of unary code
-            uint unaryCodeLength = (uint)(docIdDelta >> lowBitsLength) + 1;
-            buffer2 <<= (int)unaryCodeLength;
-
-            // set most right bit
-            buffer2 |= 1;
-            bufferLength2 += (int)unaryCodeLength;
-
-            // flush buffer to compressedBuffer
-            while (bufferLength2 > 7)
-            {
-                bufferLength2 -= 8;
-                compressedBuffer[compressedBufferPointer2++] = (byte)(buffer2 >> bufferLength2);
-            }
-
-            lastDocID = docID;
-        }
-
-        // final flush buffer
-        if (bufferLength1 > 0)
-        {
-            compressedBuffer[compressedBufferPointer1++] = (byte)(buffer1 << (8 - bufferLength1));
-        }
-
-        if (bufferLength2 > 0)
-        {
-            compressedBuffer[compressedBufferPointer2++] = (byte)(buffer2 << (8 - bufferLength2));
-        }
-
-        Console.WriteLine("\rCompression:   " + sw.ElapsedMilliseconds.ToString("N0") + " ms  " + postingList.Count.ToString("N0") + " DocID  delta: " + averageDelta.ToString("N2") + "  low bits: " + lowBitsLength.ToString() + "   bits/DocID: " + ((double)compressedBufferPointer2 * (double)8 / (double)postingList.Count).ToString("N2") + " (" + (2 + averageDeltaLog).ToString("N2") + ")  uncompressed: " + ((ulong)postingList.Count * 4).ToString("N0") + "  compressed: " + compressedBufferPointer2.ToString("N0") + "  ratio: " + ((double)postingList.Count * 4 / compressedBufferPointer2).ToString("N2"));
-    }
-
-public
-    static uint[, ] decodingTableHighBits = new uint[256, 8];
-public
-    static byte[] decodingTableDocIdNumber = new byte[256];
-public
-    static byte[] decodingTableHighBitsCarryover = new byte[256];
-
-public
-    static void eliasFanoCreateDecodingTable()
-    {
-        for (int i = 0; i < 256; i++)
-        {
-            byte zeroCount = 0;
-            for (int j = 7; j >= 0; j--)
-            {
-                // count 1 within i
-                if ((i & (1 << j)) > 0)
-                {
-                    // unary code of high bits of nth docid within this byte
-                    decodingTableHighBits[i, decodingTableDocIdNumber[i]] = zeroCount;
-
-                    // docIdNumber = number of docid = number of 1 within one byte
-                    decodingTableDocIdNumber[i]++;
-                    zeroCount = 0;
-                }
-                else
-                {
-                    // count 0 since last 1 within i
-                    zeroCount++;
-                }
-            }
-            // number of trailing zeros (zeros carryover), if whole byte=0 then unaryCodeLength+=8
-            decodingTableHighBitsCarryover[i] = zeroCount;
-        }
-    }
-
-public
-    static void EliasFanoDecompress(byte[] compressedBuffer, int compressedBufferPointer, uint[] postingList, ref int resultPointer)
-    {
-        Stopwatch sw = Stopwatch.StartNew();
-
-        // array is faster than list, but wastes space with fixed size
-        // this is only important for decompression, not for compressed intersection (because we have only a fraction of results)
-
-        int lowBitsPointer = 0;
-        ulong lastDocID = 0;
-        ulong docID = 0;
-
-        // read postingList.Count for decompression: LSB first
-        int postingListCount = compressedBuffer[lowBitsPointer++];
-        postingListCount |= (int)compressedBuffer[lowBitsPointer++] << 8;
-        postingListCount |= (int)compressedBuffer[lowBitsPointer++] << 16;
-        postingListCount |= (int)compressedBuffer[lowBitsPointer++] << 24;
-
-        // read fanoParamInt for decompression
-        byte lowBitsLength = compressedBuffer[lowBitsPointer++];
-
-        // decompress low bits
-        byte lowBitsCount = 0;
-        byte lowBits = 0;
-
-        // decompress high bits
-        byte cb = 1;
-        for (int highBitsPointer = lowBitsLength * postingListCount / 8 + 6; highBitsPointer < compressedBufferPointer; highBitsPointer++)
-        {
-            // number of trailing zeros (zeros carryover), if whole byte=0 then unaryCodeLength+=8
-            docID += decodingTableHighBitsCarryover[cb];
-            cb = compressedBuffer[highBitsPointer];
-
-            // number of docids contained within one byte
-            byte docIdNumber = decodingTableDocIdNumber[cb];
-            for (byte i = 0; i < docIdNumber; i++)
-            {
-                // decompress low bits
-                docID <<= lowBitsCount;
-                docID |= lowBits & ((1u << lowBitsCount) - 1u); //mask remainder from previous lowBits, then add/or to docid
-
-                while (lowBitsCount < lowBitsLength)
-                {
-                    docID <<= 8;
-
-                    lowBits = compressedBuffer[lowBitsPointer++];
-                    docID |= lowBits;
-                    lowBitsCount += 8;
-                }
-                lowBitsCount -= lowBitsLength;
-                // move right bits which belong to next docid
-                docID >>= lowBitsCount;
-
-                // decompress high bits
-                // 1 byte contains high bits in unary code of 0..8 docid's
-                docID += (decodingTableHighBits[cb, i] << lowBitsLength) + lastDocID + 1u;
-                postingList[resultPointer++] = (uint)docID;
-                lastDocID = docID;
-                docID = 0;
-            }
-        }
-        Console.WriteLine("\rDecompression: " + sw.ElapsedMilliseconds.ToString("N0") + " ms  " + postingListCount.ToString("N0") + " DocID");
-    }
-
-    static void Main(string[] args)
-    {
-        // init
-        Console.Write("Create decoding table...");
-        eliasFanoCreateDecodingTable();
-
-        Console.SetWindowSize(Math.Min(180, Console.LargestWindowWidth), Console.WindowHeight);
-
-        int indexedPages = 1000000000;
-
-        // may be increased to 1,000,000,000 (>2 GB) if: >=16 GB RAM, 64 bit Windows, .NET version >= 4.5,  <gcAllowVeryLargeObjects> in config file, Project / Properties / Buld / Prefer 32-bit disabled!
-        // http://stackoverflow.com/questions/25225249/maxsize-of-array-in-net-framework-4-5
-        int maximumPostingListLength = 1000000000;
-
-        for (int postingListLength = 10; postingListLength <= maximumPostingListLength; postingListLength *= 10)
-        {
-            // posting list creation
-            Console.Write("\rCreate posting list...");
-            List<uint> postingList1 = generatePostingList(postingListLength, indexedPages);
-
-            // compression
-            Console.Write("\rCompress posting list...");
-            //maximum compressed size
-            int maxCompressedSize = (int)((2 + Math.Ceiling(Math.Log((double)postingList1[postingList1.Count - 1] / (double)postingList1.Count, 2))) * postingList1.Count / 8) + 6;
-            byte[] compressedBuffer1 = new byte[maxCompressedSize];
-            int compressedBufferPointer1 = 0;
-            EliasFanoCompress(postingList1, compressedBuffer1, ref compressedBufferPointer1);
-
-            // decompression
-            Console.Write("Decompress posting list...");
-            uint[] postingList10 = new uint[postingListLength];
-            int resultPointer1 = 0;
-            EliasFanoDecompress(compressedBuffer1, compressedBufferPointer1, postingList10, ref resultPointer1);
-
-            // verification
-            Console.Write("Verify posting list...");
-            bool error = false;
-            for (int i = 0; i < resultPointer1; i++)
-                if (postingList1[i] != postingList10[i])
-                {
-                    error = true;
-                    break;
-                }
-            if (resultPointer1 != postingList1.Count)
-                error = true;
-            if (error)
-                Console.WriteLine("\rVerification failed!  ");
-        }
-
-        Console.WriteLine("\rPress any key to exit");
-        Console.ReadKey();
-    }
+namespace yas {
+EliasFanoCompression::EliasFanoCompression(/* args */) {
+  std::once_flag f;
+  std::call_once(f, elias_fano_create_decoding_table);
 }
+
+EliasFanoCompression::~EliasFanoCompression() {}
+void EliasFanoCompression::compress(const uint32_t* in, size_t in_size,
+                                    uint8_t* out, size_t& out_size) {
+  // Elias Fano Coding
+  // compress sorted integers: Given n and u we have a monotone sequence 0 ≤
+  // x0, x1, x2, ... , xn-1 ≤ u at most 2 + log(u / n) bits per element
+  // Quasi-succinct: less than half a bit away from succinct bound!
+  // https://en.wikipedia.org/wiki/Unary_coding
+  // http://vigna.di.unimi.it/ftp/papers/QuasiSuccinctIndices.pdf
+  // http://shonan.nii.ac.jp/seminar/029/wp-content/uploads/sites/12/2013/07/Sebastiano_Shonan.pdf
+  // http://www.di.unipi.it/~ottavian/files/elias_fano_sigir14.pdf
+  // http://hpc.isti.cnr.it/hpcworkshop2014/PartitionedEliasFanoIndexes.pdf
+
+  uint32_t last_docid = 0;
+
+  uint64_t buffer1 = 0;
+  int buffer_length1 = 0;
+  uint64_t buffer2 = 0;
+  int buffer_length2 = 0;
+
+  uint32_t largest_docid = in[in_size - 1];
+  double average_delta = (double)largest_docid / (double)in_size;
+  double average_delta_log = log2(average_delta);
+  int low_bits_length = (int)floor(average_delta_log);
+  if (low_bits_length < 0) low_bits_length = 0;
+  uint64_t low_bits_mask = (((uint64_t)1 << low_bits_length) - 1);
+
+  int compressed_buffer_pointer1 = 0;
+
+  // +6 : for docid number, lowerBitsLength and ceiling
+  int compressed_buffer_pointer2 = low_bits_length * in_size / 8 + 6;
+
+  // store postingList.Count for decompression: LSB first
+  out[compressed_buffer_pointer1++] = (uint8_t)(in_size & 0xff);
+  out[compressed_buffer_pointer1++] = (uint8_t)((in_size >> 8) & 0xff);
+  out[compressed_buffer_pointer1++] = (uint8_t)((in_size >> 16) & 0xff);
+  out[compressed_buffer_pointer1++] = (uint8_t)((in_size >> 24) & 0xff);
+
+  // store low_bits_length for decompression
+  out[compressed_buffer_pointer1++] = (uint8_t)low_bits_length;
+
+  for (size_t i = 0; i < in_size; ++i) {
+    // docID strictly monotone/increasing numbers, docIdDelta strictly
+    // positive, no zero allowed
+    uint32_t docid = in[i];
+    uint32_t docid_delta = (docid - last_docid - 1);
+
+    // low bits
+    // Store the lower l= log(u / n) bits explicitly
+    // binary packing/bit packing
+
+    buffer1 <<= low_bits_length;
+    buffer1 |= (docid_delta & low_bits_mask);
+    buffer_length1 += low_bits_length;
+
+    // flush buffer to out
+    while (buffer_length1 > 7) {
+      buffer_length1 -= 8;
+      out[compressed_buffer_pointer1++] = (uint8_t)(buffer1 >> buffer_length1);
+    }
+
+    // high bits
+    // Store high bits as a sequence of unary coded gaps
+    // 0=1, 1=01, 2=001, 3=0001, ...
+    // https://en.wikipedia.org/wiki/Unary_coding
+
+    // length of unary code
+    uint32_t unary_code_length = (uint32_t)(docid_delta >> low_bits_length) + 1;
+    buffer2 <<= (int)unary_code_length;
+
+    // set most right bit
+    buffer2 |= 1;
+    buffer_length2 += (int)unary_code_length;
+
+    // flush buffer to out
+    while (buffer_length2 > 7) {
+      buffer_length2 -= 8;
+      out[compressed_buffer_pointer2++] = (uint8_t)(buffer2 >> buffer_length2);
+    }
+
+    last_docid = docid;
+  }
+
+  // final flush buffer
+  if (buffer_length1 > 0) {
+    out[compressed_buffer_pointer1++] =
+        (uint8_t)(buffer1 << (8 - buffer_length1));
+  }
+
+  if (buffer_length2 > 0) {
+    out[compressed_buffer_pointer2++] =
+        (uint8_t)(buffer2 << (8 - buffer_length2));
+  }
+}
+uint32_t* EliasFanoCompression::decompress(const uint8_t* in, size_t in_size,
+                                           uint32_t* out, size_t& out_size) {
+  // array is faster than list,
+  // but wastes space with fixed size
+  // this is only important for decompression, not for compressed
+  // intersection (because we have only a fraction of results)
+
+  int low_bits_pointer = 0;
+  uint32_t last_docid = 0;
+  uint32_t docid = 0;
+  size_t result_size = 0;
+
+  // read postingList.Count for decompression: LSB first
+  int posting_list_count = in[low_bits_pointer++];
+  posting_list_count |= (int)in[low_bits_pointer++] << 8;
+  posting_list_count |= (int)in[low_bits_pointer++] << 16;
+  posting_list_count |= (int)in[low_bits_pointer++] << 24;
+
+  // read fanoParamInt for decompression
+  uint8_t low_bits_length = in[low_bits_pointer++];
+
+  // decompress low bits
+  uint8_t low_bits_count = 0;
+  uint8_t low_bits = 0;
+
+  // decompress high bits
+  uint8_t cb = 1;
+  for (int high_bits_pointer = low_bits_length * posting_list_count / 8 + 6;
+       high_bits_pointer < in_size; high_bits_pointer++) {
+    // number of trailing zeros (zeros carryover), if whole byte=0 then
+    // unaryCodeLength+=8
+    docid += decoding_table_high_bits_carry[cb];
+    cb = in[high_bits_pointer];
+
+    // number of docids contained within one byte
+    uint8_t docid_number = decoding_table_docid_number[cb];
+    for (uint8_t i = 0; i < docid_number; i++) {
+      // decompress low bits
+      docid <<= low_bits_count;
+      docid |=
+          low_bits &
+          ((1u << low_bits_count) -
+           1u);  // mask remainder from previous lowBits, then add/or to docid
+
+      while (low_bits_count < low_bits_length) {
+        docid <<= 8;
+        low_bits = in[low_bits_pointer++];
+        docid |= low_bits;
+        low_bits_count += 8;
+      }
+      low_bits_count -= low_bits_length;
+      // move right bits which belong to next docid
+      docid >>= low_bits_count;
+
+      // decompress high bits
+      // 1 byte contains high bits in unary code of 0..8 docid's
+      docid += (decoding_table_high_bits[cb][i] << low_bits_length) +
+               last_docid + 1u;
+      out[result_size++] = (uint32_t)docid;
+      last_docid = docid;
+      docid = 0;
+    }
+  }
+  out_size = result_size;
+  return out + out_size;
+}
+
+void EliasFanoCompression::elias_fano_create_decoding_table() {
+  for (int i = 0; i < 256; i++) {
+    uint8_t zero_count = 0;
+    for (int j = 7; j >= 0; j--) {
+      // count 1 within i
+      if ((i & (1 << j)) > 0) {
+        // unary code of high bits of nth docid within this byte
+        decoding_table_high_bits[i][decoding_table_docid_number[i]] =
+            zero_count;
+        // docIdNumber = number of docid = number of 1 within one byte
+        decoding_table_docid_number[i]++;
+        zero_count = 0;
+      } else {
+        // count 0 since last 1 within i
+        zero_count++;
+      }
+    }
+    // number of trailing zeros (zeros carryover), if whole byte=0 then
+    // unaryCodeLength+=8
+    decoding_table_high_bits_carry[i] = zero_count;
+  }
+}
+
+}  // namespace yas
