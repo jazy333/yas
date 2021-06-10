@@ -13,13 +13,18 @@
 //
 
 namespace yas {
+
+uint32_t EliasFanoCompression::decoding_table_high_bits[256][8];
+uint8_t EliasFanoCompression::decoding_table_docid_number[256];
+uint8_t EliasFanoCompression::decoding_table_high_bits_carry[256];
+
 EliasFanoCompression::EliasFanoCompression(/* args */) {
   std::once_flag f;
   std::call_once(f, elias_fano_create_decoding_table);
 }
 
 EliasFanoCompression::~EliasFanoCompression() {}
-void EliasFanoCompression::compress(const uint32_t* in, size_t in_size,
+void EliasFanoCompression::compress(uint32_t* in, size_t in_size,
                                     uint8_t* out, size_t& out_size) {
   // Elias Fano Coding
   // compress sorted integers: Given n and u we have a monotone sequence 0 ≤

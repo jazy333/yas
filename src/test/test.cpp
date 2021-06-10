@@ -1,10 +1,12 @@
 //#include "murmur_hash2.h"
+#include <x86intrin.h>
+
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
-#include <x86intrin.h>
+#include <algorithm>
 
 #include "bkd_tree.h"
 #include "common.h"
@@ -17,8 +19,10 @@
 #include "point.h"
 #include "segment_mutex.h"
 #include "shared_mutex.h"
+#include "simd_binary_compression.h"
 #include "sortable_bytes.h"
 #include "sorter.h"
+#include "variable_byte_compression.h"
 
 using namespace yas;
 using namespace std;
@@ -99,7 +103,67 @@ class TestIntroSorter : public IntroSorter {
 int main(int argc, char* argv[]) {
   // MurmurHash2 mh2;
   // mh2.hash64("test",20181220);
+  default_random_engine e;
+  uniform_int_distribution<uint32_t> u(0, 0xfff);
+  e.seed(time(0));
+  vector<uint32_t> docids;
+  size_t in_size = 128 * 3;
+  for (size_t i = 0; i < in_size; ++i) {
+    docids.push_back(u(e));
+  }
+  SIMDBinaryCompression<false> sbc1;
+  __attribute__((aligned(16))) uint32_t* out = new uint32_t[in_size];
+  size_t out_size = in_size * 4;
+  sbc1.compress(docids.data(), docids.size(), reinterpret_cast<uint8_t*>(out),
+                out_size);
+  std::cout << "out_size:" << out_size << ",compress ratio:"
+            << static_cast<double>(out_size) / (in_size * 4) << endl;
+  std::cout << "compress data:" << endl;
+  std::copy(docids.begin(), docids.end(),
+            std::ostream_iterator<uint32_t>(cout, ","));
+  cout << endl;
 
+  __attribute__((aligned(16))) uint32_t* out_decompress =
+      new uint32_t[4 * out_size];
+  size_t out_decompress_size = 4 * out_size;
+
+  sbc1.decompress(reinterpret_cast<uint8_t*>(out), out_size * 4, out_decompress,
+                  out_decompress_size);
+  std::cout << "max out_decompress_size:" << out_decompress_size << endl;
+  std::cout << "decompress data:" << endl;
+  std::copy(out_decompress, out_decompress + out_decompress_size,
+            std::ostream_iterator<uint32_t>(cout, ","));
+  std::cout << endl;
+  std::cout << "real out_decompress_size:" << out_decompress_size << endl;
+  
+
+  SIMDBinaryCompression<true> sbc2;
+  sort(docids.begin(),docids.end());
+  cout<<"after sort:"<<endl;
+  copy(docids.begin(),docids.end(),ostream_iterator<uint32_t>(cout,","));
+  cout<<endl;
+  out_size = in_size * 4;
+  sbc2.compress(docids.data(), docids.size(), reinterpret_cast<uint8_t*>(out),
+                out_size);
+  std::cout << " delta out_size:" << out_size << ", delta compress ratio:"
+            << static_cast<double>(out_size) / (in_size * 4) << endl;
+  std::cout << "delta compress data:" << endl;
+  std::copy(docids.begin(), docids.end(),
+            std::ostream_iterator<uint32_t>(cout, ","));
+  cout << endl;
+
+  out_decompress_size = 4 * out_size;
+  sbc2.decompress(reinterpret_cast<uint8_t*>(out), out_size * 4, out_decompress,
+                  out_decompress_size);
+  std::cout << "delta max out_decompress_size:" << out_decompress_size << endl;
+  std::cout << "delta decompress data:" << endl;
+  std::copy(out_decompress, out_decompress + out_decompress_size,
+            std::ostream_iterator<uint32_t>(cout, ","));
+  std::cout << endl;
+  std::cout << "delta real out_decompress_size:" << out_decompress_size << endl;
+  delete[] out;
+  delete[] out_decompress;
+  
   long l1 = 123123131, l2 = 123123123123, l3 = 9983838838, l4 = 999913123131;
   int i1 = -1, i2 = 1, i3 = 3, i4 = -3;
   double d1 = 0.11111134141, d2 = -0.3333333334242, d3 = -1.34324242,

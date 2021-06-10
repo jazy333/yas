@@ -3,6 +3,7 @@
 #include <immintrin.h>
 #include <xmmintrin.h>  // SSE
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 
@@ -26,10 +27,32 @@ __attribute__((always_inline)) static inline __m128i simd_delta(__m128i curr,
       curr, _mm_or_si128(_mm_slli_si128(curr, 4), _mm_srli_si128(prev, 12)));
 }
 
+__attribute__((always_inline)) static __m128i run_prefix_sum(__m128i initOffset,
+                                                             uint32_t* pData,
+                                                             size_t TotalQty) {
+  const size_t QtyDivBy4 = TotalQty / 4;
+  // The block should contain 8N 32-bit integers, where N is some integer
+  assert(QtyDivBy4 % 2 == 0);
+
+  __m128i* pCurr = reinterpret_cast<__m128i*>(pData);
+  const __m128i* pEnd = pCurr + QtyDivBy4;
+
+  // Leonid Boytsov: manual loop unrolling may be crucial here.
+  while (pCurr < pEnd) {
+    initOffset = simd_prefix_sum(MM_LOAD_SI_128(pCurr), initOffset);
+    MM_STORE_SI_128(pCurr++, initOffset);
+
+    initOffset = simd_prefix_sum(MM_LOAD_SI_128(pCurr), initOffset);
+    MM_STORE_SI_128(pCurr++, initOffset);
+  }
+
+  return initOffset;
+}
+
 template <bool delta>
 class SIMDBinaryCompression : public Compression {
  public:
-  virtual void compress(const uint32_t* in, size_t in_size, uint8_t* out,
+  virtual void compress(uint32_t* in, size_t in_size, uint8_t* out,
                         size_t& out_size) override {
     uint32_t* iout = reinterpret_cast<uint32_t*>(out);
     uint32_t* out_start = iout;
@@ -39,7 +62,7 @@ class SIMDBinaryCompression : public Compression {
       uint32_t bits = maxbits(in + i, init);
       *iout++ = bits;
       simdpackwithoutmask(in + i, reinterpret_cast<__m128i*>(iout), bits);
-      init = MM_LOAD_SI_128(reinterpret_cast<__m128i*>(in + i));
+      MM_LOAD_SI_128(reinterpret_cast<__m128i*>(const_cast<uint32_t*>(in + i)));
       iout += (SIMD_BLOCKSIZE * bits / 32);
     }
     out_size = (iout - out_start) * 4;
@@ -54,9 +77,7 @@ class SIMDBinaryCompression : public Compression {
       uint32_t bit = *iin++;
       simdunpack(reinterpret_cast<const __m128i*>(iin), out, bit);
       if (delta) {
-        init = simd_prefix_sum(MM_LOAD_SI_128(reinterpret_cast<__m128i*>(out)),
-                               init);
-        MM_STORE_SI_128(reinterpret_cast<__m128i*>(out), init);
+        init = run_prefix_sum(init, out, SIMD_BLOCKSIZE);
       }
       iin += (SIMD_BLOCKSIZE * bit / 32);
       out += SIMD_BLOCKSIZE;
@@ -66,15 +87,22 @@ class SIMDBinaryCompression : public Compression {
   }
 
  private:
-  uint32_t maxbits(const uint32_t* in, __m128i& initoffset) {
-    const __m128i* pin = reinterpret_cast<const __m128i*>(in);
+  uint32_t maxbits(uint32_t* in, __m128i& initoffset) {
+    __m128i* pin = reinterpret_cast<__m128i*>(in);
     __m128i newvec = MM_LOAD_SI_128(pin);
-    __m128i accumulator = simd_delta(newvec, initoffset);
+    __m128i accumulator = newvec;
+    if (delta) {
+      accumulator = simd_delta(newvec, initoffset);
+      MM_STORE_SI_128(pin, accumulator);
+    }
     __m128i oldvec = newvec;
     for (uint32_t k = 1; 4 * k < SIMD_BLOCKSIZE; ++k) {
       newvec = MM_LOAD_SI_128(pin + k);
       __m128i diff = newvec;
-      if (delta) diff = simd_delta(newvec, oldvec);
+      if (delta) {
+        diff = simd_delta(newvec, oldvec);
+        MM_STORE_SI_128(pin + k, diff);
+      }
       accumulator = _mm_or_si128(accumulator, diff);
       oldvec = newvec;
     }

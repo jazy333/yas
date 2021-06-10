@@ -5,7 +5,7 @@ namespace yas {
 template <bool delta>
 class VariableByteCompression : public Compression {
  public:
-  void compress(const uint32_t* in, size_t in_size, uint8_t* out,
+  void compress(uint32_t* in, size_t in_size, uint8_t* out,
                 size_t& out_size) override {
     uint8_t* start = out;
     uint32_t pre = 0;
@@ -66,16 +66,16 @@ class VariableByteCompression : public Compression {
     uint8_t* in_end = in + in_size;
     while (in + 5 < in_end) {
       if (delta) {
-        *out = in[i] & 0x7F;
-        if (in[i] < 0x80) {
+        *out = *in & 0x7F;
+        if (*in < 0x80) {
           *out += pre;
           pre = *out;
           out++;
-          in += 1;
+          in++;
           continue;
         }
-        *out = *out | ((in[i] & 0x7F) << 7);
-        if (in[i] < 0x80) {
+        *out = *out | ((*in & 0x7F) << 7);
+        if (*in < 0x80) {
           *out += pre;
           pre = *out;
           out++;
@@ -83,8 +83,8 @@ class VariableByteCompression : public Compression {
           continue;
         }
 
-        *out = *out | ((in[i] & 0x7F) << 14);
-        if (in[i] < 0x80) {
+        *out = *out | ((*in & 0x7F) << 14);
+        if (*in < 0x80) {
           *out += pre;
           pre = *out;
           out++;
@@ -92,8 +92,8 @@ class VariableByteCompression : public Compression {
           continue;
         }
 
-        *out = *out | ((in[i] & 0x7F) << 21);
-        if (in[i] < 0x80) {
+        *out = *out | ((*in & 0x7F) << 21);
+        if (*in < 0x80) {
           *out += pre;
           pre = *out;
           out++;
@@ -101,41 +101,41 @@ class VariableByteCompression : public Compression {
           continue;
         }
 
-        *out = *out | ((in[i] & 0x7F) << 28);
+        *out = *out | ((*in & 0x7F) << 28);
         *out += pre;
         pre = *out;
         out++;
         in += 5;
 
       } else {
-        *out = in[i] & 0x7F;
-        if (in[i] < 0x80) {
+        *out = *in & 0x7F;
+        if (*in < 0x80) {
           out++;
           in += 1;
           continue;
         }
-        *out = *out | ((in[i] & 0x7F) << 7);
-        if (in[i] < 0x80) {
+        *out = *out | ((*in & 0x7F) << 7);
+        if (*in < 0x80) {
           out++;
           in += 2;
           continue;
         }
 
-        *out = *out | ((in[i] & 0x7F) << 14);
-        if (in[i] < 0x80) {
+        *out = *out | ((*in & 0x7F) << 14);
+        if (*in < 0x80) {
           out++;
           in += 3;
           continue;
         }
 
-        *out = *out | ((in[i] & 0x7F) << 21);
-        if (in[i] < 0x80) {
+        *out = *out | ((*in & 0x7F) << 21);
+        if (*in < 0x80) {
           out++;
           in += 4;
           continue;
         }
 
-        *out = *out | ((in[i] & 0x7F) << 28);
+        *out = *out | ((*in & 0x7F) << 28);
         out++;
         in += 5;
       }
