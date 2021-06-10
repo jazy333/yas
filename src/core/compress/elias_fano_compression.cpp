@@ -112,8 +112,8 @@ void EliasFanoCompression::compress(const uint32_t* in, size_t in_size,
         (uint8_t)(buffer2 << (8 - buffer_length2));
   }
 }
-uint32_t* EliasFanoCompression::decompress(const uint8_t* in, size_t in_size,
-                                           uint32_t* out, size_t& out_size) {
+uint8_t* EliasFanoCompression::decompress(const uint8_t* in, size_t in_size,
+                                          uint32_t* out, size_t& out_size) {
   // array is faster than list,
   // but wastes space with fixed size
   // this is only important for decompression, not for compressed
@@ -176,7 +176,7 @@ uint32_t* EliasFanoCompression::decompress(const uint8_t* in, size_t in_size,
     }
   }
   out_size = result_size;
-  return out + out_size;
+  return const_cast<uint8_t*>(in + in_size);
 }
 
 void EliasFanoCompression::elias_fano_create_decoding_table() {

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <x86intrin.h>
 
 #include "bkd_tree.h"
 #include "common.h"

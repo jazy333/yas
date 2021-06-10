@@ -8,7 +8,7 @@ class Compression {
  public:
   virtual void compress(const uint32_t* in, size_t in_size, uint8_t* out,
                         size_t& out_size) = 0;
-  virtual uint32_t* decompress(const uint8_t* in, size_t in_size, uint32_t* out,
+  virtual uint8_t* decompress(const uint8_t* in, size_t in_size, uint32_t* out,
                                size_t& out_size) = 0;
   virtual void compress(const std::vector<uint32_t>& in,
                         std::vector<uint8_t>& out) {
