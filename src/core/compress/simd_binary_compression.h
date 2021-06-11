@@ -52,12 +52,14 @@ __attribute__((always_inline)) static __m128i run_prefix_sum(__m128i initOffset,
 template <bool delta>
 class SIMDBinaryCompression : public Compression {
  public:
+  SIMDBinaryCompression() : init_(0) {}
+  SIMDBinaryCompression(uint32_t init) : init_(init) {}
   virtual void compress(uint32_t* in, size_t in_size, uint8_t* out,
                         size_t& out_size) override {
     uint32_t* iout = reinterpret_cast<uint32_t*>(out);
     uint32_t* out_start = iout;
     *iout++ = in_size;
-    __m128i init = _mm_setr_epi32(0, 0, 0, 0);
+    __m128i init = _mm_setr_epi32(init_, init_, init_, init_);
     for (size_t i = 0; i < in_size; i += SIMD_BLOCKSIZE) {
       uint32_t bits = maxbits(in + i, init);
       *iout++ = bits;
@@ -67,12 +69,13 @@ class SIMDBinaryCompression : public Compression {
     }
     out_size = (iout - out_start) * 4;
   }
+
   virtual uint8_t* decompress(const uint8_t* in, size_t in_size, uint32_t* out,
                               size_t& out_size) override {
     const uint32_t* iin = reinterpret_cast<const uint32_t*>(in);
     uint32_t* out_start = out;
     size_t length = *iin++;
-    __m128i init = _mm_setr_epi32(0, 0, 0, 0);
+    __m128i init = _mm_setr_epi32(init_, init_, init_, init_);
     for (size_t i = 0; i < length; i += SIMD_BLOCKSIZE) {
       uint32_t bit = *iin++;
       simdunpack(reinterpret_cast<const __m128i*>(iin), out, bit);
@@ -85,6 +88,9 @@ class SIMDBinaryCompression : public Compression {
     out_size = out - out_start;
     return const_cast<uint8_t*>(in + in_size);
   }
+
+  uint32_t get_init() { return init_; }
+  void set_init(uint32_t init) { init_ = init; }
 
  private:
   uint32_t maxbits(uint32_t* in, __m128i& initoffset) {
@@ -109,5 +115,6 @@ class SIMDBinaryCompression : public Compression {
     initoffset = oldvec;
     return maxbit(accumulator);
   }
+  uint32_t init_;
 };
 }  // namespace yas

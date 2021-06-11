@@ -11,13 +11,6 @@ inline void SIMD_nullunpacker32(const __m128i *__restrict__,
                                 uint32_t *__restrict__ out) {
   memset(out, 0, 32 * 4 * 4);
 }
-/**
- * Rest of the code is borrowed from the fastpfor project (file of the same
- * name)
- * with the removal of a few functions at the end and removal of the  prefix.
- * Also
- * functions are no longer static.
- */
 
 void __SIMD_fastpackwithoutmask1(const uint32_t *__restrict__ _in,
                                  __m128i *__restrict__ out) {

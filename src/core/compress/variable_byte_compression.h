@@ -13,7 +13,7 @@ class VariableByteCompression : public Compression {
       uint32_t val = in[i];
       if (delta) {
         val -= pre;
-        pre = val;
+        pre += val;
       }
       if (val < (1U << 7)) {
         *out = val & 0x7F;
@@ -59,23 +59,28 @@ class VariableByteCompression : public Compression {
                       size_t& out_size) override {
     if (in_size == 0) {
       out_size = 0;
-      return in;
+      return const_cast<uint8_t*>(in);
     }
     uint32_t pre = 0;
     uint32_t* out_start = out;
-    uint8_t* in_end = in + in_size;
+    const uint8_t* in_end = in + in_size;
     while (in + 5 < in_end) {
       if (delta) {
-        *out = *in & 0x7F;
-        if (*in < 0x80) {
+        uint8_t c;
+
+        c = in[0];
+        *out = c & 0x7F;
+        if (c < 0x80) {
           *out += pre;
           pre = *out;
           out++;
           in++;
           continue;
         }
-        *out = *out | ((*in & 0x7F) << 7);
-        if (*in < 0x80) {
+
+        c = in[1];
+        *out = *out | ((c & 0x7F) << 7);
+        if (c < 0x80) {
           *out += pre;
           pre = *out;
           out++;
@@ -83,8 +88,9 @@ class VariableByteCompression : public Compression {
           continue;
         }
 
-        *out = *out | ((*in & 0x7F) << 14);
-        if (*in < 0x80) {
+        c = in[2];
+        *out = *out | ((c & 0x7F) << 14);
+        if (c < 0x80) {
           *out += pre;
           pre = *out;
           out++;
@@ -92,8 +98,9 @@ class VariableByteCompression : public Compression {
           continue;
         }
 
-        *out = *out | ((*in & 0x7F) << 21);
-        if (*in < 0x80) {
+        c = in[3];
+        *out = *out | ((c & 0x7F) << 21);
+        if (c < 0x80) {
           *out += pre;
           pre = *out;
           out++;
@@ -101,41 +108,50 @@ class VariableByteCompression : public Compression {
           continue;
         }
 
-        *out = *out | ((*in & 0x7F) << 28);
+        c = in[4];
+        *out = *out | ((c & 0x7F) << 28);
         *out += pre;
         pre = *out;
         out++;
         in += 5;
 
       } else {
-        *out = *in & 0x7F;
-        if (*in < 0x80) {
+        uint8_t c;
+
+        c = in[0];
+        *out = c & 0x7F;
+        if (c < 0x80) {
           out++;
           in += 1;
           continue;
         }
-        *out = *out | ((*in & 0x7F) << 7);
-        if (*in < 0x80) {
+
+        c = in[1];
+        *out = *out | ((c & 0x7F) << 7);
+        if (c < 0x80) {
           out++;
           in += 2;
           continue;
         }
 
-        *out = *out | ((*in & 0x7F) << 14);
-        if (*in < 0x80) {
+        c = in[2];
+        *out = *out | ((c & 0x7F) << 14);
+        if (c < 0x80) {
           out++;
           in += 3;
           continue;
         }
 
-        *out = *out | ((*in & 0x7F) << 21);
-        if (*in < 0x80) {
+        c = in[3];
+        *out = *out | ((c & 0x7F) << 21);
+        if (c < 0x80) {
           out++;
           in += 4;
           continue;
         }
 
-        *out = *out | ((*in & 0x7F) << 28);
+        c = in[4];
+        *out = *out | ((c & 0x7F) << 28);
         out++;
         in += 5;
       }
@@ -143,9 +159,10 @@ class VariableByteCompression : public Compression {
 
     while (in < in_end) {
       uint8_t shift = 0;
-      for (uint32_t v = 0; in < in_end; shift += 7, in++) {
-        v |= ((*in & 0x7F) << shift);
-        if (*in < 0x7F) {
+      for (uint32_t v = 0; in < in_end; shift += 7) {
+        uint8_t c = *in++;
+        v |= ((c & 0x7F) << shift);
+        if (c < 0x7F) {
           *out++ = delta ? (pre = v + pre) : v;
           break;
         }
@@ -153,7 +170,7 @@ class VariableByteCompression : public Compression {
     }
 
     out_size = out - out_start;
-    return in;
+    return const_cast<uint8_t*>(in);
   }
 };
 }  // namespace yas

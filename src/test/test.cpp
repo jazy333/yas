@@ -1,12 +1,12 @@
 //#include "murmur_hash2.h"
 #include <x86intrin.h>
 
+#include <algorithm>
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
-#include <algorithm>
 
 #include "bkd_tree.h"
 #include "common.h"
@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
   uniform_int_distribution<uint32_t> u(0, 0xfff);
   e.seed(time(0));
   vector<uint32_t> docids;
-  size_t in_size = 128 * 3;
+  size_t in_size = 128*1;
   for (size_t i = 0; i < in_size; ++i) {
     docids.push_back(u(e));
   }
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
       new uint32_t[4 * out_size];
   size_t out_decompress_size = 4 * out_size;
 
-  sbc1.decompress(reinterpret_cast<uint8_t*>(out), out_size * 4, out_decompress,
+  sbc1.decompress(reinterpret_cast<uint8_t*>(out), out_size, out_decompress,
                   out_decompress_size);
   std::cout << "max out_decompress_size:" << out_decompress_size << endl;
   std::cout << "decompress data:" << endl;
@@ -135,13 +135,12 @@ int main(int argc, char* argv[]) {
             std::ostream_iterator<uint32_t>(cout, ","));
   std::cout << endl;
   std::cout << "real out_decompress_size:" << out_decompress_size << endl;
-  
 
   SIMDBinaryCompression<true> sbc2;
-  sort(docids.begin(),docids.end());
-  cout<<"after sort:"<<endl;
-  copy(docids.begin(),docids.end(),ostream_iterator<uint32_t>(cout,","));
-  cout<<endl;
+  sort(docids.begin(), docids.end());
+  cout << "after sort:" << endl;
+  copy(docids.begin(), docids.end(), ostream_iterator<uint32_t>(cout, ","));
+  cout << endl;
   out_size = in_size * 4;
   sbc2.compress(docids.data(), docids.size(), reinterpret_cast<uint8_t*>(out),
                 out_size);
@@ -161,9 +160,65 @@ int main(int argc, char* argv[]) {
             std::ostream_iterator<uint32_t>(cout, ","));
   std::cout << endl;
   std::cout << "delta real out_decompress_size:" << out_decompress_size << endl;
+
+  VariableByteCompression<false> vbc1;
+  docids.clear();
+  for (size_t i = 0; i < in_size; ++i) {
+    docids.push_back(u(e));
+  }
+  out_size = in_size * 4;
+  vbc1.compress(docids.data(), docids.size(), reinterpret_cast<uint8_t*>(out),
+                out_size);
+
+  std::cout << "vbc out_size:" << out_size << ",compress ratio:"
+            << static_cast<double>(out_size) / (in_size * 4) << endl;
+  std::cout << "compress data:" << endl;
+  std::copy(docids.begin(), docids.end(),
+            std::ostream_iterator<uint32_t>(cout, ","));
+  cout << endl;
+
+  out_decompress_size = 4 * out_size;
+
+  vbc1.decompress(reinterpret_cast<uint8_t*>(out), out_size, out_decompress,
+                  out_decompress_size);
+  std::cout << "vbc max out_decompress_size:" << out_decompress_size << endl;
+  std::cout << "vbc decompress data:" << endl;
+  std::copy(out_decompress, out_decompress + out_decompress_size,
+            std::ostream_iterator<uint32_t>(cout, ","));
+  std::cout << endl;
+  std::cout << "vbc real out_decompress_size:" << out_decompress_size << endl;
+
+  VariableByteCompression<true> vbc2;
+  sort(docids.begin(), docids.end());
+  cout << "after sort:" << endl;
+  copy(docids.begin(), docids.end(), ostream_iterator<uint32_t>(cout, ","));
+  cout << endl;
+  out_size = in_size * 4;
+  vbc2.compress(docids.data(), docids.size(), reinterpret_cast<uint8_t*>(out),
+                out_size);
+  std::cout << "vbc delta out_size:" << out_size
+            << ", vbc delta compress ratio:"
+            << static_cast<double>(out_size) / (in_size * 4) << endl;
+  std::cout << "vbc delta compress data:" << endl;
+  std::copy(docids.begin(), docids.end(),
+            std::ostream_iterator<uint32_t>(cout, ","));
+  cout << endl;
+
+  out_decompress_size = 4 * out_size;
+  vbc2.decompress(reinterpret_cast<uint8_t*>(out), out_size, out_decompress,
+                  out_decompress_size);
+  std::cout << "vbc delta max out_decompress_size:" << out_decompress_size
+            << endl;
+  std::cout << "vbc delta decompress data:" << endl;
+  std::copy(out_decompress, out_decompress + out_decompress_size,
+            std::ostream_iterator<uint32_t>(cout, ","));
+  std::cout << endl;
+  std::cout << "vbc delta real out_decompress_size:" << out_decompress_size
+            << endl;
+
   delete[] out;
   delete[] out_decompress;
-  
+
   long l1 = 123123131, l2 = 123123123123, l3 = 9983838838, l4 = 999913123131;
   int i1 = -1, i2 = 1, i3 = 3, i4 = -3;
   double d1 = 0.11111134141, d2 = -0.3333333334242, d3 = -1.34324242,
