@@ -2,6 +2,8 @@
 #include <x86intrin.h>
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -13,6 +15,7 @@
 #include "fnv_hash.h"
 #include "hash_db.h"
 #include "intro_sorter.h"
+#include "log.h"
 #include "memory_points.h"
 #include "mmap_file.h"
 #include "murmur_hash2.h"
@@ -23,7 +26,6 @@
 #include "sortable_bytes.h"
 #include "sorter.h"
 #include "variable_byte_compression.h"
-#include "log.h"
 
 using namespace yas;
 using namespace std;
@@ -104,17 +106,41 @@ class TestIntroSorter : public IntroSorter {
 int main(int argc, char* argv[]) {
   // MurmurHash2 mh2;
   // mh2.hash64("test",20181220);
-  log_info("%s","hello yas");
+  log_info("hello yas");
+  log_error("test error %d,%s", errno, strerror(errno));
+  log_info("%s", "hello yas");
+  log_debug("test debug");
+  set_severity(LogSeverity::DEBUG);
+  log_debug("test debug again");
+  LOG_INFO("%s", "hello macros");
+  LOG_DEBUG("%s", "hello debug macros");
+  LOG_DEBUG("hello debug macros without format");
+  LOG_WARN("%s", "hello warn macros");
+  LOG_WARN("hello warn macros without format");
+  LOG_ERROR("%s", "hello error macros");
+  LOG_ERROR("hello debug error without format");
+  LOG_CRIT("%s", "hello crit macros");
+  LOG_CRIT("hello crit macros without format");
+  LOG_IF(true, LogSeverity::INFO, "%s", "test for true");
+  LOG_IF(false, LogSeverity::INFO, "%s", "should not print");
+  LOG_IF(1 > 2, LogSeverity::INFO, "%s", "should not print");
+  LOG_IF(1 < 2, LogSeverity::INFO, "%s", "should print 1<2");
+  LOG_IF(1 < 2, LogSeverity::INFO, "should print 1<2 without format");
+  LOG_DEBUG_IF(true, "LOG_DEBUG_IF,should print 1<2 without format");
+  LOG_INFO_IF(true, "LOG_INFO_IF,should print 1<2 without format");
+  LOG_WARN_IF(true, "LOG_WARN_IF,should print 1<2 without format");
+  LOG_ERROR_IF(true, "LOG_ERROR_IF,should print 1<2 without format");
+  LOG_CRIT_IF(true, "LOG_CRIT_IF,should print 1<2 without format");
   default_random_engine e;
   uniform_int_distribution<uint32_t> u(0, 0xffffffff);
   e.seed(time(0));
   vector<uint32_t> docids;
-  size_t in_size = 128*3;
+  size_t in_size = 128 * 1;
   for (size_t i = 0; i < in_size; ++i) {
     docids.push_back(u(e));
   }
   SIMDBinaryCompression<false> sbc1;
-  __attribute__((aligned(16))) uint32_t* out = new uint32_t[in_size*2];
+  __attribute__((aligned(16))) uint32_t* out = new uint32_t[in_size * 2];
   size_t out_size = in_size * 4;
   sbc1.compress(docids.data(), docids.size(), reinterpret_cast<uint8_t*>(out),
                 out_size);

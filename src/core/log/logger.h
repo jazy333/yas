@@ -7,7 +7,7 @@
 #include "severity.h"
 #include "sink.h"
 
-namespace yas{
+namespace yas {
 class Logger {
  public:
   Logger() = default;
@@ -15,14 +15,16 @@ class Logger {
       : name_(name), sink_(std::move(sink)), severity_(severity) {}
   Logger(std::string name, std::unique_ptr<Sink> sink)
       : name_(name), sink_(std::move(sink)) {}
-  virtual ~Logger()=default;
+  virtual ~Logger() = default;
   std::string get_name();
   void set_name(std::string& name);
   std::unique_ptr<Sink>& get_sink();
   void set_sink(std::unique_ptr<Sink> sink);
   void set_severity(LogSeverity severity);
   LogSeverity get_severity();
-  void log(LogSeverity severity, const char* format, ...);
+  void log(LogSeverity severity, const char* format, va_list args);
+  void log(LogSeverity severity, const char* file_name, int line,
+           const char* format, ...);
   void flush();
 
  private:
@@ -30,4 +32,4 @@ class Logger {
   std::unique_ptr<Sink> sink_;
   LogSeverity severity_ = LogSeverity::INFO;
 };
-}  // namespace
+}  // namespace yas

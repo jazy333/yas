@@ -12,7 +12,9 @@ class FileSink : public Sink {
   FileSink(std::unique_ptr<Formatter> formatter, FILE* file)
       : Sink(std::move(formatter)), file_(file) {}
   virtual ~FileSink() {}
-  virtual void log(LogSeverity severity, const char* format, ...) override;
+  virtual void log(LogSeverity severity, const char* format, va_list va) override;
+   virtual void log(LogSeverity severity, const char* file_name, int line,
+                   const char* format, va_list va) override;
   virtual void flush() override;
 
  private:
