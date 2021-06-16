@@ -23,6 +23,7 @@
 #include "sortable_bytes.h"
 #include "sorter.h"
 #include "variable_byte_compression.h"
+#include "log.h"
 
 using namespace yas;
 using namespace std;
@@ -103,16 +104,17 @@ class TestIntroSorter : public IntroSorter {
 int main(int argc, char* argv[]) {
   // MurmurHash2 mh2;
   // mh2.hash64("test",20181220);
+  log_info("%s","hello yas");
   default_random_engine e;
-  uniform_int_distribution<uint32_t> u(0, 0xfff);
+  uniform_int_distribution<uint32_t> u(0, 0xffffffff);
   e.seed(time(0));
   vector<uint32_t> docids;
-  size_t in_size = 128*1;
+  size_t in_size = 128*3;
   for (size_t i = 0; i < in_size; ++i) {
     docids.push_back(u(e));
   }
   SIMDBinaryCompression<false> sbc1;
-  __attribute__((aligned(16))) uint32_t* out = new uint32_t[in_size];
+  __attribute__((aligned(16))) uint32_t* out = new uint32_t[in_size*2];
   size_t out_size = in_size * 4;
   sbc1.compress(docids.data(), docids.size(), reinterpret_cast<uint8_t*>(out),
                 out_size);
