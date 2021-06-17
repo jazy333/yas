@@ -9,7 +9,7 @@ static const char* SeverityStrings[] = {
     "I",  // info
     "W",  // warn
     "E",  // error
-    "F"   // fatal
+    "C"   // crit
 };
 
 }  // namespace yas
