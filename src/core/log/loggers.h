@@ -12,7 +12,7 @@ class Loggers {
   Loggers() {
     std::string default_log_name = "";
     std::shared_ptr<Logger> default_logger = std::make_shared<Logger>(
-        default_log_name, std::unique_ptr<Sink>(new FileSink(stdout)));
+        default_log_name, std::make_shared<FileSink>(stdout));
     loggers_[default_log_name] = default_logger;
   }
   virtual ~Loggers() { delete static_loggers_; }

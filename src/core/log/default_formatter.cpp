@@ -1,7 +1,6 @@
 #include "default_formatter.h"
 
 #include <pthread.h>
-
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -19,7 +18,7 @@ std::string DefaultFormatter::do_format(LogSeverity severity,
   if (!file_name)
     header_format = "[%s][%s][%5u]";
   else
-    header_format = "[%s][%s][%5u][%s][%d]";
+    header_format = "[%s][%s][%5u][%s:%d]";
   char header[256] = {0};
   std::time_t now = std::time(nullptr);
   struct tm t;

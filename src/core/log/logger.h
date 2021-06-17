@@ -11,15 +11,19 @@ namespace yas {
 class Logger {
  public:
   Logger() = default;
-  Logger(std::string name, std::unique_ptr<Sink> sink, LogSeverity severity)
-      : name_(name), sink_(std::move(sink)), severity_(severity) {}
-  Logger(std::string name, std::unique_ptr<Sink> sink)
-      : name_(name), sink_(std::move(sink)) {}
+  Logger(std::string name, std::shared_ptr<Sink> sink, LogSeverity severity)
+      : name_(name), sink_(sink), severity_(severity) {}
+  Logger(std::string name, std::shared_ptr<Sink> sink)
+      : name_(name), sink_(sink) {}
   virtual ~Logger() = default;
+  Logger(const Logger&);
+  Logger(Logger&& logger);
+  Logger& operator=(const Logger&);
+  Logger& operator=(Logger&&);
   std::string get_name();
   void set_name(std::string& name);
-  std::unique_ptr<Sink>& get_sink();
-  void set_sink(std::unique_ptr<Sink> sink);
+  std::shared_ptr<Sink>& get_sink();
+  void set_sink(std::shared_ptr<Sink> sink);
   void set_severity(LogSeverity severity);
   LogSeverity get_severity();
   void log(LogSeverity severity, const char* format, va_list args);
@@ -29,7 +33,7 @@ class Logger {
 
  private:
   std::string name_;
-  std::unique_ptr<Sink> sink_;
+  std::shared_ptr<Sink> sink_;
   LogSeverity severity_ = LogSeverity::INFO;
 };
 }  // namespace yas

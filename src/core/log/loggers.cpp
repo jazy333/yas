@@ -14,11 +14,15 @@ void Loggers::set_severity(LogSeverity severity) {
 }
 
 void Loggers::set_logger(std::string name, std::shared_ptr<Logger> logger) {
+  if (!logger) return;
   loggers_[name] = logger;
 }
 
 std::shared_ptr<Logger> Loggers::get_logger(std::string name) {
-  return loggers_[name];
+  if (loggers_.count(name) == 1)
+    return loggers_[name];
+  else
+    return nullptr;
 }
 
 }  // namespace yas

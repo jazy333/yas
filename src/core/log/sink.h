@@ -12,6 +12,10 @@ class Sink {
   virtual ~Sink() = default;
   Sink(std::unique_ptr<Formatter> formatter)
       : severity_(LogSeverity::INFO), formatter_(std::move(formatter)) {}
+  Sink(Sink&&) = delete;
+  Sink(const Sink&) = delete;
+  Sink& operator = (const Sink&) = delete;
+  Sink& operator = (Sink &&) = delete;
   virtual void log(LogSeverity severity, const char* format, va_list va) = 0;
   virtual void log(LogSeverity severity, const char* file_name, int line,
                    const char* format, va_list va) = 0;
