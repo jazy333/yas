@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdarg>
-#include <memory>
-
 #include "logger.h"
 #include "severity.h"
+
+#include <cstdarg>
+#include <memory>
 
 namespace yas {
 std::shared_ptr<Logger> get_default_logger();
@@ -52,6 +52,11 @@ void log_crit(const char* format, ...) {
   get_default_logger()->log(LogSeverity::CRIT, format, va);
   va_end(va);
 }
+
+#define LOG(severity, ...)                                                \
+  do {                                                                    \
+    get_default_logger()->log(severity, __FILE__, __LINE__, __VA_ARGS__); \
+  }
 
 #define LOG_DEBUG(...)                                                \
   do {                                                                \

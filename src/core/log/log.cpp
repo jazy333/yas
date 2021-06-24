@@ -1,5 +1,4 @@
 #include "log.h"
-
 #include "loggers.h"
 
 namespace yas {

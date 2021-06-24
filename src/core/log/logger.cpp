@@ -29,7 +29,7 @@ Logger& Logger::operator=(Logger&& logger) {
 
 std::string Logger::get_name() { return name_; }
 
-void Logger::set_name(std::string& name) { name_ = name; }
+void Logger::set_name(const std::string& name) { name_ = name; }
 
 std::shared_ptr<Sink>& Logger::get_sink() { return sink_; }
 

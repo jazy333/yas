@@ -1,10 +1,12 @@
 #pragma once
-#include <string>
-#include <unordered_map>
-
 #include "file_sink.h"
 #include "logger.h"
 #include "severity.h"
+
+#include <string>
+#include <unordered_map>
+
+
 
 namespace yas {
 class Loggers {

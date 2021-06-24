@@ -1,11 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <string>
-
 #include "formatter.h"
 #include "severity.h"
 #include "sink.h"
+
+#include <memory>
+#include <string>
+
 
 namespace yas {
 class Logger {
@@ -21,7 +22,7 @@ class Logger {
   Logger& operator=(const Logger&);
   Logger& operator=(Logger&&);
   std::string get_name();
-  void set_name(std::string& name);
+  void set_name(const std::string& name);
   std::shared_ptr<Sink>& get_sink();
   void set_sink(std::shared_ptr<Sink> sink);
   void set_severity(LogSeverity severity);

@@ -1,10 +1,10 @@
 #pragma once
+#include "formatter.h"
+#include "severity.h"
+
 #include <memory>
 #include <mutex>
 #include <string>
-
-#include "formatter.h"
-#include "severity.h"
 
 namespace yas {
 class Sink {

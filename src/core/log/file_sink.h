@@ -1,8 +1,9 @@
 #pragma once
-#include <cstdio>
 
 #include "default_formatter.h"
 #include "sink.h"
+
+#include <cstdio>
 
 namespace yas {
 class FileSink : public Sink {

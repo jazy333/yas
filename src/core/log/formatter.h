@@ -1,10 +1,12 @@
 #pragma once
 
+#include "severity.h"
+
 #include <cstdarg>
 #include <cstdio>
 #include <string>
 
-#include "severity.h"
+
 
 namespace yas {
 class Formatter {
