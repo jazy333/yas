@@ -41,6 +41,7 @@ uint32_t AndPostingList::advance(uint32_t target) {
   do_next(lead1->advance(target));
 }
 uint32_t AndPostingList::docid() { return lead1->docid(); }
-virtual long AndPostingList::cost() { return lead1->cost(); }
+long AndPostingList::cost() { return lead1->cost(); }
+std::string AndPostingList::name() { return "AndPostingList"; }
 };
 }  // namespace yas

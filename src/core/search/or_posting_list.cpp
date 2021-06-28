@@ -7,29 +7,34 @@ OrPostingList::OrPostingList(/* args */) {}
 
 OrPostingList::~OrPostingList() {}
 
-bool OrPostingList::posting_list_compare(PostingList* l, PostingList* r) {}
 uint32_t OrPostingList::next() {
-  std::priority_queue<PostingList*> pq;
-  for (PostingList* pl : pq_) {
-    pl->next();
-    pq.push(pl);
-  }
-  pq_ = pq;
+  do {
+    PostingList* top = pq_->top();
+    uint32_t doc = top->docid();
+    top->next();
+    pq_->pop();
+    pq_->push(top);
+  } while (top->docid() == doc);
   return pq_.top()->docid();
 }
-uint32_t OrPostingList::advance(uint32_t target) {}
-uint32_t OrPostingList::docid() {
-  std::priority_queue<PostingList*> pq;
-  for (PostingList* pl : pq_) {
-    pl->advance(target);
-    pq.push(pl);
-  }
-  pq_ = pq;
-  return pq_.top->docid();
+
+uint32_t OrPostingList::advance(uint32_t target) {
+  do {
+    PostingList* top = pq_->top();
+    uint32_t next = top->advance(target);
+    pq_->pop();
+    pq_->push(top);
+  } while (top->docid() < target);
+  return pq_.top()->docid();
 }
-virtual long OrPostingList::cost() {
+
+uint32_t OrPostingList::docid() { return pq_.top()->docid(); }
+
+long OrPostingList::cost() {
   return std::accumulate(
       pq_.begin(), pq_.end(), 0L,
       [](long a, const PostingList* b) { return a + b->cost(); });
 }
+
+std::string OrPostingList::name() { return "OrPostingList"; }
 }  // namespace yas
