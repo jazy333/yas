@@ -15,6 +15,7 @@ class OrPostingList : public PostingList {
   uint32_t docid() override;
   long cost() override;
   std::string name() override;
+  float score() override;
 
  private:
   std::priority_queue<PostingList*, posting_list_compare_docid> pq_;

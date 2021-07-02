@@ -1,7 +1,7 @@
 #include "index_searcher.h"
 
 namespace yas {
-IndexSearcher::IndexSearcher(/* args */) {}
+IndexSearcher::IndexSearcher(IndexReader* reader) {}
 
 IndexSearcher::~IndexSearcher() {}
 

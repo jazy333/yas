@@ -7,8 +7,8 @@ namespace yas {
 class AndPostingList : public PostingList {
  private:
   /* data */
-  PostingList *lead1, *lead2;
-  std::vector<PostingList *> others;
+  PostingList *lead1_, *lead2_;
+  std::vector<PostingList *> others_;
   uint32_t do_next(uint32_t next1);
   uint32_t do_next();
 
@@ -19,7 +19,8 @@ class AndPostingList : public PostingList {
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
   long cost() override;
-  std::string name();
+  std::string name() override;
+  float score() override;
 };
 
 }  // namespace yas

@@ -1,4 +1,5 @@
 #pragma once
+#include "matcher.h"
 
 namespace yas {
 class DefaultMatcher : public Matcher {

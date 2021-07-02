@@ -12,6 +12,8 @@ class PostingList {
   virtual uint32_t docid() = 0;
   virtual long cost() = 0;
   virtual std::string name() { return "PostingList"; }
+  virtual float score(){ return 0.0f;}
+  static const NDOCID=std::numeric_limits<uint32_t>::max();
 
  protected:
   bool posting_list_compare_with_docid(PostingList* l, PostingList* r) {

@@ -37,8 +37,7 @@ uint32_t AndNotPostingList::docid() {
 
 long AndNotPostingList::cost() { return pl_->cost(); }
 
-std::string AndNotPostingList::name() {
-    return "AndNotPostingList";
-}
+std::string AndNotPostingList::name() { return "AndNotPostingList"; }
 
+float AndNotPostingList::score() { return pl_->score(); }
 }  // namespace yas

@@ -1,12 +1,13 @@
-#include "mm_posting_list.h"
+#include "weak_and_posting_list.h"
 
 #include <functional>
 
 namespace yas {
-MMPostingList::MMPostingList(std::vector<PostingList*>& pl, int minimum_match)
+WeakAndPostingList::WeakAndPostingList(std::vector<PostingList*>& pl,
+                                       int minimum_match)
     : minimum_match_(minimum_match), docid_(0) {
   for (auto p : pl) {
-    add_lead(*p);
+    add_lead(p);
   }
 
   std::priority_queue<PostingList*, posting_list_compare_cost> tail;
@@ -29,17 +30,18 @@ MMPostingList::MMPostingList(std::vector<PostingList*>& pl, int minimum_match)
     cost_ += p->cost();
   }
 }
-MMPostingList::~MMPostingList() {}
 
-void MMPostingList::add_lead(PostingList* pl) {
+WeakAndPostingList::~WeakAndPostingList() {}
+
+void WeakAndPostingList::add_lead(PostingList* pl) {
   lead_.push_front(pl);
   matched_++;
 }
 
-void MMPostingList::update_lead() {
+void WeakAndPostingList::update_lead() {
   lead_.clear();
   matched_ = 1;
-  PostingList* top = head_.top();
+  auto top = head_.top();
   lead_.push_back(top);
   head_.pop();
   docid_ = top->docid();
@@ -50,10 +52,10 @@ void MMPostingList::update_lead() {
   }
 }
 
-uint32_t MMPostingList::do_next() {
+uint32_t WeakAndPostingList::do_next() {
   while (matched_ < minimum_match_) {
     if (matched_ + tail_.size() >= minimum_match_) {
-      PostingList* top = tail_.top();
+      auto top = tail_.top();
       tail_.pop();
       top->advance(docid_);
       if (top->docid() == docid_)
@@ -64,16 +66,15 @@ uint32_t MMPostingList::do_next() {
       for (auto p : lead_) {
         tail_.push(p);
       }
-      lead_.clear();
       update_lead();
     }
   }
   return docid_;
 }
 
-PostingList* MMPostingList::add_tail(PostingList* p) {
+PostingList* WeakAndPostingList::add_tail(PostingList* p) {
   if (tail_.size() < minimum_match_ - 1) {
-    tail_.push(*p);
+    tail_.push(p);
     return nullptr;
   } else {
     auto cur = tail_.top();
@@ -86,7 +87,7 @@ PostingList* MMPostingList::add_tail(PostingList* p) {
   }
 }
 
-uint32_t MMPostingList::next() {
+uint32_t WeakAndPostingList::next() {
   for (auto p : lead_) {
     PostingList* cur = add_tail(p);
     if (cur) {
@@ -103,9 +104,9 @@ uint32_t MMPostingList::next() {
   return do_next();
 }
 
-uint32_t MMPostingList::advance(uint32_t target) {
+uint32_t WeakAndPostingList::advance(uint32_t target) {
   for (auto p : lead_) {
-    PostingList* cur = add_tail(p);
+    auto cur = add_tail(p);
     if (cur) {
       cur->advance(target);
       head_.push(cur);
@@ -122,18 +123,20 @@ uint32_t MMPostingList::advance(uint32_t target) {
   }
 
   update_lead();
-  while (matched_ + tail_.size() < minimum_match_) {
-    // no match on doc is possible, move to the next potential match
-    for (auto p : lead_) {
-      tail_.push(p);
-    }
-    lead_.clear();
-    update_lead();
-  }
-  return docid_;
+  return do_next();
 }
 
-uint32_t MMPostingList::docid() { return docid_; }
-long MMPostingList::cost() { return cost_; }
-std::string MMPostingList::name() { return "MMPostingList"; }
+uint32_t WeakAndPostingList::docid() { return docid_; }
+
+long WeakAndPostingList::cost() { return cost_; }
+
+std::string WeakAndPostingList::name() { return "WeakAndPostingList"; }
+
+float WeakAndPostingList::score() {
+  float sum = 0.0;
+  for (auto f : lead_) {
+    sum += f->score();
+  }
+  return sum;
+}
 }  // namespace yas

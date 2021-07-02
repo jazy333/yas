@@ -1,15 +1,18 @@
 #pragma once
+#include "bitset.h"
 #include "posting_list.h"
 
 namespace yas {
-class AndNotPostingList : public PostingList {
+
+class BitSetPostingList : public PostingList {
  private:
-  PostingList *pl_, *excl_;
-  uint32_t do_next(uint32_t next);
+  BitSet* bs_;
+  uint32_t docid_;
+  long cost_;
 
  public:
-  AndNotPostingList(PostingList* pl, PostingList* excl);
-  ~AndNotPostingList();
+  BitSetPostingList(BitSet*);
+  ~BitSetPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
