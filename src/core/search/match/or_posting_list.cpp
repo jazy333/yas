@@ -3,7 +3,11 @@
 #include <numeric>
 
 namespace yas {
-OrPostingList::OrPostingList(/* args */) {}
+OrPostingList::OrPostingList(std::vector<PostingList*> pls) {
+  for (auto&& pl : pls) {
+    pq_.push(pl);
+  }
+}
 
 OrPostingList::~OrPostingList() {}
 

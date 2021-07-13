@@ -1,5 +1,13 @@
 #pragma once
+#include "sub_index_reader.h"
+
+#include <vector>
 
 namespace yas {
-class IndexReader {};
+class IndexReader {
+    public:
+    std::vector<SubIndexReader*> get_sub_index_reader();
+    private:
+    std::vector<SubIndexReader*> sub_index_readers_;
+};
 }  // namespace yas

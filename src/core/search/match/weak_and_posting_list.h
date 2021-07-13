@@ -1,9 +1,9 @@
 #pragma once
+#include "posting_list.h"
+
 #include <list>
 #include <queue>
 #include <vector>
-
-#include "posting_list.h"
 
 namespace yas {
 /*

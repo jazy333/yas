@@ -1,7 +1,8 @@
 #pragma once
-#include <vector>
 
 #include "posting_list.h"
+
+#include <vector>
 
 namespace yas {
 class AndPostingList : public PostingList {
@@ -20,7 +21,7 @@ class AndPostingList : public PostingList {
   uint32_t docid() override;
   long cost() override;
   std::string name() override;
-  float score() override;
+ 
 };
 
 }  // namespace yas

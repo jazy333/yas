@@ -1,12 +1,12 @@
-#include "and_not_posting_list.h"
+#include "not_posting_list.h"
 
 namespace yas {
-AndNotPostingList::AndNotPostingList(PostingList* pl, PostingList* excl)
+NotPostingList::NotPostingList(PostingList* pl, PostingList* excl)
     : pl_(pl), excl_(excl) {}
 
-AndNotPostingList::~AndNotPostingList() {}
+NotPostingList::~NotPostingList() {}
 
-uint32_t AndNotPostingList::do_next(uint32_t next) {
+uint32_t NotPostingList::do_next(uint32_t next) {
   while (next >= excl_->docid()) {
     if (next == std::numeric_limits<uint32_t>::max ||
         excl_->docid() == std::numeric_limits<uint32_t>::max) {
@@ -20,24 +20,24 @@ uint32_t AndNotPostingList::do_next(uint32_t next) {
   return next;
 }
 
-uint32_t AndNotPostingList::next() {
+uint32_t NotPostingList::next() {
   uint32_t next = pl_->next();
   return do_next(next);
 }
 
-uint32_t AndNotPostingList::advance(uint32_t target) {
+uint32_t NotPostingList::advance(uint32_t target) {
   uint32_t next = pl_->advance(target);
   return do_next(next);
 }
 
-uint32_t AndNotPostingList::docid() {
+uint32_t NotPostingList::docid() {
   do_next(pl_->docid());
   return pl_->docid();
 }
 
-long AndNotPostingList::cost() { return pl_->cost(); }
+long NotPostingList::cost() { return pl_->cost(); }
 
-std::string AndNotPostingList::name() { return "AndNotPostingList"; }
+std::string NotPostingList::name() { return "NotPostingList"; }
 
-float AndNotPostingList::score() { return pl_->score(); }
+float NotPostingList::score() { return pl_->score(); }
 }  // namespace yas
