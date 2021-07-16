@@ -85,11 +85,28 @@ int gcd(int a, int b) {
 int lcm(int a, int b) { return (a * b) / gcd(a, b); }
 
 uint32_t asmbits(const uint32_t v) {
-  if (v == 0)
-    return 0;
+  if (v == 0) return 0;
   uint32_t answer;
   __asm__("bsr %1, %0;" : "=r"(answer) : "r"(v));
   return answer + 1;
+}
+
+uint8_t uint2uchar(uint32_t value) {
+  uint8_t bits = gccbits(value);
+  if (bits < 4) return value;
+  int shift = bits - 4;
+  uint8_t fraction = value >> shift;
+  uint8_t encode = ((shift + 1) << 3) | (fraction & 0x7);
+  return encode;
+}
+
+uint32_t uchar2uint(uint8_t value) {
+  int shift = value >> 3 - 1;
+  if (shift == -1) return value;
+
+  int fraction = value & 0x07;
+  uint32_t decode = (fraction | 0x80) << (shift);
+  return decode;
 }
 
 }  // namespace yas

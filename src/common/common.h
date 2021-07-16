@@ -1,7 +1,6 @@
 #pragma once
 #include <immintrin.h>
 #include <sys/types.h>
-
 #include <cstdint>
 
 #define MM_LOAD_SI_128 _mm_loadu_si128
@@ -34,5 +33,8 @@ template <class T>
 __attribute__((const)) inline bool need_padding_to_128Bits(const T *inbyte) {
   return (reinterpret_cast<uintptr_t>(inbyte) & 15) != 0;
 }
+
+uint8_t uint2uchar(uint32_t value);
+uint32_t uchar2uint(uint8_t value);
 
 }  // namespace yas
