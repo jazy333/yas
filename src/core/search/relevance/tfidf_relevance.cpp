@@ -7,7 +7,7 @@ namespace yas {
 
  RelevanceScorer*  TFIDFRelevance::scorer(float boost,IndexStat* index_stat,TermStat* term_stat){
    float idf=idf(term_stat->get_doc_freq(),index_stat->doc_count);
-   return new TFIDFScorer(idf);
+   return new TFIDFScorer(boost,idf);
  }
  
 /*

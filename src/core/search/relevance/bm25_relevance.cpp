@@ -19,7 +19,7 @@ void BM25Relevance::init_length(float avgdl) {
 
 BM25Relevance::BM25Relevance(float k1, float b) : k1_(k1), b_(b) {}
 
-BM25Relevance::BM25Relevance() k1_(1.2f), b_(0.75f) {}
+BM25Relevance::BM25Relevance(): k1_(1.2f), b_(0.75f) {}
 
 BM25Relevance::~BM25Relevance() {}
 
@@ -34,6 +34,6 @@ RelevanceScorer* BM25Relevance::scorer(float boost, IndexStat* index_stat,
   float weight = idf(term_stat->get_doc_freq(), index_stat->doc_count);
   float avgdl = index_stat->total_term_freq / index_stat->doc_count;
   init_length(avgdl);
-  return BM25Scorer(weigth, part);
+  return BM25Scorer(weight, part);
 }
 }  // namespace yas

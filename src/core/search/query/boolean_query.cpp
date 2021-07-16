@@ -46,8 +46,8 @@ Query* BooleanQuery::rewrite() {
   // case 3 : children need to do rewrite recursively
   {
     bool rewrited = false;
-    for (size_t i = 0; i < expressions.size(); ++i) {
-      Query* exp = expressions[i];
+    for (size_t i = 0; i < expressions_.size(); ++i) {
+      Query* exp = expressions_[i];
       Query* query = exp->get_query()->rewrite();
       if (query != exp) {
         delete exp;

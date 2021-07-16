@@ -1,7 +1,6 @@
 #include "term_stat.h"
 
 namespace yas {
-TermStat::TermStat(/* args */) {}
 
 TermStat::TermStat(Term term, int doc_freq, int total_term_freq)
     : term_(term), doc_freq_(doc_freq), total_term_freq_(total_term_freq) {}

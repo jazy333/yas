@@ -2,7 +2,7 @@
 #include "posting_list.h"
 
 namespace yas {
-class NonePostingList {
+class NonePostingList:public PostingList {
  public:
   NonePostingList(/* args */);
   ~NonePostingList();

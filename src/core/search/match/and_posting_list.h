@@ -13,6 +13,7 @@ class AndPostingList : public PostingList {
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
   long cost() override;
+  float score() override;
   std::string name() override;
 
  private:

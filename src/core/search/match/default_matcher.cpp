@@ -7,6 +7,4 @@ DefaultMatcher::~DefaultMatcher() {}
 
 PostingList* DefaultMatcher::posting_list() { return pl_; }
 Scorer* DefaultMatcher::scorer() { return scorer_; }
-}
-
 }  // namespace yas

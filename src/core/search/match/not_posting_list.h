@@ -1,6 +1,8 @@
 #pragma once
 #include "posting_list.h"
 
+#include <string>
+
 namespace yas {
 class NotPostingList : public PostingList {
  private:
