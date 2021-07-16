@@ -21,5 +21,5 @@ class BooleanQuery : public Query {
   std::vector<BooleanExpression*> expressions_;
   int mm_;
   std::unordered_map<Operator, std::unordered_set<Query*>> map_expressions_;
-}
+};
 }  // namespace yas

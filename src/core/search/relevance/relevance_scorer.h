@@ -3,7 +3,7 @@
 #include "index_stat.h"
 
 namespace yas {
-class Scorer {
-  virtual float score() = 0;
+class RelevanceScorer {
+  virtual float score(long freq,long norm) = 0;
 };
 }  // namespace yas

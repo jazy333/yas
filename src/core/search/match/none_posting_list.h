@@ -3,8 +3,6 @@
 
 namespace yas {
 class NonePostingList {
- private:
-  /* data */
  public:
   NonePostingList(/* args */);
   ~NonePostingList();

@@ -8,11 +8,11 @@ TermMatcher::TermMatcher(TermReader* term_reader, Relevance* rel)
 
 TermMatcher::~TermMatcher() {
   delete rel_;
-  delete score_;
+  delete scorer_;
 }
 
 PostingList* TermMatcher::posting_list(SubIndexReader* sub_reader) {
   return term_reader_;
 }
-Scorer* TermMatcher::scorer() { return score_; }
+Scorer* TermMatcher::scorer() { return scorer_; }
 }  // namespace yas

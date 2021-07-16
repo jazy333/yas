@@ -5,7 +5,7 @@
 namespace yas {
 class TermMatcher : public Matcher {
  public:
-  TermMatcher(TermReader*, Relevance*);
+  TermMatcher(TermReader* term_reader, Relevance* rel);
   ~TermMatcher();
   PostingList* posting_list() override;
   Scorer* scorer() override;
@@ -13,5 +13,6 @@ class TermMatcher : public Matcher {
  private:
   TermReader* term_reader;
   Relevance* rel_;
+  TermScorer* scorer_;
 };
 }  // namespace yas

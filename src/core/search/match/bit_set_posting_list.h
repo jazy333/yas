@@ -5,11 +5,6 @@
 namespace yas {
 
 class BitSetPostingList : public PostingList {
- private:
-  BitSet* bs_;
-  uint32_t docid_;
-  long cost_;
-
  public:
   BitSetPostingList(BitSet*);
   ~BitSetPostingList();
@@ -19,6 +14,11 @@ class BitSetPostingList : public PostingList {
   long cost() override;
   std::string name() override;
   float score() override;
+
+ private:
+  BitSet* bs_;
+  uint32_t docid_;
+  long cost_;
 };
 
 }  // namespace yas

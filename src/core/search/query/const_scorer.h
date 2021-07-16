@@ -10,5 +10,5 @@ class ConstScorer : public Scorer {
 
  private:
   float score_;
-}
+};
 }  // namespace yas

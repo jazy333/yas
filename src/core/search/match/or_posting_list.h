@@ -1,15 +1,15 @@
 #pragma once
+#include "posting_list.h"
 
 #include <queue>
 #include <vector>
 
-#include "posting_list.h"
 
 namespace yas {
 
 class OrPostingList : public PostingList {
  public:
-  OrPostingList(std::vector<PostingList*> pls);
+  OrPostingList(std::vector<PostingList*>& pls);
   ~OrPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;

@@ -1,5 +1,4 @@
 #include "none_match_query.h"
-
 #include "const_scorer.h"
 #include "none_posting_list.h"
 

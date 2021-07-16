@@ -1,8 +1,8 @@
 #include "any_posting_list.h"
 
 namespace yas {
-AnyPostingList::AnyPostingList(uint32_t max_docid) docid_(0),
-    max_docid_(max_docid) {}
+AnyPostingList::AnyPostingList(uint32_t max_docid)
+    : docid_(0), max_docid_(max_docid) {}
 
 AnyPostingList::~AnyPostingList() {}
 

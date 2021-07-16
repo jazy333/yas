@@ -11,8 +11,7 @@ namespace yas {
 class IndexSearcher {
  private:
   IndexReader* reader_;
-  Relevance* rel;
-
+ 
  public:
   IndexSearcher(IndexReader* reader);
   virtual ~IndexSearcher();

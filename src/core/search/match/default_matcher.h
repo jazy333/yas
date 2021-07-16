@@ -3,14 +3,14 @@
 
 namespace yas {
 class DefaultMatcher : public Matcher {
-
  public:
-  DefaultMatcher(PostingList*,Scorer*);
+  DefaultMatcher(PostingList* pl, Scorer* scorer);
   ~DefaultMatcher();
   PostingList* posting_list() override;
   Scorer* scorer() override;
-  private:
+
+ private:
   PostingList* pl_;
-  Scorer scorer_;
+  Scorer* scorer_;
 };
 }  // namespace yas

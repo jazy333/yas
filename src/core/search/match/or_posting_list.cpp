@@ -3,7 +3,7 @@
 #include <numeric>
 
 namespace yas {
-OrPostingList::OrPostingList(std::vector<PostingList*> pls) {
+OrPostingList::OrPostingList(std::vector<PostingList*>& pls) {
   for (auto&& pl : pls) {
     pq_.push(pl);
   }

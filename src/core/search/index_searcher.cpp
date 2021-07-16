@@ -3,7 +3,7 @@
 #include "matcher.h"
 
 namespace yas {
-IndexSearcher::IndexSearcher(IndexReader* reader) {}
+IndexSearcher::IndexSearcher(IndexReader* reader) : reader_(reader) {}
 
 IndexSearcher::~IndexSearcher() {}
 
@@ -13,8 +13,8 @@ void IndexSearcher::search(Query* q, MatchSet& set) {
   for (auto&& sub_index_reader : sub_index_readers) {
     std::unique_ptr<Matcher> matcher = q->matcher(sub_index_reader);
     PostingList* pl = matcher->posting_list();
-    Scorer scorer = matcher->scorer();
-    while (pl->next() ！ = PostingList::NDOCID) {
+    Scorer* scorer = matcher->scorer();
+    while (pl->next() != PostingList::NDOCID) {
       MatchedDoc md;
       md.docid_ = pl->docid();
       md.score_ = scorer->score();
@@ -31,4 +31,5 @@ std::shared_ptr<Query> IndexSearcher::rewrite(std::shared_ptr<Query> query) {
   } while (query.get() != original.get());
   return query;
 }
+
 }  // namespace yas

@@ -1,11 +1,11 @@
+#include <algorithm>
+
 #include "boolean_query.h"
 #include "and_posting_list.h"
 #include "none_match_query.h"
 #include "not_posting_list.h"
 #include "or_posting_list.h"
 #include "weak_and_posting_list.h"
-
-#include <algorithm>
 
 namespace yas {
 BooleanQuery::BooleanQuery(std::vector<BooleanExpression*> expressions) {}
@@ -19,7 +19,7 @@ bool BooleanQuery::only_or() {
 Query* BooleanQuery::rewrite() {
   // case 1: zero expression,recursive termitate
   if (expressions.size() == 0) {
-    return new ZeroMatchQuery();
+    return new NoneMatchQuery();
   }
 
   // case 2: one expression ,recursion termitate

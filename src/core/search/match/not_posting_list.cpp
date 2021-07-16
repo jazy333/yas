@@ -8,8 +8,8 @@ NotPostingList::~NotPostingList() {}
 
 uint32_t NotPostingList::do_next(uint32_t next) {
   while (next >= excl_->docid()) {
-    if (next == std::numeric_limits<uint32_t>::max ||
-        excl_->docid() == std::numeric_limits<uint32_t>::max) {
+    if (next == NDOCID||
+        excl_->docid() == NDOCID) {
       return next;
     }
     if (next == excl_->docid())

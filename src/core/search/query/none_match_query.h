@@ -3,8 +3,6 @@
 
 namespace yas {
 class NoneMatchQuery : public Query {
- private:
-  /* data */
  public:
   NoneMatchQuery(/* args */);
   ~NoneMatchQuery();

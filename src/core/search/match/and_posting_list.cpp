@@ -3,7 +3,24 @@
 #include <limits>
 
 namespace yas {
-AndPostingList::AndPostingList(/* args */) {}
+AndPostingList::AndPostingList(std::vector<PostingList*>& pls) {
+  lead1_ = pls[0];
+  lead2_ = pls[1];
+  PostingList* min_posting_list = lead1_;
+  long min_cost = lead1_->cost();
+  if (lead1_->cost() > lead2_->cost()) {
+    min_cost = lead2_->cost();
+    min_posting_list = lead2_;
+  }
+  for (int i = 2; i < pls.size(); ++i) {
+    if (min_cost > pls[i]->cost()) {
+      others_.push_back(min_posting_list);
+      min_posting_list = pls[i];
+    } else {
+      others_.push_back(pls[i]);
+    }
+  }
+}
 
 AndPostingList::~AndPostingList() {}
 
@@ -13,17 +30,17 @@ uint32_t AndPostingList::do_next(uint32_t next1) {
       uint32_t next2 = lead2_->advance(next1);
       if (next1 != next2) {
         next1 = lead1_->advance(next2);
-        if (next1 == std::numeric_limits<uint32_t>::max) return next1;
+        if (next1 == NDOCID) return next1;
         continue;
       }
 
       bool end = true;
-      for (auto&& other : others) {
-        if (other_->docid() < next1) {
+      for (auto&& other : others_) {
+        if (other->docid() < next1) {
           uint32_t next = other->advance(next1);
           if (next > next1) {
             next1 = lead1_->advance(next);
-            if (next1 == std::numeric_limits<uint32_t>::max) return next1;
+            if (next1 == NDOCID) return next1;
             end = false;
           }
         }
