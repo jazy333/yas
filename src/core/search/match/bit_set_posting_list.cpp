@@ -5,8 +5,8 @@ BitSetPostingList::BitSetPostingList(BitSet* bs) : bs_(bs) {}
 
 BitSetPostingList::~BitSetPostingList() { delete bs_; }
 
-uint32_t BitSetPostingList::next() { return advance(doc + 1); }
-uint32_t BitSetPostiList::advance(uint32_t target) {
+uint32_t BitSetPostingList::next() { return advance(docid_ + 1); }
+uint32_t BitSetPostingList::advance(uint32_t target) {
   docid_ = bs_->next();
   return docid_;
 }

@@ -1,12 +1,12 @@
 #pragma once
-#include "bitset.h"
+#include "bit_set.h"
 #include "posting_list.h"
 
 namespace yas {
 
 class BitSetPostingList : public PostingList {
  public:
-  BitSetPostingList(BitSet*);
+  BitSetPostingList(BitSet* bs);
   ~BitSetPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;

@@ -1,6 +1,7 @@
 #include "weak_and_posting_list.h"
 
 #include <functional>
+#include <vector>
 
 namespace yas {
 WeakAndPostingList::WeakAndPostingList(std::vector<PostingList*>& pl,
