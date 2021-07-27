@@ -1,7 +1,9 @@
+#include "boolean_query.h"
+
 #include <algorithm>
 
-#include "boolean_query.h"
 #include "and_posting_list.h"
+#include "aug_and_scorer.h"
 #include "none_match_query.h"
 #include "not_posting_list.h"
 #include "or_posting_list.h"
@@ -133,29 +135,87 @@ Query* BooleanQuery::rewrite() {
 std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
   if (only_or()) {
     if (map_expressions_.count(Operator::NOT) != 0) {
-      return new NotPostingList();
+      std::vector<PostingList*> or_pls;
+      for (auto&& exp : map_expressions_[Operator::OR]) {
+        or_pls.push_back(exp->get_query()->posting_list(sub_reader));
+      }
+      std::vector<PostingList*> not_pls;
+      for (auto&& exp : map_expressions_[Operator::NOT]) {
+        not_pls.push_back(exp->get_query()->posting_list(sub_reader));
+      }
+      PostingList* opt_pl = new OrPostingList(or_pls);
+      PostingList* not_pl = new OrPostingList(not_pls);
+      PostingList* opt_not = new NotPostingList(opt_pl, not_pl);
+
+      return std::unique_ptr<DefaultMatcher>(opt_not, opt_not);
     } else {
       std::vector<PostingList*> pls;
       for (auto&& exp : map_expressions_[Operator::OR]) {
         pls.push_back(exp->get_query()->posting_list(sub_reader));
       }
-      return new OrPostingList(pls);
+      PostingList* pl = new OrPostingList(pls);
+      return std::unique_str<DefaultMatcher>(pl, pl);
     }
   }
 
   if (only_and()) {
     if (map_expressions_.count(Operator::NOT) != 0)
-      return new NotPostingList();
-    else
-      return new AndPostingList();
+      std::vector<PostingList*> and_pls;
+    for (auto&& exp : map_expressions_[Operator::AND]) {
+      and_pls.push_back(exp->get_query()->posting_list(sub_reader));
+    }
+    std::vector<PostingList*> not_pls;
+    for (auto&& exp : map_expressions_[Operator::NOT]) {
+      not_pls.push_back(exp->get_query()->posting_list(sub_reader));
+    }
+    PostingList* and_pl = new AndPostingList(and_pls);
+    PostingList* not_pl = new NotPostingList(and_pls, not_pls);
+    PostingList* and_not = new NotPostingList(not_pl, not_pl);
+
+    return std::unique_ptr<DefaultMatcher>(and_not, opt_not);
+    else {
+      std::vector<PostingList*> pls;
+      for (auto&& exp : map_expressions_[Operator::AND]) {
+        pls.push_back(exp->get_query()->posting_list(sub_reader));
+      }
+      PostingList* pl = new AndPostingList(pls);
+      return std::unique_str<DefaultMatcher>(pl, pl);
+    }
   }
 
   if (mm_ > 1) {
-    PostingList* req;
-    return new WeakAndPostingList();
+    std::vector<PostingList*> or_pls;
+    for (auto&& exp : map_expressions_[Operator::OR]) {
+      or_pls.push_back(exp->get_query()->posting_list(sub_reader));
+    }
 
+    PostingList* weak_and_pl = new WeakAndPostingList(or_pls);
+    if (map_expressions_.count(Operator::NOT) != 0) {
+      std::vector<PostingList*> not_pls;
+      for (auto&& exp : map_expressions_[Operator::NOT]) {
+        not_pls.push_back(exp->get_query()->posting_list(sub_reader));
+      }
+      PostingList* or_pl = new OrPostingList(not_pls);
+      PostingList* not_pl = new NotPostingList(weak_and_pl, or_pl);
+
+      return std::unique_ptr<DefaultMatcher>(not_pl, not_pl);
+    } else {
+      return std::unique_ptr<DefaultMatcher>(weak_and_pl, weak_and_pl);
+    }
   } else {
-    return new OrPostingList();
+    std::vector<PostingList*> or_pls;
+    for (auto&& exp : map_expressions_[Operator::OR]) {
+      or_pls.push_back(exp->get_query()->posting_list(sub_reader));
+    }
+
+    std::vector<PostingList*> and_pls;
+    for (auto&& exp : map_expressions_[Operator::AND]) {
+      and_pls.push_back(exp->get_query()->posting_list(sub_reader));
+    }
+    PostingList* or_pl = new OrPostingList(or_pls);
+    PostingList* and_pl=new AndPostingList(and_pls);
+    PostingList* aug_and_scorer = new AugAndScorer(and_pls, or_pl);
+    return std::unique_ptr<DefaultMatcher>(and_pl, aug_and_scorer);
   }
 }
 

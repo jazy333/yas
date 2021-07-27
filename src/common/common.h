@@ -12,13 +12,22 @@ ssize_t pwrite_with_check(int fd, const void *buf, size_t count, off_t offset);
 ssize_t read_with_check(int fd, void *buf, size_t count);
 ssize_t write_with_check(int fd, const void *buf, size_t count);
 inline int round(int len, int align) { return ((len - 1) / align + 1) * align; }
-int gcd(int a, int b);
+template<class T> T gcd(T a, T b){
+  if (b == 0)
+    return a;
+  else {
+    return a > b ? gcd(b, a % b) : gcd(a, b % a);
+  }
+}
 int lcm(int a, int b);
 inline uint32_t asmbits(const uint32_t v);
 inline uint32_t gccbits(const uint32_t v) {
   return v == 0 ? 0 : 32 - __builtin_clz(v);
 }
 
+inline uint32_t gccbits(const uint64_t v) {
+  return v == 0 ? 0 : 64 - __builtin_clzl(v);
+}
 /**
  * Treats  __m128i as 4 x 32-bit integers and asks for the max
  * number of bits used (integer logarithm).

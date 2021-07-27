@@ -12,7 +12,6 @@ class PostingList {
   virtual uint32_t next() = 0;
   virtual uint32_t advance(uint32_t target) = 0;
   virtual uint32_t docid() = 0;
-  virtual float score()=0;
   virtual long cost() = 0;
   virtual std::string name() { return "PostingList"; }
   

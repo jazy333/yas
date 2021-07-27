@@ -1,7 +1,9 @@
 #include "fixed_bit_set.h"
 
 namespace yas {
-FixedBitSet::FixedBitSet() { bits_ = new uint32_t[round(N, 4) / 4]; }
+FixedBitSet::FixedBitSet() { 
+  capcity_=round(N, 4) / 4];
+  bits_ = new uint32_t[capcity_]; }
 
 FixedBitSet::~FixedBitSet() { delete[] bits_; }
 
@@ -37,4 +39,14 @@ uint32_t FixedBitSet::next(uint32_t target) {
 
   return -1;
 }
+
+
+ size_t FixedBitSet::capcity(){
+   return capcity_;
+ }
+
+
+  uint32_t* FixedBitSet::bits(){
+    return bits_;
+  }
 }  // namespace yas

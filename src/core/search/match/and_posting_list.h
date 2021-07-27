@@ -3,12 +3,13 @@
 #include <vector>
 
 #include "posting_list.h"
+#include "scorer.h"
 
 namespace yas {
-class AndPostingList : public PostingList {
+class AndPostingList : public PostingList,public Scorer {
  public:
   AndPostingList(std::vector<PostingList*>& pls);
-  ~AndPostingList();
+  virtual ~AndPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;

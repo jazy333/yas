@@ -1,5 +1,6 @@
 #pragma once
 #include "posting_list.h"
+#include "scorer.h"
 
 #include <list>
 #include <queue>

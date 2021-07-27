@@ -1,8 +1,9 @@
 #pragma once
 #include "posting_list.h"
+#include "scorer.h"
 
 namespace yas {
-class NonePostingList:public PostingList {
+class NonePostingList:public PostingList,public Scorer {
  public:
   NonePostingList(/* args */);
   ~NonePostingList();

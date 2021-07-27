@@ -1,10 +1,11 @@
 #pragma once
 #include "bit_set.h"
 #include "posting_list.h"
+#include "scorer.h"
 
 namespace yas {
 
-class BitSetPostingList : public PostingList {
+class BitSetPostingList : public PostingList ,public Scorer{
  public:
   BitSetPostingList(BitSet* bs);
   ~BitSetPostingList();

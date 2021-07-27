@@ -6,6 +6,7 @@ template <uint32_t N>
 class FixedBitSet : public BitSet {
  private:
   uint32_t* bits_;
+  size_t capcity_;
 
  public:
   FixedBitSet();
@@ -13,6 +14,7 @@ class FixedBitSet : public BitSet {
   virtual set(uint32_t) override;
   virtual bool get() override;
   virtual size_t size() override;
+  size_t capcity() ;
   virtual uint32_t next(uint32_t) override;
 };
 

@@ -1,10 +1,11 @@
 #pragma once
 #include "posting_list.h"
+#include "scorer.h"
 
 #include <string>
 
 namespace yas {
-class NotPostingList : public PostingList {
+class NotPostingList : public PostingList,public Scorer {
  private:
   PostingList *pl_, *excl_;
   uint32_t do_next(uint32_t next);
