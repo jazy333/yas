@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 namespace yas {
 class InvertFieldIndexWriter : public FieldIndexWriter {

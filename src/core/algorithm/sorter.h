@@ -9,7 +9,8 @@ class Sorter {
   virtual void sort(int i, int j, void* cookie) = 0;
   virtual void select(int from, int to, int, void* cookie) = 0;
   virtual void swap(int i, int j) = 0;
-  virtual bool compare(int i, int j, void* cookie) = 0;
+  // return false when data[i]<data[j],or true
+  virtual bool compare(int i, int j, void* cookie) = 0;  // less semantics
   virtual int max_length() = 0;
   virtual int byte_at(int i, int pos, void* cookie) = 0;
 
@@ -40,6 +41,7 @@ class Sorter {
   }
 
  private:
+  // find the first pos which is greater than data[k] with binary search
   int binary_search(int i, int j, int k, void* cookie) {
     while (i < j) {
       int mid = (i + j) >> 1;

@@ -9,26 +9,7 @@ MutableLongValuesCompression::MutableLongValuesCompression()
     : max_bits_(0), max_(std::mumeric_limits<uint64_t>)::max()), min_(0),gcd_(0) {}
 MutableLongValuesCompression::~MutableLongValuesCompression() {}
 void MutableLongValuesCompression::add(uint64_t value) {
-  values_.push_back(value);
-  int bits = gcc_bits(value);
-  if (max_bits_ < bits) {
-    max_bits_ = bits;
-  }
-
-  if (value > max_) {
-    max_ = value;
-  }
-
-  if (value < min_) {
-    min_ = value;
-  }
-
-  if (gcd_ == 0) {
-    gcd_ = value;
-  } else {
-    gcd_ = gcd(gcd_, value);
-  }
-}
+  
 
 void MutableLongValuesCompression::compress(uint64_t* out, size_t& out_size) {
   for (auto v : values_) {

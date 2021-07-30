@@ -19,7 +19,6 @@ class MemoryFile : public File {
   int size(int64_t* size) override;
   off64_t seek(off64_t offset) override;
   size_t size() override;
-
   std::unique_ptr<File> make() override;
 
  private:
