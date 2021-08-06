@@ -1,13 +1,13 @@
 #pragma once
 
-namespace yas{
-    class  FieldIndexReadr
-    {
-    private:
-        /* data */
-    public:
-         FieldIndexReadr(/* args */);
-        ~ FieldIndexReadr();
-    };
-    
-}
+namespace yas {
+class FieldIndexReader {
+ private:
+  /* data */
+ public:
+  FieldIndexReadr(/* args */);
+  ~FieldIndexReadr();
+  get(uint32_t docid);
+};
+
+}  // namespace yas

@@ -56,6 +56,7 @@ class Point {
   virtual ~Point() = default;
 
   int get_docid() { return docid_; }
+  void set_docid(uint32_t docid) { docid_=docid; }
 
   T get(int dim) const {
     T d;

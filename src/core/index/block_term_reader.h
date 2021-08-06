@@ -1,7 +1,7 @@
 #pragma once
+#include "file_slice.h"
 #include "term_reader.h"
 #include "term_scorer.h"
-#include "file_slice.h"
 
 namespace yas {
 class BlockTermReader : public TermReader {
@@ -20,7 +20,7 @@ class BlockTermReader : public TermReader {
     uint32_t position_list_offset;
   };
 
-  BlockTermReader();
+  BlockTermReader(DB* db,Term* term);
   ~BlockTermReader();
   virtual uint32_t next() override;
   uint32_t advance(uint32_t target) override;
@@ -31,7 +31,12 @@ class BlockTermReader : public TermReader {
   Scorer* scorer() override;
   int freq() override;
   int next_postion() override;
-  private:
+
+ private:
+  void next_unit(uint32_t target);
+  void read_data();
+  void reset_current_unit();
+  bool compare_with_jump_table_entry(JumptTableEntry* a, uint32_t target);
   void next_unit(uint32_t target);
 
  private:
@@ -51,7 +56,7 @@ class BlockTermReader : public TermReader {
   int current_unit_;
   JumptTableEntry* current_entry_;
   uint32_t current_unit_index_;
-  uint32_t current_unit_postion_index_;
+  uint32_t current_unit_position_index_;
   std::vector<uint32_t> current_unit_docids_;
   std::vector<std::vector<uint32_t>> current_unit_positions_;
 };

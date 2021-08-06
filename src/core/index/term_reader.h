@@ -1,6 +1,5 @@
-#include "hash_db.h"
+#pragma once
 #include "posting_list.h"
-#include "term.h"
 
 namespace yas {
 class TermReader : public PostingList {

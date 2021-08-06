@@ -1,10 +1,10 @@
 #include "invert_field_index_writer.h"
-
-#include <iterator>
-
 #include "memory_file.h"
 #include "memory_invert_field_index_reader.h"
 #include "simd_binary_compression.h"
+
+#include <iterator>
+
 namespace yas {
 InvertFieldIndexWriter::InvertFieldIndexWriter(/* args */);
 InvertFieldIndexWriter::~InvertFieldIndexWriter();

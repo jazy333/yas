@@ -16,6 +16,7 @@ class FixedBitSet : public BitSet {
   virtual size_t size() override;
   size_t capcity() ;
   virtual uint32_t next(uint32_t) override;
+  uint32_t* bits();
 };
 
 }  // namespace yas

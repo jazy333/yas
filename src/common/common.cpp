@@ -74,13 +74,7 @@ ssize_t write_with_check(int fd, const void *buf, size_t count, off_t offset) {
   return io_bytes;
 }
 
-int gcd(int a, int b) {
-  if (b == 0)
-    return a;
-  else {
-    return a > b ? gcd(b, a % b) : gcd(a, b % a);
-  }
-}
+
 
 int lcm(int a, int b) { return (a * b) / gcd(a, b); }
 

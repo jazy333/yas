@@ -2,7 +2,7 @@
 #include "field_index_writer.h"
 #include "field_info.h"
 #include "file.h"
-#include "roaring_posting_list.h"
+
 
 namespace yas {
 class NumericFieldIndexWriter : public FieldIndexWriter {

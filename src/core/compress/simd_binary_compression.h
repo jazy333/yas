@@ -86,7 +86,7 @@ class SIMDBinaryCompression : public Compression {
       out += SIMD_BLOCKSIZE;
     }
     out_size = out - out_start;
-    return const_cast<uint8_t*>(in + in_size);
+    return const_cast<uint8_t*>(iin);
   }
 
   uint32_t get_init() { return init_; }

@@ -23,4 +23,8 @@ void IndexWriter::flush() {
   }
 }
 
+ SubIndexReader* IndexWriter::get_sub_index_readers(){
+
+ }
+
 }  // namespace
