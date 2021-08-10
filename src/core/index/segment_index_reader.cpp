@@ -1,36 +1,45 @@
 #include "segment_index_reader.h"
+#include "serialized_field_values_reader.h"
+#include "serialized_invert_fields_index_reader.h"
+#include "serialized_point_fields_index_reader.h"
 
 namespace yas {
 SegmentIndexReader::SegmentIndexReader(SegmentFiles files) : files_(files) {}
+
 SegmentIndexReader::~SegmentIndexReader() {}
-TermReader* SegmentIndexReader::posting_list(Term* term) {
-  return BlockTermReader(db_, term);
+
+InvertFieldsIndexReader* SegmentIndexReader::invert_index_reader() {
+  return invert_fields_index_reader_;
 }
-FieldIndexReadr* SegmentIndexReader::field_reader(std::string field_name) {
-  field_values_reader_.get(field_name);
+
+FieldValuesReader* SegmentIndexReader::field_values_reader() {
+  return field_values_index_reader_;
 }
-PointFieldIndexReader* point_reader(std::string field_name) {
-  return point_reader_.get_reader(field_name);
+
+PointFieldsIndexReader* SegmentIndexReader::point_fields_reader() {
+  return point_fields_index_reader_;
 }
+
 int SegmentIndexReader::open() {
-  File* kdm = new File(files_.kdm, false);
-  kdm->open();
-  File* kdi = new File(files_.kdi, false);
-  kdi->open();
-  File* kdd = new File(files_.kdd, false);
-  kdd->open();
-  point_reader_ = new PointFieldsIndexReader(kdm, kdi, kdd);
-  point_reader_->open();
+  point_fields_index_reader_ =
+      new SerializedPointFieldsIndexReader(files_.kdm, files_.kdi, files_.kdd);
+  point_fields_index_reader_->open();
 
-  db_ = new HashDB(files_.invert_index_file);
-  db_->open();
+  invert_fields_index_reader_ =
+      new SerializedInvertFieldsIndexReader(files_.invert_index_file);
+  invert_fields_index_reader_->open();
 
-  File* fdm = new File(files_.fdm, false);
-  kdm->open();
-  File* fdd = new File(files_.fdd, false);
-  field_values_reader_ = new FieldValuesReadr(fdm, fdd);
-  field_values_reader_->open();
+  field_values_index_reader_ =
+      new SerializedFieldValuesIndexReadr(files_.fvm, files_, fvd);
+  field_values_index_reader_->open();
+
+  return 0;
 }
-void SegmentIndexReader::close() {}
+
+int SegmentIndexReader::close() {
+  if (point_fields_index_reader_) point_fields_index_reader_->close();
+  if (invert_field_index_reader_) invert_field_index_reader_->close();
+  if (field_values_index_reader_) field_values_index_reader_->close();
+}
 
 }  // namespace yas

@@ -1,15 +1,17 @@
 #pragma once
+#include "field_index_reader.h"
 #include "field_index_writer.h"
 #include "field_info.h"
 #include "file.h"
 
-
 namespace yas {
-class NumericFieldIndexWriter : public FieldIndexWriter {
+class NumericFieldIndexWriter : public FieldIndexWriter,
+                                public FieldValueIndexReader {
  public:
-  void flush() override;
+  void flush(FieldInfo fi, uint32_t max_doc,Index,const IndexWriterOption& option) override;
   void add(uint32_t docid, Field* field) override;
-  FieldIndexReader* get_reader() override;
+  void get(uint32_t docid, uint64_t& value) override;
+  void get(uint32_t docid, std::vector<char>& value) override;
 
  private:
   uint32_t last_docid_;

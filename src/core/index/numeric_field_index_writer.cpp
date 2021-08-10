@@ -1,12 +1,23 @@
 #include "numeric_field_index_writer.h"
+
 #include "bitpacking_compression.h"
-#include "memory_numeric_field_index_reader.h"
+#include "numeric_field.h"
 #include "roaring_posting_list.h"
 
 namespace yas {
-void NumericFieldIndexWriter::flush(File* fvm, File* fvd, FieldInfo fi,
-                                    uint32_t max_doc) {
+void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
+                                    const IndexWriterOption& option) {
   int field_id = fi.get_field_id();
+
+  std::string file_fvm = option.dir + "/" + option.segment_prefix +
+                         std::to_string(option.current_segment_no) + ".fvm";
+  File* fvmm = new MMapFile;
+  fvm->open(file_fvm);
+
+  std::string file_fvd = option.dir + "/" + option.segment_prefix +
+                         std::to_string(option.current_segment_no) + ".fvd";
+  File* fvmd = new MMapFile;
+  fvm->open(file_fvd);
 
   fvm->write(&field_id, 4);  // field id
   uint8_t type = 0;
@@ -68,10 +79,15 @@ void NumericFieldIndexWriter::flush(File* fvm, File* fvd, FieldInfo fi,
     delete[] compress_out;
     fvm->write(&field_value_len, sizeof(size_t));  // field value length;
   }
+  fvm->close();
+  fvd->close();
+  delete fvm;
+  delete fvd;
 }
 
 void NumericFieldIndexWriter::add(uint32_t docid, Field* field) {
-  uint64_t value = field->get_value();
+  NumericField* nf = dynamic_cast<NumericField*>(field);
+  uint64_t value = nf->get_value();
   docids_.push_back(docid);
   values_.push_back(value);
 
@@ -84,7 +100,16 @@ void NumericFieldIndexWriter::add(uint32_t docid, Field* field) {
   }
 }
 
-FieldIndexReader* NumericFieldIndexWriter::get_reader() {
-  return new MemoryNumericFieldIndexReadr(docids_, values_);
+void NumericFieldIndexWriter::get(uint32_t docid, uint64_t& value) {
+  auto iter = std::lower_bound(docids_->begin(), docids_.end(), docid);
+  if (iter != docids_.end()) {
+    int index = std::distance(iter - docids_->begin());
+    value = values_[index];
+  }
+
+  return;
+}
+
+void NumericFieldIndexWriter::get(uint32_t docid, std::vector<char>& value) {}
 }
 }  // namespace yas

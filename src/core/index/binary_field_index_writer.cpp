@@ -1,13 +1,11 @@
-#include "binary_field_index_writer.h"
-#include "bitpacking_compression.h"
-#include "common.h"
-#include "memory_binary_field_index_reader.h"
-#include "roaring_posting_list.h"
-
 #include <cstdint>
 #include <limits>
 #include <vector>
 
+#include "bitpacking_compression.h"
+#include "common.h"
+#include "roaring_posting_list.h"
+#include "binary_field_index_writer.h"
 
 namespace yas {
 BinaryFieldIndexWriter::BinaryFieldIndexWriter(/* args */) {
@@ -17,8 +15,7 @@ BinaryFieldIndexWriter::BinaryFieldIndexWriter(/* args */) {
 
 BinaryFieldIndexWriter::~BinaryFieldIndexWriter() {}
 
-void BinaryFieldIndexWriter::flush(File* fvm, File* fvd, FieldInfo fi,
-                                   uint32_t max_doc) {
+void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,Index,const IndexWriterOption& option) {
   int field_id = fi.get_field_id();
   fvm.write(&field_id, sizeof(field_id));
   uint8_t type = 1;
@@ -61,7 +58,7 @@ void BinaryFieldIndexWriter::flush(File* fvm, File* fvd, FieldInfo fi,
   if (min_length_ != max_length_) {
     // write value len index compress
     uint8_t max_bits = gcc_bits(*(lens.rbegin()));
-    fvm->write(&max_bits,sizoef(max_bits));
+    fvm->write(&max_bits, sizoef(max_bits));
     BitPackingCompression bc(max_bits);
     offset = fvd->size();
     fvm->write(&offset, sizeof(offset));  // value lens data offset
@@ -84,12 +81,17 @@ void BinaryFieldIndexWriter::add(uint32_t docid, Field* field) {
   if (value.size() < min_length_) {
     min_length_ = value.size();
   }
-  values_.emplace_back(values_);
+  values_.emplace_back(value);
   docids_.push_back(docid);
 }
 
-FieldIndexReader* BinaryFieldIndexWriter::get_reader() {
-  return new MemoryBinaryFieldIndexReader(&docids_, values_);
-}
+std::vector<uint8_t> BinaryFieldIndexWriter::get(uint32_t target) {
+  auto iter = std::lower_bound(docids_->begin(), docids_.end(), docid);
+  if (iter != docids_.end()) {
+    int index = std::distance(iter - docids_->begin());
+    return values_[index];
+  }
 
+  return {};
+}
 }  // namespace yas

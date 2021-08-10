@@ -7,11 +7,12 @@
 #include "file_slice.h"
 
 namespace yas {
-class BinaryFieldIndexReader : public FieldIndexReader {
+class BinaryFieldIndexReader : public FieldValueIndexReader {
  public:
   BinaryFieldIndexReader(BinaryFieldMeta* meta, File* fvd);
   virtual ~BinaryFieldIndexReader();
-  std::vector<uint8_t> get(uint32_t docid);
+  void get(uint32_t docid, uint64_t& value);
+  void get(uint32_t docid, std::vector<char>& value);
 
  private:
   uint64_t get_value(int index);

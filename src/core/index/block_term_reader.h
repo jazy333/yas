@@ -37,7 +37,6 @@ class BlockTermReader : public TermReader {
   void read_data();
   void reset_current_unit();
   bool compare_with_jump_table_entry(JumptTableEntry* a, uint32_t target);
-  void next_unit(uint32_t target);
 
  private:
   DB* hdb_;

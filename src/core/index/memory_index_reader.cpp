@@ -1,26 +1,32 @@
 #include "memory_index_reader.h"
+#include "field_values_index_reader_wrapper.h"
+#include "point_values_index_reader_wrapper.h"
 
 namespace yas {
-MemoryIndexReader(
-    std::unordered_map<std::string, FieldIndexWriter*>* field_index_writers)
-    : field_index_writer_(field_index_writer) {}
-~MemoryIndexReader() {}
+MemoryIndexReader::MemoryIndexReader(
+    InvertFieldsIndexWriter* invert_field_index_writer,
+    std::unordered_map<std::string, FieldIndexWriter*>*
+        point_fields_index_writers,
+    std::unordered_map<std::string, FieldIndexWriter*>
+        field_values_index_writers)
+    : invert_field_index_writer_(invert_field_index_writer),
+      point_fields_index_writers_(point_fields_index_writers),
+      field_values_index_writers_(field_values_index_writers) {}
+MemoryIndexReader::~MemoryIndexReader() {}
 
-TermReader* posting_list(Term* term) {
-  std::string field = term->get_field();
-  if (field_index_writers_.count(field) == 1) {
-    FieldIndexWriter* writer = field_index_writers_[field];
-    return writer->get_reader(term);
-  } else {
-    return nullptr;
-  }
+InvertFieldsIndexReader* MemoryIndexReader::invert_index_reader()() {
+  return invert_field_index_writer_;
 }
 
-FieldIndexReadr* field_reader(std::string field_name) {
-  if (field_index_writers_.count(field_name) == 1) {
-    return field_index_writers_[field_name];
-  } else {
-    return nullptr;
-  }
+FieldValuesIndexReader* MemoryIndexReader::field_values_reader() {
+  return new FieldValuesIndexReaderWrapper(field_values_index_writers_);
 }
+
+PointFieldsIndexReader* MemoryIndexReader::point_fields_reader() {
+  return new PointVlauesIndexReaderWrapper(point_fields_index_writers_);
+}
+
+int MemoryIndexReader::open() { return 0; }
+int MemoryIndexReader::close() { return 0; }
+
 }  // namespace yas

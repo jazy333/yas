@@ -10,12 +10,12 @@
 
 namespace yas {
 template <class T, class D>
-class MemoryPointFieldIndexReader {
+class MemoryPointFieldIndexReader : public PointFieldIndexReader {
  public:
   MemoryPointFieldIndexReader(SkipList<T, uint32_t>* skip_lists)
       : skip_lists_(skip_lists) {}
   virtual ~MemoryPointFieldIndexReader() {}
-  PostingList* get(Point<T, D> min, Point<T, D> max) {
+  PostingList* get(u_char* min, u_char* max) {
     std::vector<PostingList*> pls;
     for (int i = 0; i < D; ++i) {
       auto low = skip_lists_[i].lower_bound(min.get(i));

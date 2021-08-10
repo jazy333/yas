@@ -1,6 +1,4 @@
-#include "block_term_reader.h"
-#include "field_values_reader.h"
-#include "point_fields_index_reader.h"
+#pragma once
 #include "segment_files.h"
 #include "sub_index_reader.h"
 
@@ -9,16 +7,16 @@ class SegmentIndexReader : public SubIndexReader {
  public:
   SegmentIndexReader(SegmentFiles files);
   virtual ~SegmentIndexReader();
-  TermReader* posting_list(Term*) override;
-  FieldIndexReader* field_reader(std::string field_name) override;
-  PointFieldIndexReader* point_reader(std::string field_name);
-  int open();
-  int close();
+  InvertFieldsIndexReader* invert_index_reader() override;
+  FieldValuesIndexReader* field_values_reader() override;
+  PointFieldsIndexReader* point_fields_reader() override;
+  int open() override;
+  int close() override;
 
  private:
   SegmentFiles files_;
-  PointFieldsIndexReader* point_reader_;
-  FieldValuesReader* field_values_reader_;
-  DB* db_;
+  PointFieldsIndexReader* point_fields_index_reader_;
+  FieldValuesReader* field_values_index_reader_;
+  InvertFieldsIndexReader* invert_fields_index_readesr_;
 };
 }  // namespace yas

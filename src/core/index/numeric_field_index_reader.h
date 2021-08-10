@@ -9,7 +9,7 @@
 #include <memory>
 
 namespace yas {
-class NumericFieldIndexReader : public FieldIndexReadr {
+class NumericFieldIndexReader : public FieldValueIndexReader {
  public:
   NumericFieldIndexReader(NumericFieldMeta* meta, File* fvd);
   virtual ~NumericFieldIndexReader();

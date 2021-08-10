@@ -1,17 +1,19 @@
 #pragma once
-#include "field.h"
-
 #include <vector>
+#include <memory>
+
+#include "field.h"
 
 namespace yas {
 class Document {
  public:
   Document(/* args */);
-  ~Document();
-  void add_field(Field* field);
-  std::vector<Field*> get_fields();
+  virtual ~Document();
+  void add_field(std::unique_ptr<Field> field);
+  std::vector<std::unique_ptr<Field>> get_fields();
+
  private:
-  std::vector<Field*> fields_;
+  std::vector<std::unique_ptr<Field>> fields_;
 };
 
 }  // namespace yas

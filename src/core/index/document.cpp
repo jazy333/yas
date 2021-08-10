@@ -3,8 +3,11 @@
 namespace yas {
 Document::Document(/* args */) {}
 
-Document::~Document() {}
+Document::~Document() { fields_.clear(); }
 
-void Document::add_field(Field* field) { fields_.push_back(field); }
-std::vector<Field*> Document::get_fields() { return fields_; }
+void Document::add_field(std::unique_ptr<Field> field) {
+  fields_.push_back(std::move(field));
+}
+
+std::vector<std::unique_ptr<Field>> Document::get_fields() { return fields_; }
 }  // namespace yas

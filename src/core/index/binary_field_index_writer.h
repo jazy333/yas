@@ -2,16 +2,19 @@
 #include <cstdint>
 #include <vector>
 
+#include "field_index_reader.h"
 #include "field_index_writer.h"
 
 namespace yas {
-class BinaryFieldIndexWriter : public FieldIndexWriter {
+class BinaryFieldIndexWriter : public FieldIndexWriter,
+                               public FieldValueIndexReader {
  public:
   BinaryFieldIndexWriter(/* args */);
   ~BinaryFieldIndexWriter();
-  void flush(File* fvm, File* fvd, FieldInfo fi, uint32_t max_doc) override;
+  void flush(FieldInfo fi, uint32_t max_doc,Index,const IndexWriterOption& option) override;
   void add(uint32_t docid, Field* field) override;
-  FieldIndexReader* get_reader() override;
+  void get(uint32_t docid, uint64_t& value) override;
+  void get(uint32_t docid, std::vector<char>& value) override;
 
  private:
   std::vector<std::vector<uint8_t>> values_;
