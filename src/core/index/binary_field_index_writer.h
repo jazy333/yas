@@ -11,7 +11,7 @@ class BinaryFieldIndexWriter : public FieldIndexWriter,
  public:
   BinaryFieldIndexWriter(/* args */);
   ~BinaryFieldIndexWriter();
-  void flush(FieldInfo fi, uint32_t max_doc,Index,const IndexWriterOption& option) override;
+  void flush(FieldInfo fi, uint32_t max_doc,Index,const IndexOption& option) override;
   void add(uint32_t docid, Field* field) override;
   void get(uint32_t docid, uint64_t& value) override;
   void get(uint32_t docid, std::vector<char>& value) override;

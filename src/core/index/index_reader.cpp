@@ -86,9 +86,10 @@ int IndexReader::scan_dir(std::vector<SegmentFiles>& files) {
 int IndexReader::open() {
   std::vector<SegmentFiles> files;
   int ret = scandir(files);
-  for (int i = 0; i < files.size(); ++i) {
+  for (size_t i = 0; i < files.size(); ++i) {
     std::unique_ptr<SegmentIndexReader> segment_reader =
         new SegmentIndexReader(files[i]);
+    segment_reader->open();
     sub_index_readers_.push_back(std::move(segment_reader));
   }
 }

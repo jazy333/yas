@@ -15,7 +15,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
  public:
   InvertFieldsIndexWriter();
   virtual ~InvertFieldsIndexWriter();
-  void flush(FieldInfo fi, uint32_t max_doc,const IndexWriterOption& option) override;
+  void flush(FieldInfo fi, uint32_t max_doc,const IndexOption& option) override;
   void add(uint32_t docid, Field* field) override;
   int open() override;
   int close() override;

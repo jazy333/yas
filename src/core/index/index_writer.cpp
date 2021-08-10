@@ -3,9 +3,9 @@
 
 #include <mutex>
 namespace {
-IndexWriter::IndexWriter() : option_(IndexWriterOption()) {}
+IndexWriter::IndexWriter() : option_(IndexOption()) {}
 
-IndexWriter::IndexWriter(const IndexWriterOption& index_writer_option)
+IndexWriter::IndexWriter(const IndexOption& index_writer_option)
     : options_(index_writer_option) {}
 
 IndexWriter::~IndexWriter() {}

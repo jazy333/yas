@@ -10,7 +10,7 @@ namespace yas {
 InvertFieldsIndexWriter::InvertFieldIndexWriter(/* args */);
 InvertFieldsIndexWriter::~InvertFieldIndexWriter();
 void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
-                                    const IndexWriterOption& option) {
+                                    const IndexOption& option) {
   DB* db = new HashDB;
   std::string db_path = option.dir + "/" + option.segment_prefix +
                         std::to_string(option.current_segment_no)+".hdb";

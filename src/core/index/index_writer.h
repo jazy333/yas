@@ -13,7 +13,7 @@ namespace yas {
 class IndexWriter {
  public:
   IndexWriter(/* args */);
-  IndexWriter(const IndexWriterOption& index_writer_option);
+  IndexWriter(const IndexOption& index_writer_option);
   virtual ~IndexWriter();
   void add_document(std::unique_ptr<Document> doc);
   void flush();
@@ -26,7 +26,7 @@ class IndexWriter {
   std::unordered_map<std::string, std::unique_ptr<FieldIndexWriter>>
       field_values_index_writers_;
   atomic_uint32_t max_doc_;
-  IndexWriterOption option_;
+  IndexOption option_;
   SharedMutex shared_mutex_;
 };
 

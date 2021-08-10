@@ -1,12 +1,11 @@
 #include "numeric_field_index_writer.h"
-
 #include "bitpacking_compression.h"
 #include "numeric_field.h"
 #include "roaring_posting_list.h"
 
 namespace yas {
 void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
-                                    const IndexWriterOption& option) {
+                                    const IndexOption& option) {
   int field_id = fi.get_field_id();
 
   std::string file_fvm = option.dir + "/" + option.segment_prefix +

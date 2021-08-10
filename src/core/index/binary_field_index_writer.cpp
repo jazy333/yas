@@ -15,7 +15,7 @@ BinaryFieldIndexWriter::BinaryFieldIndexWriter(/* args */) {
 
 BinaryFieldIndexWriter::~BinaryFieldIndexWriter() {}
 
-void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,Index,const IndexWriterOption& option) {
+void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,Index,const IndexOption& option) {
   int field_id = fi.get_field_id();
   fvm.write(&field_id, sizeof(field_id));
   uint8_t type = 1;
