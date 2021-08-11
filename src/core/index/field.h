@@ -18,7 +18,6 @@ class Field {
   virtual bool get_store() { return store_; }
 
   std::unique_ptr<FieldIndexWriter> make_field_index_writer() = 0;
-
  private:
   std::string name_;
   int field_id_;

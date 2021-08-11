@@ -1,19 +1,21 @@
 #include "invert_fields_index_writer.h"
-
-#include <iterator>
-
 #include "memory_file.h"
 #include "memory_term_reader.h"
 #include "simd_binary_compression.h"
+
+#include <iterator>
+#include <memory>
+
+
 
 namespace yas {
 InvertFieldsIndexWriter::InvertFieldIndexWriter(/* args */);
 InvertFieldsIndexWriter::~InvertFieldIndexWriter();
 void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
                                     const IndexOption& option) {
-  DB* db = new HashDB;
+  DB* db = std::unique_ptr<HashDB>(new HashDB);
   std::string db_path = option.dir + "/" + option.segment_prefix +
-                        std::to_string(option.current_segment_no)+".hdb";
+                        std::to_string(option.current_segment_no) + ".hdb";
   db->open(db_path);
   for (auto&& item : posting_lists_) {
     std::string key = item.first();
@@ -82,11 +84,11 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     delete unit;
   }
   db->close();
-  delete db;
 }
 
-void InvertFieldsIndexWriter::add(uint32_t docid, Field* field) {
-  TextField* tf = dynamic_cast<TextField*>(field);
+void InvertFieldsIndexWriter::add(uint32_t docid,
+                                  std::shared_ptr<Field> field) {
+  TextField* tf = dynamic_cast<TextField*>(field->get());
   std::vector<int> postion_list;
   TermIterator* ti = tokenizer_->get_term_iterator(tf->get_value());
   while (ti->next()) {

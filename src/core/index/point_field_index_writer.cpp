@@ -1,33 +1,40 @@
 #include "point_field_index_writer.h"
-#include "point_field.h"
-#include "memory_point_field_index_reader.h"
 #include "mmap_file.h"
+#include "point_field.h"
 
+#include <memory>
 namespace yas {
 PointFieldIndexWriter::PointFieldIndexWriter() {}
 PointFieldIndexWriter::~PointFieldIndexWriter() {}
-void PointFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,Index,const IndexWriterOption& option) {
-   BkdTree<T, D> bkd;
-   std::string file_kdm = option.dir + "/" + option.segment_prefix +
-                        std::to_string(option.current_segment_no)+".kdm";
-  File* kdm=new MMapFile;
+void PointFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
+                                  const IndexWriterOption& option) {
+  BkdTree<T, D> bkd;
+  std::string file_kdm = option.dir + "/" + option.segment_prefix +
+                         std::to_string(option.current_segment_no) + ".kdm";
+  File* kdm = new MMapFile;
   kdm->open(file_kdm);
+
   std::string file_kdi = option.dir + "/" + option.segment_prefix +
-                        std::to_string(option.current_segment_no)+".kdi";
-  File* kdi=new MMapFile;
-   kdm->open(file_kdi);
+                         std::to_string(option.current_segment_no) + ".kdi";
+  File* kdi = new MMapFile;
+  kdi->open(file_kdi);
+  
   std::string file_kdd = option.dir + "/" + option.segment_prefix +
-                        std::to_string(option.current_segment_no)+".kdd";
-  File* kdd=new MMapFile;
-  kdd->open(file_kdd)
+                         std::to_string(option.current_segment_no) + ".kdd";
+  File* kdd = new MMapFile;
+  kdd->open(file_kdd);
+
   bkd.pack(fi.get_field_id(), &points_, kdm, kdi, kdd);
-  kdm->close();delete kdm;
-  kdi->close();delete kdi;
-  kdd->close();delete kdd;
+  kdm->close();
+  delete kdm;
+  kdi->close();
+  delete kdi;
+  kdd->close();
+  delete kdd;
 }
 
-void PointFieldIndexWriter::add(uint32_t docid, Field* field) {
-  PointField<T,D>* pf=dynamic_cast<Point<T,D>*>(field);
+void PointFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
+  PointField<T, D>* pf = dynamic_cast<Point<T, D>*>(field->get());
   auto point = pf->get_value();
   for (int i = 0; i < point.dim(); ++i) {
     skip_list[i].insert(point.get(i), docid);

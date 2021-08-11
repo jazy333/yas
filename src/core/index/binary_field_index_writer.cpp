@@ -1,21 +1,34 @@
+#include "binary_field_index_writer.h"
+#include "bitpacking_compression.h"
+#include "common.h"
+#include "roaring_posting_list.h"
+
 #include <cstdint>
 #include <limits>
 #include <vector>
 
-#include "bitpacking_compression.h"
-#include "common.h"
-#include "roaring_posting_list.h"
-#include "binary_field_index_writer.h"
+
 
 namespace yas {
-BinaryFieldIndexWriter::BinaryFieldIndexWriter(/* args */) {
+BinaryFieldIndexWriter::BinaryFieldIndexWriter() {
   min_length_ = std::numeric_limits<uint32_t>::max();
   max_length_ = std::numeric_limits<uint32_t>::min();
 }
 
 BinaryFieldIndexWriter::~BinaryFieldIndexWriter() {}
 
-void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,Index,const IndexOption& option) {
+void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
+                                   const IndexOption& option) {
+  std::string file_fvm = option.dir + "/" + option.segment_prefix +
+                         std::to_string(option.current_segment_no) + ".fvm";
+  File* fvmm = new MMapFile;
+  fvm->open(file_fvm);
+
+  std::string file_fvd = option.dir + "/" + option.segment_prefix +
+                         std::to_string(option.current_segment_no) + ".fvd";
+  File* fvd = new MMapFile;
+  fvd->open(file_fvd);
+
   int field_id = fi.get_field_id();
   fvm.write(&field_id, sizeof(field_id));
   uint8_t type = 1;
@@ -72,7 +85,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,Index,const In
   }
 }
 
-void BinaryFieldIndexWriter::add(uint32_t docid, Field* field) {
+void BinaryFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
   std::vector<uint8_t> value = field->get_value();
   if (value.size() > max_length_) {
     max_length_ = value.size();

@@ -16,7 +16,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
   InvertFieldsIndexWriter();
   virtual ~InvertFieldsIndexWriter();
   void flush(FieldInfo fi, uint32_t max_doc,const IndexOption& option) override;
-  void add(uint32_t docid, Field* field) override;
+  void add(uint32_t docid, std::shared_ptr<Field> field) override;
   int open() override;
   int close() override;
   TermReader* get_reader(Term* term) override;

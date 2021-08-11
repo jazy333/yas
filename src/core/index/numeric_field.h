@@ -5,10 +5,14 @@
 namespace yas {
 
 class NumericField : public Field {
-  PointField(const std::string& name, const long& value)
+  NumericField(const std::string& name, const long& value)
       : Field(name), value_(value) {}
-  virtual ~PointField() = default;
+  virtual ~NumericField() = default;
   long get_value() { return value_; }
+  std::unique_ptr<FieldIndexWriter> make_field_index_writer() override {
+    return std::unique_ptr<NumericFieldIndexWriter>(
+        new NumericFieldIndexWriter());
+  }
 
  private:
   long value_;

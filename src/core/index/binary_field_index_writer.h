@@ -9,10 +9,10 @@ namespace yas {
 class BinaryFieldIndexWriter : public FieldIndexWriter,
                                public FieldValueIndexReader {
  public:
-  BinaryFieldIndexWriter(/* args */);
+  BinaryFieldIndexWriter();
   ~BinaryFieldIndexWriter();
   void flush(FieldInfo fi, uint32_t max_doc,Index,const IndexOption& option) override;
-  void add(uint32_t docid, Field* field) override;
+  void add(uint32_t docid, std::shared_ptr<Field>  field) override;
   void get(uint32_t docid, uint64_t& value) override;
   void get(uint32_t docid, std::vector<char>& value) override;
 

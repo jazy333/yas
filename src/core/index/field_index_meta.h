@@ -30,16 +30,16 @@ struct BinaryFieldMeta : public FieldIndexMeta {
   uint64_t field_lengths_data_len;
 };
 
-  struct PointFieldMeta {
-    int field_id_;
-    int num_dims_;
-    int max_count_per_leaf_;
-    int bytes_per_dim_;
-    int num_leaves_;
-    value_type min_;
-    value_type max_;
-    int count_;
-    long data_fp_;
-    long index_fp_;
-  };
+struct PointFieldMeta {
+  int field_id_;
+  int num_dims_;
+  int max_count_per_leaf_;
+  int bytes_per_dim_;
+  int num_leaves_;
+  value_type min_;
+  value_type max_;
+  int count_;
+  long data_fp_;
+  long index_fp_;
+};
 }  // namespace yas

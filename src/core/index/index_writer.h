@@ -20,11 +20,12 @@ class IndexWriter {
   std::unique_ptr<SubIndexReader> get_sub_index_reader();
 
  private:
-  std::unique_ptr<InvertFieldsIndexWriter> invert_fields_writer_;
-  std::unordered_map<std::string, std::unique_ptr<FieldIndexWriter>>
+  std::shared_ptr<InvertFieldsIndexWriter> invert_fields_writer_;
+  std::unordered_map<std::string, std::shared_ptr<FieldIndexWriter>>
       point_fields_index_writers_;
-  std::unordered_map<std::string, std::unique_ptr<FieldIndexWriter>>
+  std::unordered_map<std::string, std::shared_ptr<FieldIndexWriter>>
       field_values_index_writers_;
+  std::unordered_map<std::string, FieldInfo> field_infos_;
   atomic_uint32_t max_doc_;
   IndexOption option_;
   SharedMutex shared_mutex_;

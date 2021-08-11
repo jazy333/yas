@@ -2,14 +2,13 @@
 #include "field_index_reader.h"
 
 namespace yas {
-class PointValuesIndexReaderWrapper : public PointValuesIndexReader {
+class MemoryFieldValuesIndexReaderWrapper : public FieldValuesIndexReader {
  public:
-  PointValuesIndexReaderWrapper(
+  MemoryFieldValuesIndexReaderWrapper(
       std::unordered_map<std::string, FieldIndexWriter*>* field_index_writers);
-      virtual ~PointValuesIndexReaderWrapper()=default;
   int open();
   int close();
-  PointValueIndexReader* get_reader(const std::string& field_name);
+  FieldValueIndexReader* get_reader(const std::string& field_name);
   private:
    std::unordered_map<std::string, FieldIndexWriter*>* field_index_writers_;
 };

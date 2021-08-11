@@ -3,8 +3,9 @@
 
 namespace yas {
 SerializedPointFieldsIndexReader::SerializedPointFieldsIndexReader(
-    FieldInfo* field_infos, const std::string& meta_file,
-    const std::string& index_file, const std::string& data_file)
+    const std::unordered_map<std::string, FieldInfo>& field_infos,
+    const std::string& meta_file, const std::string& index_file,
+    const std::string& data_file)
     : field_infos_(field_infos),
       meta_file_(meta_file),
       index_file_(index_file),
@@ -17,16 +18,25 @@ SerializedPointFieldsIndexReader::~SerializedPointFieldsIndexReader() {
   close();
 }
 
-  PointFieldIndexReader* SerializedPointFieldsIndexReader::get_reader(const std::string& field_name) {
-
+std::unique_ptr<PointFieldIndexReader>
+SerializedPointFieldsIndexReader::get_reader(
+    const std::string& field_name,
+    std::unique_ptr<PointFieldIndexReader> init_reader) {
+  if (field_infos_.count(field_name) == 1) {
+    int field_id = field_infos_[field_name].get_field_id();
+    init_reader->init(field_id, kdm_infos_[field_id], kdi_, kdm_);
+    return init_reader;
+  } else {
+    return nullptr;
   }
+}
 
 int SerializedPointFieldsIndexReader::open() {
-  File* kdm_ = new File(files_.kdm, false);
+  kdm_ = new MMapFile(files_.kdm, false);
   kdm_->open();
-  File* kdi_ = new File(files_.kdi, false);
+  kdi_ = new MMapFile(files_.kdi, false);
   kdi_->open();
-  File* kdd_ = new File(files_.kdd, false);
+  kdd_ = new MMapFile(files_.kdd, false);
   kdd_->open();
   loff_t off = 0;
   while (true) {

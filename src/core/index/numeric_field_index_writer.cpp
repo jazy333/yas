@@ -15,8 +15,8 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
 
   std::string file_fvd = option.dir + "/" + option.segment_prefix +
                          std::to_string(option.current_segment_no) + ".fvd";
-  File* fvmd = new MMapFile;
-  fvm->open(file_fvd);
+  File* fvd = new MMapFile;
+  fvd->open(file_fvd);
 
   fvm->write(&field_id, 4);  // field id
   uint8_t type = 0;
@@ -84,8 +84,8 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
   delete fvd;
 }
 
-void NumericFieldIndexWriter::add(uint32_t docid, Field* field) {
-  NumericField* nf = dynamic_cast<NumericField*>(field);
+void NumericFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field>  field) {
+  NumericField* nf = dynamic_cast<NumericField*>(field->get());
   uint64_t value = nf->get_value();
   docids_.push_back(docid);
   values_.push_back(value);

@@ -1,6 +1,6 @@
 #include <algorithm>
 
-#include "memory_invert_field_index_reader.h"
+#include "memory_term_reader.h"
 
 namespace yas {
 MemoryTermReader::MemoryInvertFieldIndexReader(

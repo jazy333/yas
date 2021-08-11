@@ -11,15 +11,15 @@ template <class T, class D>
 class PointFieldIndexWriter : public FieldIndexWriter,
                               public PointFieldIndexReader {
  public:
-  PointFieldIndexWriter(File* kdm, File* kdi, File* kdd);
+  PointFieldIndexWriter();
   virtual ~PointFieldIndexWriter();
-  void flush(FieldInfo fi, uint32_t max_doc,Index,const IndexWriterOption& option) override;
-  void add(uint32_t docid, Field* field) override;
+  void flush(FieldInfo fi, uint32_t max_doc, Index,
+             const IndexWriterOption& option) override;
+  void add(uint32_t docid, std::shared_ptr<Field> field) override;
   PostingList* get(u_char* min, u_char* max) override;
 
  private:
   MemoryPoints<T, D> points_;
   SkipList<T, uint32_t> skip_list[D];
- 
 };
 }  // namespace yas

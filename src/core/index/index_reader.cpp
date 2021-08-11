@@ -16,8 +16,8 @@ IndexReader::IndexReader() option_(IndexOption()) {}
 
 IndexReader::~IndexReader() { close(); }
 
-std::vector<std::unique_ptr<SubIndexReader>>
-IndexReader::get_sub_index_reader() {
+std::vector<std::shared_ptr<SubIndexReader>>
+IndexReader::get_sub_index_readers() {
   return sub_index_readers_;
 }
 
@@ -87,15 +87,15 @@ int IndexReader::open() {
   std::vector<SegmentFiles> files;
   int ret = scandir(files);
   for (size_t i = 0; i < files.size(); ++i) {
-    std::unique_ptr<SegmentIndexReader> segment_reader =
-        new SegmentIndexReader(files[i]);
+    std::shared_ptr<SegmentIndexReader> segment_reader =
+        new SegmentIndexReader(files[i],field_infos_);
     segment_reader->open();
-    sub_index_readers_.push_back(std::move(segment_reader));
+    sub_index_readers_.push_back(segment_reader);
   }
 }
 
-void IndexReader::add(std::unique_ptr<SubIndexReader> reader) {
-  sub_index_readers_.push_back(std::move(reader));
+void IndexReader::add(std::shared_ptr<SubIndexReader> reader) {
+  sub_index_readers_.push_back(reader);
 }
 
 int IndexReader::close() {}

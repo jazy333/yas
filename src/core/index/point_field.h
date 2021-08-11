@@ -1,6 +1,7 @@
 #pragma once
 
 #include "field.h"
+#include "field_index_reader.h"
 
 namespace yas {
 template <class T, class D>
@@ -12,6 +13,11 @@ class PointField : public Field {
   std::unique_ptr<FieldIndexWriter> make_field_index_writer() override{
       return std::unique_ptr<FieldIndexWriter>(new PointFieldIndexWriter<T,D>);
   }
+
+ std::unique_ptr<PointFieldIndexReader> make_serialized_field_index_reader() override{
+      return std::unique_ptr<PointFieldIndexReader>(new PointFieldIndexWriter<T,D>());
+  }
+
  private:
   Point<T, D> value_;
 };
