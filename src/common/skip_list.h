@@ -8,7 +8,7 @@ namespace yas {
 template <class Key, class Value>
 class SkipListNode {
  public:
-  SkipListNode(int max_level, Key key, Value v)
+  SkipListNode(int max_level, Key key, Value value)
       : key(key), value(value), level(max_level, nullptr) {}
   SkipListNode(int max_level) : key(), value(), level(max_level, nullptr) {}
   SkipListNode* next() { return level[0]; }
@@ -24,7 +24,7 @@ class SkipList {
  public:
   using node_type = SkipListNode<Key, Value>;
 
-  SkipList() : level_(1) { head_ = new node_type(kMaxLevel); }
+  SkipList() : level_(1),size_(0) { head_ = new node_type(kMaxLevel); }
 
   ~SkipList() {
     auto cur = head_;
@@ -43,7 +43,7 @@ class SkipList {
     std::vector<node_type*> update(kMaxLevel, nullptr);
     do_lower_bound(head_, key, &update);
     int new_level = random_level();
-    if (new_level > level) {
+    if (new_level > level_) {
       for (int i = level_; i < new_level; ++i) {
         update[i] = head_;
       }
@@ -53,8 +53,8 @@ class SkipList {
     node_type* node = new node_type(new_level, key, value);
 
     for (int i = 0; i < new_level; ++i) {
-      node->level[i] = update[i];
-      update[i] = node;
+      node->level[i] = update[i]->level[i];
+      update[i]->level[i] = node;
     }
     size_++;
     return node;
@@ -63,7 +63,7 @@ class SkipList {
   node_type* erase(Key key) {
     node_type* low = head_;
     std::vector<node_type*> update_low(kMaxLevel, nullptr);
-    low = do_lower_bound(key, &update_low);
+    low = do_lower_bound(head_, key, &update_low);
 
     node_type* high = low;
     std::vector<node_type*> update_high(kMaxLevel, nullptr);
@@ -73,6 +73,12 @@ class SkipList {
       delete low;
       low = cur;
       size_--;
+    }
+
+    for (int i = 0; i < level_; ++i) {
+      if (update_low[i]) {
+        update_low[i]->level[i] = update_high[i];
+      }
     }
     return low;
   }
@@ -94,29 +100,36 @@ class SkipList {
   }
 
  private:
-  node_type* do_upper_bound(node_type* start, Key up,
+  node_type* do_lower_bound(node_type* start, Key low,
                             std::vector<node_type*>* update) {
-    auto cur = start;
-    for (int i = level_ - 1; i >= 0; i--) {
-      cur = cur->level[i];
-      while (cur && !Compare(cur->key, up)) {
+    if (!start) return nullptr;
+    auto cur = start, pre = start;
+    int node_level = start->level.size();
+    for (int i = node_level - 1; i >= 0; i--) {
+      cur = pre;
+      do {
+        pre = cur;
         cur = cur->level[i];
-      }
-      if (update) update[i] = cur;
+      } while (cur && Compare()(cur->key, low));
+
+      if (update) (*update)[i] = pre;
     }
 
     return cur;
   }
 
-  node_type* do_lower_bound(node_type* start, Key low,
+  node_type* do_upper_bound(node_type* start, Key up,
                             std::vector<node_type*>* update) {
-    auto cur = start;
-    for (int i = level_ - 1; i >= 0; i--) {
-      cur = cur->level[i];
-      while (cur && Compare(cur->key, low)) {
+    if (!start) return nullptr;
+    int node_level = start->level.size();
+    auto cur = start, pre = start;
+    for (int i = node_level - 1; i >= 0; i--) {
+      cur = pre;
+      do {
+        pre = cur;
         cur = cur->level[i];
-      }
-      if (update) update[i] = cur;
+      } while (cur && !Compare()(up, cur->key));
+      if (update) (*update)[i] = cur;
     }
 
     return cur;
