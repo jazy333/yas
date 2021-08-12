@@ -1,3 +1,6 @@
 SET (LIB_COMMON_SRC common.cpp shared_mutex.cpp)
 add_library(common SHARED ${LIB_COMMON_SRC})
 target_link_libraries(pthread)
+SET (TEST_COMMON_SRC fixed_bit_set_test.cpp skip_list_test.cpp)
+add_executable(commont_test ${TEST_COMMON_SRC}) 
+target_link_libraries(commont_test gtest gtest_main)

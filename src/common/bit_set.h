@@ -3,14 +3,12 @@
 
 namespace yas {
 class BitSet {
- private:
-  /* data */
  public:
-  BitSet(/* args */);
-  ~BitSet();
-  virtual set(uint32_t) = 0;
-  virtual bool get() = 0;
+  virtual void set(uint64_t target) = 0;
+  virtual bool get(uint64_t target) = 0;
   virtual size_t size() = 0;
-  virtual uint32_t next(uint32_t) = 0;
+  virtual size_t capcity() = 0;
+  virtual uint64_t next(uint64_t target) = 0;
+  virtual uint64_t* bits()=0;
 };
 }  // namespace yas

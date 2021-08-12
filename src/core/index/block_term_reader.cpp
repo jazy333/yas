@@ -1,11 +1,11 @@
 #include "block_term_reader.h"
-
-#include <algorithm>
-
 #include "algorithm.h"
 #include "bm25_relevance.h"
 #include "simd_binary_compression.h"
 #include "variable_byte_compression.h"
+
+#include <algorithm>
+
 namespace yas {
 BlockTermReader(DB* db, Term* term) db_(db), term_(term) {}
 

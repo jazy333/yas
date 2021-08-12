@@ -1,12 +1,11 @@
 #pragma once
-
-#include "term_iterator.h"
 #include <string>
 
+#include "term_iterator.h"
 
 namespace yas {
 class Tokenizer {
  public:
-  TermIterator* get_term_iterator(std::string text) = 0;
+  virtual TermIterator* get_term_iterator(const std::string& text) = 0;
 };
 }  // namespace yas

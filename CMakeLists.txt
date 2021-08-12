@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 
 project(yas CXX)
 
+
+find_package(GTest REQUIRED)
+
 SET(CMAKE_BUILD_TYPE "Debug")  
 
 if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
