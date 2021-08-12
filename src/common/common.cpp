@@ -74,8 +74,6 @@ ssize_t write_with_check(int fd, const void *buf, size_t count, off_t offset) {
   return io_bytes;
 }
 
-
-
 int lcm(int a, int b) { return (a * b) / gcd(a, b); }
 
 uint32_t asmbits(const uint32_t v) {
