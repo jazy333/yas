@@ -10,12 +10,14 @@ class PointField : public Field {
       : Field(name), value_(value) {}
   virtual ~PointField() = default;
   Point<T, D> get_value() { return value_; }
-  std::unique_ptr<FieldIndexWriter> make_field_index_writer() override{
-      return std::unique_ptr<FieldIndexWriter>(new PointFieldIndexWriter<T,D>);
+  FieldIndexWriter* make_field_index_writer() override {
+    return std::unique_ptr<FieldIndexWriter>(new PointFieldIndexWriter<T, D>);
   }
 
- std::unique_ptr<PointFieldIndexReader> make_serialized_field_index_reader() override{
-      return std::unique_ptr<PointFieldIndexReader>(new PointFieldIndexWriter<T,D>());
+  std::unique_ptr<PointFieldIndexReader> make_serialized_field_index_reader()
+      override {
+    return std::unique_ptr<PointFieldIndexReader>(
+        new PointFieldIndexWriter<T, D>());
   }
 
  private:

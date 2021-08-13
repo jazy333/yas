@@ -1,9 +1,8 @@
 #pragma once
-#include "term_stat.h"
-#include "index_stat.h"
 
 namespace yas {
 class Scorer {
+ public:
   virtual float score() = 0;
 };
 }  // namespace yas

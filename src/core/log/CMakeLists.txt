@@ -2,4 +2,4 @@ SET (LIB_LOG_SRC logger.cpp sink.cpp file_sink.cpp default_formatter.cpp log.cpp
 add_library(log SHARED ${LIB_LOG_SRC})
 LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/common)
 include_directories(${CMAKE_SOURCE_DIR}/src/common)
-target_link_libraries(pthread)
+#target_link_libraries(pthread)

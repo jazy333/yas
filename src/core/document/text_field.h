@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 
 #include "field.h"
@@ -8,7 +9,7 @@ class TextField : public Field {
   TextField(const std::string& name, const std::string& value);
   virtual ~TextField() = default;
   std::string get_value();
-  std::unique_ptr<FieldIndexWriter> make_field_index_writer() override;
+  FieldIndexWriter* make_field_index_writer() override;
 
  private:
   std::string value_;

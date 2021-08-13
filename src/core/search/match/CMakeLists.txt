@@ -1,5 +1,9 @@
-LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src/algorithm ${CMAKE_SOURCE_DIR}/src/index)
-include_directories(${CMAKE_SOURCE_DIR}/src/core/index ${CMAKE_SOURCE_DIR}/src/core/algorithm)
-SET (LIB_MATCH_SRC index_searcher.cpp and_posting_list.cpp or_posting_list.cpp)
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/core/search/query ${CMAKE_SOURCE_DIR}/src/common)
+include_directories(${CMAKE_SOURCE_DIR}/src/core/search/query ${CMAKE_SOURCE_DIR}/src/common)
+SET (LIB_MATCH_SRC  and_posting_list.cpp)
 add_library(match SHARED ${LIB_MATCH_SRC})
-target_link_libraries(common pthread algorithm)
+target_link_libraries(match common)
+#unit test
+SET (TEST_MATCH_SRC and_posting_list.cpp and_posting_list_test.cpp)
+add_executable(match_test ${TEST_MATCH_SRC}) 
+target_link_libraries(match_test gtest gtest_main)

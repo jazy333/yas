@@ -9,9 +9,8 @@ class NumericField : public Field {
       : Field(name), value_(value) {}
   virtual ~NumericField() = default;
   long get_value() { return value_; }
-  std::unique_ptr<FieldIndexWriter> make_field_index_writer() override {
-    return std::unique_ptr<NumericFieldIndexWriter>(
-        new NumericFieldIndexWriter());
+  FieldIndexWriter* make_field_index_writer() override {
+    return new NumericFieldIndexWriter();
   }
 
  private:

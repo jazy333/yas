@@ -1,8 +1,6 @@
 #pragma once
-#include "match_set.h"
 #include "posting_list.h"
 #include "scorer.h"
-#include "sub_index_reader.h"
 
 namespace yas {
 class Matcher {
