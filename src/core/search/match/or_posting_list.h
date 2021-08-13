@@ -1,9 +1,8 @@
 #pragma once
-#include "posting_list.h"
-
 #include <queue>
 #include <vector>
 
+#include "posting_list.h"
 
 namespace yas {
 
@@ -19,7 +18,9 @@ class OrPostingList : public PostingList {
   float score() override;
 
  private:
-  std::priority_queue<PostingList*, posting_list_compare_docid> pq_;
+  std::priority_queue<PostingList*, std::vector<PostingList*>,
+                      bool (*)(PostingList*, PostingList*)>
+      pq_{posting_list_compare_with_docid};
 };
 
 }  // namespace yas

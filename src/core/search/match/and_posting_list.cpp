@@ -2,7 +2,7 @@
 
 namespace yas {
 AndPostingList::AndPostingList(std::vector<PostingList*>& pls)
-    : lead1_(nullptr), lead2_(nullptr) {
+    : lead1_(nullptr), lead2_(nullptr), docid_(0) {
   if (pls.size() == 0) {
     // do nothing
   } else if (pls.size() == 1) {
@@ -52,7 +52,7 @@ uint32_t AndPostingList::do_next(uint32_t next1) {
 
     bool found = true;
     for (auto&& other : others_) {
-      if (other->docid() < next1) {
+      if (other->docid() != next1) {
         // do not return when next==NDOCID,use it to advance lead1
         uint32_t next = other->advance(next1);
         if (next > next1) {
@@ -73,13 +73,21 @@ uint32_t AndPostingList::do_next() {
   return lead1_ ? (lead2_ ? do_next(lead1_->next()) : lead1_->next()) : NDOCID;
 }
 
-uint32_t AndPostingList::next() { return do_next(); }
-
-uint32_t AndPostingList::advance(uint32_t target) {
-  return lead1_ ? (lead2_ ? do_next(target) : lead1_->advance(target)) : NDOCID;
+uint32_t AndPostingList::next() {
+  docid_ = do_next();
+  return docid_;
 }
 
-uint32_t AndPostingList::docid() { return lead1_ ? lead1_->docid() : NDOCID; }
+uint32_t AndPostingList::advance(uint32_t target) {
+  docid_ =
+      lead1_ ? (lead2_ ? do_next(target) : lead1_->advance(target)) : NDOCID;
+  return docid_;
+}
+
+uint32_t AndPostingList::docid() {
+  if (docid_ == 0) next();
+  return docid_;
+}
 
 long AndPostingList::cost() { return lead1_ ? lead1_->cost() : 0; }
 

@@ -22,6 +22,7 @@ class AndPostingList : public PostingList {
  private:
   PostingList *lead1_, *lead2_;// minimum cost ,the secodary minimum
   std::vector<PostingList *> others_;
+  uint32_t docid_;
 };
 
 }  // namespace yas

@@ -3,9 +3,9 @@
 
 #include "posting_list.h"
 namespace yas {
-class SequencePostingList : public PosintList {
+class SequencePostingList : public PostingList {
  public:
-  SequencePostingList(std::vector<uint32_t> docids);
+  SequencePostingList(std::vector<uint32_t>& docids);
   virtual ~SequencePostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
@@ -17,5 +17,6 @@ class SequencePostingList : public PosintList {
  private:
   std::vector<uint32_t> docids_;
   size_t index_;
+  uint32_t docid_;
 };
 }  // namespace yas

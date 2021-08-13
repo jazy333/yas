@@ -1,14 +1,10 @@
 #pragma once
-#include "posting_list.h"
-
 #include <string>
 
-namespace yas {
-class NotPostingList : public PostingList{
- private:
-  PostingList *pl_, *excl_;
-  uint32_t do_next(uint32_t next);
+#include "posting_list.h"
 
+namespace yas {
+class NotPostingList : public PostingList {
  public:
   NotPostingList(PostingList* pl, PostingList* excl);
   ~NotPostingList();
@@ -18,6 +14,12 @@ class NotPostingList : public PostingList{
   long cost() override;
   std::string name() override;
   float score() override;
+
+ private:
+  uint32_t do_next(uint32_t next);
+
+ private:
+  PostingList *pl_, *excl_;
 };
 
 }  // namespace yas

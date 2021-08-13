@@ -16,10 +16,17 @@ uint32_t AnyPostingList::advance(uint32_t target) {
   return docid_;
 }
 
-uint32_t AnyPostingList::docid() { return docid_ }
+uint32_t AnyPostingList::docid() {
+  if (docid_ == 0)
+    return ++docid_;
+  else
+    return docid_;
+}
 
 long AnyPostingList::cost() { return max_docid_; }
 
 std::string AnyPostingList::name() { return "AnyPostingList"; }
+
+float AnyPostingList::score() { return 0.0; }
 
 }  // namespace yas
