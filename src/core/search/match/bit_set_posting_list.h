@@ -5,7 +5,7 @@
 
 namespace yas {
 
-class BitSetPostingList : public PostingList ,public Scorer{
+class BitSetPostingList : public PostingList{
  public:
   BitSetPostingList(BitSet* bs);
   ~BitSetPostingList();

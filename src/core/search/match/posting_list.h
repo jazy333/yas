@@ -15,13 +15,16 @@ class PostingList : public Scorer {
   virtual std::string name() { return "PostingList"; }
 
  protected:
-  bool posting_list_compare_with_docid(PostingList* l, PostingList* r) {
-    return l->docid() < r->docid();
-  }
-
-  bool posting_list_compare_with_cost(PostingList* l, PostingList* r) {
-    return l->cost() < r->cost();
-  }
+  struct posting_list_compare_with_docid {
+    bool operator()(PostingList* l, PostingList* r) {
+      return l->docid() < r->docid();
+    }
+  };
+  struct posting_list_compare_with_cost {
+    bool operator()(PostingList* l, PostingList* r) {
+      return l->cost() < r->cost();
+    }
+  };
 };
 // invalid docid
 static const uint32_t NDOCID = std::numeric_limits<uint32_t>::max();

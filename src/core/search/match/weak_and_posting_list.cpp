@@ -11,10 +11,10 @@ WeakAndPostingList::WeakAndPostingList(std::vector<PostingList*>& pl,
     add_lead(p);
   }
 
-  std::priority_queue<PostingList*, posting_list_compare_cost> tail;
+  std::priority_queue<PostingList*,std::vector<PostingList*>, posting_list_compare_with_cost> tail;
   for (auto p : pl) {
     if (tail.size() < pl.size() - minimum_match_ + 1) {
-      tail.push(*p);
+      tail.push(p);
     } else {
       auto cur = tail.top();
       if (cur->cost() < p->cost()) {

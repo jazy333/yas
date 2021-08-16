@@ -19,8 +19,9 @@ class OrPostingList : public PostingList {
 
  private:
   std::priority_queue<PostingList*, std::vector<PostingList*>,
-                      bool (*)(PostingList*, PostingList*)>
-      pq_{posting_list_compare_with_docid};
+                      posting_list_compare_with_docid>
+      pq_;
+  long cost_;
 };
 
 }  // namespace yas

@@ -3,9 +3,10 @@
 #include <numeric>
 
 namespace yas {
-OrPostingList::OrPostingList(std::vector<PostingList*>& pls) {
+OrPostingList::OrPostingList(std::vector<PostingList*>& pls) : cost_(0) {
   for (auto&& pl : pls) {
     pq_.push(pl);
+    cost_ += pl->cost();
   }
 }
 
@@ -46,11 +47,7 @@ uint32_t OrPostingList::docid() {
     return pq_.top()->docid();
 }
 
-long OrPostingList::cost() {
-  return std::accumulate(
-      pq_.begin(), pq_.end(), 0L,
-      [](long a, const PostingList* b) { return a + b->cost(); });
-}
+long OrPostingList::cost() { return cost_; }
 
 std::string OrPostingList::name() { return "OrPostingList"; }
 
