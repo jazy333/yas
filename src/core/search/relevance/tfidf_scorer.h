@@ -6,6 +6,7 @@ namespace yas {
 class TFIDFScorer : public RelevanceScorer {
  public:
   TFIDFScorer(float boost, float idf);
+  virtual ~TFIDFScorer()=default;
   virtual float score(long freq, long norm) override;
 
  private:

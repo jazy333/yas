@@ -5,7 +5,7 @@ namespace yas {
 class TFIDFRelevance : public Relevance {
  public:
   TFIDFRelevance() = default;
-  ~TFIDFRelevance() = default;
+  virtual ~TFIDFRelevance() = default;
   RelevanceScorer* scorer(float boost, IndexStat* index_stat,
                           TermStat* term_stat) override;
 
