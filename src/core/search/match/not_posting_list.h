@@ -7,7 +7,7 @@ namespace yas {
 class NotPostingList : public PostingList {
  public:
   NotPostingList(PostingList* pl, PostingList* excl);
-  ~NotPostingList();
+  virtual ~NotPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;

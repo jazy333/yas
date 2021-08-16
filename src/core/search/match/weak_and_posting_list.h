@@ -12,7 +12,7 @@ namespace yas {
 class WeakAndPostingList : public PostingList {
  public:
   WeakAndPostingList(std::vector<PostingList*>& pl, int minimum_match);
-  ~WeakAndPostingList();
+  virtual ~WeakAndPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
@@ -22,18 +22,20 @@ class WeakAndPostingList : public PostingList {
 
  private:
   void add_lead(PostingList* pl);
-  PostingList* add_tail(PostingList* p);
   void update_lead();
+  PostingList* add_tail(PostingList* p);
   uint32_t do_next();
-  
 
  private:
+ //the n-mm+1 posting list order by docid
   std::priority_queue<PostingList*, std::vector<PostingList*>,
                       posting_list_compare_with_docid>
       head_;
+      // the mm-1 posting lists with least cost order by cost
   std::priority_queue<PostingList*, std::vector<PostingList*>,
                       posting_list_compare_with_cost>
       tail_;
+      //matched doc
   std::list<PostingList*> lead_;
   int minimum_match_;
   uint32_t docid_;

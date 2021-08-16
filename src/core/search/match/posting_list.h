@@ -17,12 +17,12 @@ class PostingList : public Scorer {
  protected:
   struct posting_list_compare_with_docid {
     bool operator()(PostingList* l, PostingList* r) {
-      return l->docid() < r->docid();
+      return l->docid() > r->docid();
     }
   };
   struct posting_list_compare_with_cost {
     bool operator()(PostingList* l, PostingList* r) {
-      return l->cost() < r->cost();
+      return l->cost() > r->cost();
     }
   };
 };

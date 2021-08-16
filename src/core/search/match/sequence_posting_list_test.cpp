@@ -16,7 +16,7 @@ TEST(SequencePostingList, constructor) {
   EXPECT_EQ(NDOCID, sql.next());
   EXPECT_EQ(NDOCID, sql.advance(111111));
   // empty
-  pl={};
+  pl = {};
   SequencePostingList sql1(pl);
   EXPECT_EQ(pl.size(), sql1.cost());
   EXPECT_EQ(NDOCID, sql1.docid());
@@ -24,4 +24,17 @@ TEST(SequencePostingList, constructor) {
   EXPECT_EQ(NDOCID, sql1.advance(11111));
   EXPECT_EQ(NDOCID, sql1.next());
 }
+
+TEST(SequencePostingList, next) {
+  std::vector<uint32_t> pl = {1, 3, 5, 8, 69, 9990, 11111};
+  SequencePostingList sql(pl);
+  EXPECT_EQ(pl.size(), sql.cost());
+
+  for (int i = 0; i < pl.size(); ++i) {
+    EXPECT_EQ(pl[i], sql.next());
+  }
+
+  EXPECT_EQ(NDOCID, sql.next());
+}
+
 }  // namespace yas

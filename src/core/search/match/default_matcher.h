@@ -5,7 +5,7 @@ namespace yas {
 class DefaultMatcher : public Matcher {
  public:
   DefaultMatcher(PostingList* pl, Scorer* scorer);
-  ~DefaultMatcher();
+  virtual ~DefaultMatcher();
   PostingList* posting_list() override;
   Scorer* scorer() override;
 

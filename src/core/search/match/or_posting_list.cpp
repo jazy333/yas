@@ -3,32 +3,36 @@
 #include <numeric>
 
 namespace yas {
-OrPostingList::OrPostingList(std::vector<PostingList*>& pls) : cost_(0) {
+OrPostingList::OrPostingList(std::vector<PostingList*>& pls)
+    : cost_(0), docid_(0) {
   for (auto&& pl : pls) {
     pq_.push(pl);
     cost_ += pl->cost();
+  }
+
+  if (pls.size() == 0) {
+    docid_ = NDOCID;
   }
 }
 
 OrPostingList::~OrPostingList() {}
 
 uint32_t OrPostingList::next() {
-  if (pq_.size() == 0) return NDOCID;
+  if (pq_.size() == 0 || docid_ == NDOCID) return NDOCID;
 
   PostingList* top = pq_.top();
-  uint32_t doc = top->docid();
-  if (doc == NDOCID) return NDOCID;
-  while (top->docid() == doc) {
+  while (top->docid() == docid_) {
     top->next();
     pq_.pop();
     pq_.push(top);
     top = pq_.top();
   }
-  return pq_.top()->docid();
+  docid_ = pq_.top()->docid();
+  return docid_;
 }
 
 uint32_t OrPostingList::advance(uint32_t target) {
-  if (pq_.size() == 0) return NDOCID;
+  if (pq_.size() == 0 || docid_ == NDOCID) return NDOCID;
 
   PostingList* top = pq_.top();
   while (top->docid() < target) {
@@ -37,7 +41,8 @@ uint32_t OrPostingList::advance(uint32_t target) {
     pq_.push(top);
     top = pq_.top();
   }
-  return pq_.top()->docid();
+  docid_ = pq_.top()->docid();
+  return docid_;
 }
 
 uint32_t OrPostingList::docid() {
@@ -64,7 +69,7 @@ float OrPostingList::score() {
     doc = top->docid();
     pq_.pop();
     pls.push_back(top);
-  } while (top->docid() == doc);
+  } while (docid_ == doc);
 
   for (auto p : pls) {
     pq_.push(p);

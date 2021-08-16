@@ -9,7 +9,7 @@ namespace yas {
 class OrPostingList : public PostingList {
  public:
   OrPostingList(std::vector<PostingList*>& pls);
-  ~OrPostingList();
+  virtual ~OrPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
@@ -22,6 +22,7 @@ class OrPostingList : public PostingList {
                       posting_list_compare_with_docid>
       pq_;
   long cost_;
+  uint32_t docid_;
 };
 
 }  // namespace yas

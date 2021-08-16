@@ -11,7 +11,10 @@ WeakAndPostingList::WeakAndPostingList(std::vector<PostingList*>& pl,
     add_lead(p);
   }
 
-  std::priority_queue<PostingList*,std::vector<PostingList*>, posting_list_compare_with_cost> tail;
+  // compute cost
+  std::priority_queue<PostingList*, std::vector<PostingList*>,
+                      posting_list_compare_with_cost>
+      tail;
   for (auto p : pl) {
     if (tail.size() < pl.size() - minimum_match_ + 1) {
       tail.push(p);
@@ -42,10 +45,12 @@ void WeakAndPostingList::add_lead(PostingList* pl) {
 void WeakAndPostingList::update_lead() {
   lead_.clear();
   matched_ = 1;
+  // first matched doc
   auto top = head_.top();
   lead_.push_back(top);
   head_.pop();
   docid_ = top->docid();
+  // find all matched doc in head_
   while (head_.size() && head_.top()->docid() == docid_) {
     lead_.push_back(head_.top());
     head_.pop();
@@ -54,7 +59,9 @@ void WeakAndPostingList::update_lead() {
 }
 
 uint32_t WeakAndPostingList::do_next() {
+  // not get all docs
   while (matched_ < minimum_match_) {
+    // still can get docs from tail
     if (matched_ + tail_.size() >= minimum_match_) {
       auto top = tail_.top();
       tail_.pop();
@@ -62,11 +69,14 @@ uint32_t WeakAndPostingList::do_next() {
       if (top->docid() == docid_)
         add_lead(top);
       else
-        head_.push(top);
-    } else {
+        head_.push(top);  // the pre if guarentee the head_ size <=n-mm+1
+    } else {              // no enough docs in tail,next doc
+
+      // reback all nodes to tail_
       for (auto p : lead_) {
         tail_.push(p);
       }
+      // recompute matched doc
       update_lead();
     }
   }
@@ -114,6 +124,7 @@ uint32_t WeakAndPostingList::advance(uint32_t target) {
     }
   }
 
+  // make sure other pl's docid in head_ >= target
   while (head_.top()->docid() < target) {
     auto top = head_.top();
     head_.pop();
@@ -127,7 +138,9 @@ uint32_t WeakAndPostingList::advance(uint32_t target) {
   return do_next();
 }
 
-uint32_t WeakAndPostingList::docid() { return docid_; }
+uint32_t WeakAndPostingList::docid() {
+  return docid_;
+}
 
 long WeakAndPostingList::cost() { return cost_; }
 
