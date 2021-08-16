@@ -7,6 +7,6 @@ class AnyMatchQuery : public Query {
   AnyMatchQuery() = default;
   virtual ~AnyMatchQuery() = default;
   Query* rewrite() override;
-  Matcher* matcher(SubIndexReader* sub_reader) override;
+  std::unique_ptr<Matcher> matcher(SubIndexReader* sub_reader) override;
 };
 }  // namespace yas

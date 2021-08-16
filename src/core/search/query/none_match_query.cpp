@@ -10,8 +10,9 @@ NoneMatchQuery::~NoneMatchQuery() {}
 
 Query* NoneMatchQuery::rewrite() { return this; }
 
-Matcher* NoneMatchQuery::matcher(SubIndexReader* sub_reader) {
-  return new DefaultMatcher(new NonePostingList(), new ConstScorer(0.0));
+std::unique_ptr<Matcher> NoneMatchQuery::matcher(SubIndexReader* sub_reader) {
+  return std::unique_ptr<Matcher>(
+      new DefaultMatcher(new NonePostingList(), new ConstScorer(0.0)));
 }
 
 }  // namespace yas

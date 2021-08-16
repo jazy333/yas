@@ -4,7 +4,7 @@ namespace yas {
 class BooleanScorer : public RelevanceScorer {
  public:
   BooleanScorer(float boost);
-  ~BooleanScorer() = default;
+  virtual ~BooleanScorer() = default;
   virtual float score(long freq, long norm) override;
 
  private:

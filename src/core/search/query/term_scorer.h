@@ -8,12 +8,12 @@ namespace yas {
 class TermScorer : public Scorer {
  public:
   TermScorer(TermReader* reader, Relevance* rel, IndexStat* index_stat,
-             TermStat* term_stat*);
+             TermStat* term_stat);
   virtual ~TermScorer();
   float score() override;
 
  private:
-  TermReader* reader_;
+  TermReader* term_reader_;
   RelevanceScorer* rel_scorer_;
 };
 }  // namespace yas

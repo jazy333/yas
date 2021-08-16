@@ -7,7 +7,7 @@ class NoneMatchQuery : public Query {
   NoneMatchQuery();
   virtual ~NoneMatchQuery();
   Query* rewrite() override;
-  Matcher* matcher(SubIndexReader* sub_reader) override;
+  std::unique_ptr<Matcher> matcher(SubIndexReader* sub_reader) override;
 };
 
 }  // namespace yas

@@ -1,6 +1,7 @@
 #include "tfidf_relevance.h"
-#include <cmath>
 #include "tfidf_scorer.h"
+
+#include <cmath>
 
 namespace yas {
 

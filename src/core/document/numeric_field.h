@@ -3,7 +3,7 @@
 #include "field.h"
 
 namespace yas {
-
+class NumericFieldIndexWriter;
 class NumericField : public Field {
   NumericField(const std::string& name, const long& value)
       : Field(name), value_(value) {}

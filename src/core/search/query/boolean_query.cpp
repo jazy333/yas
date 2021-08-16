@@ -10,7 +10,7 @@
 #include "weak_and_posting_list.h"
 
 namespace yas {
-BooleanQuery::BooleanQuery(std::vector<BooleanExpression*> expressions) {}
+BooleanQuery::BooleanQuery(std::vector<BooleanExpression*>& expressions) {}
 BooleanQuery::~BooleanQuery() {}
 
 bool BooleanQuery::only_or() {
@@ -137,11 +137,13 @@ std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
     if (map_expressions_.count(Operator::NOT) != 0) {
       std::vector<PostingList*> or_pls;
       for (auto&& exp : map_expressions_[Operator::OR]) {
-        or_pls.push_back(exp->get_query()->posting_list(sub_reader));
+        or_pls.push_back(
+            exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
       }
       std::vector<PostingList*> not_pls;
       for (auto&& exp : map_expressions_[Operator::NOT]) {
-        not_pls.push_back(exp->get_query()->posting_list(sub_reader));
+        not_pls.push_back(
+            exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
       }
       PostingList* opt_pl = new OrPostingList(or_pls);
       PostingList* not_pl = new OrPostingList(not_pls);
@@ -151,7 +153,8 @@ std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
     } else {
       std::vector<PostingList*> pls;
       for (auto&& exp : map_expressions_[Operator::OR]) {
-        pls.push_back(exp->get_query()->posting_list(sub_reader));
+        pls.push_back(
+            exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
       }
       PostingList* pl = new OrPostingList(pls);
       return std::unique_str<DefaultMatcher>(pl, pl);
@@ -162,7 +165,8 @@ std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
     if (map_expressions_.count(Operator::NOT) != 0)
       std::vector<PostingList*> and_pls;
     for (auto&& exp : map_expressions_[Operator::AND]) {
-      and_pls.push_back(exp->get_query()->posting_list(sub_reader));
+      and_pls.push_back(
+          exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
     }
     std::vector<PostingList*> not_pls;
     for (auto&& exp : map_expressions_[Operator::NOT]) {
@@ -176,7 +180,8 @@ std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
     else {
       std::vector<PostingList*> pls;
       for (auto&& exp : map_expressions_[Operator::AND]) {
-        pls.push_back(exp->get_query()->posting_list(sub_reader));
+        pls.push_back(
+            exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
       }
       PostingList* pl = new AndPostingList(pls);
       return std::unique_str<DefaultMatcher>(pl, pl);
@@ -186,14 +191,16 @@ std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
   if (mm_ > 1) {
     std::vector<PostingList*> or_pls;
     for (auto&& exp : map_expressions_[Operator::OR]) {
-      or_pls.push_back(exp->get_query()->posting_list(sub_reader));
+      or_pls.push_back(
+          exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
     }
 
     PostingList* weak_and_pl = new WeakAndPostingList(or_pls);
     if (map_expressions_.count(Operator::NOT) != 0) {
       std::vector<PostingList*> not_pls;
       for (auto&& exp : map_expressions_[Operator::NOT]) {
-        not_pls.push_back(exp->get_query()->posting_list(sub_reader));
+        not_pls.push_back(
+            exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
       }
       PostingList* or_pl = new OrPostingList(not_pls);
       PostingList* not_pl = new NotPostingList(weak_and_pl, or_pl);
@@ -205,15 +212,16 @@ std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
   } else {
     std::vector<PostingList*> or_pls;
     for (auto&& exp : map_expressions_[Operator::OR]) {
-      or_pls.push_back(exp->get_query()->posting_list(sub_reader));
+      or_pls.push_back(exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
     }
 
     std::vector<PostingList*> and_pls;
     for (auto&& exp : map_expressions_[Operator::AND]) {
-      and_pls.push_back(exp->get_query()->posting_list(sub_reader));
+      and_pls.push_back(
+          exp->get_query()->matcher(sub_reader)->posting_list(sub_reader));
     }
     PostingList* or_pl = new OrPostingList(or_pls);
-    PostingList* and_pl=new AndPostingList(and_pls);
+    PostingList* and_pl = new AndPostingList(and_pls);
     PostingList* aug_and_scorer = new AugAndScorer(and_pls, or_pl);
     return std::unique_ptr<DefaultMatcher>(and_pl, aug_and_scorer);
   }

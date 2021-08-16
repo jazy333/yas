@@ -36,8 +36,8 @@ struct PointFieldMeta {
   int max_count_per_leaf_;
   int bytes_per_dim_;
   int num_leaves_;
-  value_type min_;
-  value_type max_;
+  //value_type min_;
+  //value_type max_;
   int count_;
   long data_fp_;
   long index_fp_;

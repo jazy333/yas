@@ -9,7 +9,7 @@ class AugAndScorer: public Scorer {
   virtual ~AugAndScorer() = default;
   float score() override;
   private:
-  PostingList* pls_;
+  PostingList* pl_;
   PostingList* aux_;
 };
 }  // namespace yas

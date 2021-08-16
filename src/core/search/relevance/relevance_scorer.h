@@ -4,6 +4,7 @@
 
 namespace yas {
 class RelevanceScorer {
+ public:
   virtual float score(long freq, long norm) = 0;
 };
 }  // namespace yas
