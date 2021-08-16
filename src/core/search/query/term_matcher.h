@@ -6,7 +6,7 @@ namespace yas {
 class TermMatcher : public Matcher {
  public:
   TermMatcher(TermReader* term_reader, Relevance* rel);
-  ~TermMatcher();
+  virtual ~TermMatcher();
   PostingList* posting_list() override;
   Scorer* scorer() override;
 

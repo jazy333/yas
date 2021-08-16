@@ -7,19 +7,18 @@
 #include <mutex>
 
 
-
 namespace yas {
 float BM25Relevance::part[256];
 
 void BM25Relevance::init_length(float avgdl) {
   for (uint8_t i = 0; i <= 255; ++i) {
-    part[i] = 1f / (k1_ * ((1 - b_) + b_ * uchar2uint(i) / avgdl));
+    part[i] = 1.0 / (k1_ * ((1 - b_) + b_ * uchar2uint(i) / avgdl));
   }
 }
 
 BM25Relevance::BM25Relevance(float k1, float b) : k1_(k1), b_(b) {}
 
-BM25Relevance::BM25Relevance(): k1_(1.2f), b_(0.75f) {}
+BM25Relevance::BM25Relevance() : k1_(1.2f), b_(0.75f) {}
 
 BM25Relevance::~BM25Relevance() {}
 
@@ -34,6 +33,6 @@ RelevanceScorer* BM25Relevance::scorer(float boost, IndexStat* index_stat,
   float weight = idf(term_stat->get_doc_freq(), index_stat->doc_count);
   float avgdl = index_stat->total_term_freq / index_stat->doc_count;
   init_length(avgdl);
-  return BM25Scorer(weight, part);
+  return new  BM25Scorer(weight, part);
 }
 }  // namespace yas

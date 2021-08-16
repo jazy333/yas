@@ -5,9 +5,8 @@ namespace yas {
 class AnyMatchQuery : public Query {
  public:
   AnyMatchQuery() = default;
-  ~AnyMatchQuery() = default;
-  Query* rewrite();
-  PostingList* posting_list(SubIndexReader* sub_reader);
-  Scorer* scorer();
+  virtual ~AnyMatchQuery() = default;
+  Query* rewrite() override;
+  Matcher* matcher(SubIndexReader* sub_reader) override;
 };
 }  // namespace yas

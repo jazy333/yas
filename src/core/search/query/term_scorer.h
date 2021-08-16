@@ -9,7 +9,7 @@ class TermScorer : public Scorer {
  public:
   TermScorer(TermReader* reader, Relevance* rel, IndexStat* index_stat,
              TermStat* term_stat*);
-  ~TermScorer();
+  virtual ~TermScorer();
   float score() override;
 
  private:

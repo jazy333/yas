@@ -6,7 +6,7 @@ namespace yas {
 class AugAndScorer: public Scorer {
  public:
   AugAndScorer(PostingList* pls,PostingList* aux);
-  ~AugAndScorer() = default;
+  virtual ~AugAndScorer() = default;
   float score() override;
   private:
   PostingList* pls_;

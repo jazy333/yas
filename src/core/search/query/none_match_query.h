@@ -4,11 +4,10 @@
 namespace yas {
 class NoneMatchQuery : public Query {
  public:
-  NoneMatchQuery(/* args */);
-  ~NoneMatchQuery();
-  Query* rewrite();
-  PostingList* posting_list(SubIndexReader* sub_reader);
-  Scorer* scorer() ;
+  NoneMatchQuery();
+  virtual ~NoneMatchQuery();
+  Query* rewrite() override;
+  Matcher* matcher(SubIndexReader* sub_reader) override;
 };
 
 }  // namespace yas

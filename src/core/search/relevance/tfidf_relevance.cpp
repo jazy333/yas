@@ -1,15 +1,15 @@
 #include "tfidf_relevance.h"
-#include "tfidf_scorer.h"
-
 #include <cmath>
+#include "tfidf_scorer.h"
 
 namespace yas {
 
- RelevanceScorer*  TFIDFRelevance::scorer(float boost,IndexStat* index_stat,TermStat* term_stat){
-   float idf=idf(term_stat->get_doc_freq(),index_stat->doc_count);
-   return new TFIDFScorer(boost,idf);
- }
- 
+RelevanceScorer* TFIDFRelevance::scorer(float boost, IndexStat* index_stat,
+                                        TermStat* term_stat) {
+  float idfv = idf(term_stat->get_doc_freq(), index_stat->doc_count);
+  return new TFIDFScorer(boost, idfv);
+}
+
 /*
  *log((docCount+1)/(docFreq+1)) + 1
  */

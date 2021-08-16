@@ -9,7 +9,7 @@ namespace yas {
 class TermQuery : public Query {
  public:
   TermQuery(Term* term);
-  ~TermQuery();
+  virtual ~TermQuery();
   Query* rewrite(Query* query) override;
   Matcher* matcher(SubIndexReader* sub_reader) override;
   private:

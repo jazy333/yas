@@ -9,7 +9,7 @@ namespace yas {
 class BooleanQuery : public Query {
  public:
   BooleanQuery(std::vector<BooleanExpression*> expressions);
-  ~BooleanQuery();
+  virtual ~BooleanQuery();
   Query* rewrite() override;
   std::unique_ptr<Matcher> matcher(SubIndexReader* sub_reader);
   int get_mm();

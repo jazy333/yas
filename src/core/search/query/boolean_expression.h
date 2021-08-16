@@ -6,7 +6,7 @@ enum Operator { AND, OR, NOT };
 class BooleanExpression {
  public:
   BooleanExpression(Query* query, Operator op);
-  ~BooleanExpression();
+  virtual ~BooleanExpression();
   Operator get_operator();
   Query* get_query();
 

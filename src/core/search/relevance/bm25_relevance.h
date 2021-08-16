@@ -7,12 +7,16 @@ class BM25Relevance : public Relevance {
   BM25Relevance(float k1, float b);
   BM25Relevance();
   ~BM25Relevance();
-  RelevanceScorer* scorer(float boost,IndexStat* index_stat,TermStat* term_stat) override;
+  RelevanceScorer* scorer(float boost, IndexStat* index_stat,
+                          TermStat* term_stat) override;
+
  protected:
   float idf(long doc_freq, long doc_count);
 
  private:
-  static void init_length();
+  void init_length(float avgdl);
+
+ private:
   float k1_;
   float b_;
   static float part[256];

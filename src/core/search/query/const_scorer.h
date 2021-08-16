@@ -5,7 +5,7 @@ namespace yas {
 class ConstScorer : public Scorer {
  public:
   ConstScorer(float score);
-  ~ConstScorer() = default;
+  virtual ~ConstScorer() = default;
   float score() override;
 
  private:
