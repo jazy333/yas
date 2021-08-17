@@ -7,6 +7,7 @@
 #include "field_info.h"
 #include "index_option.h"
 #include "sub_index_reader.h"
+#include "segment_files.h"
 
 namespace yas {
 class IndexReader {
@@ -26,4 +27,5 @@ class IndexReader {
   std::vector<std::shared_ptr<SubIndexReader>> sub_index_readers_;
   IndexOption option_;
   std::unordered_map<std::string, FieldInfo> field_infos_;
+};
 }  // namespace yas

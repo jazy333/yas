@@ -8,13 +8,13 @@ IndexSearcher::IndexSearcher(IndexReader* reader) : reader_(reader) {}
 IndexSearcher::~IndexSearcher() {}
 
 void IndexSearcher::search(Query* q, MatchSet& set) {
-  std::vector<SubIndexReader*> sub_index_readers =
-      reader_->get_sub_index_reader();
+  std::vector<std::shared_ptr<SubIndexReader>> sub_index_readers =
+      reader_->get_sub_index_readers();
   for (auto&& sub_index_reader : sub_index_readers) {
-    std::unique_ptr<Matcher> matcher = q->matcher(sub_index_reader);
+    std::unique_ptr<Matcher> matcher = q->matcher(sub_index_reader.get());
     PostingList* pl = matcher->posting_list();
     Scorer* scorer = matcher->scorer();
-    while (pl->next() != PostingList::NDOCID) {
+    while (pl->next() != NDOCID) {
       MatchedDoc md;
       md.docid_ = pl->docid();
       md.score_ = scorer->score();
@@ -27,7 +27,7 @@ std::shared_ptr<Query> IndexSearcher::rewrite(std::shared_ptr<Query> query) {
   std::shared_ptr<Query> original = query;
   do {
     original = query;
-    query = query->rewrite();
+    query.reset(query->rewrite());
   } while (query.get() != original.get());
   return query;
 }

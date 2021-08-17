@@ -6,6 +6,7 @@
 #include "field_index_meta.h"
 #include "file.h"
 #include "term_reader.h"
+#include "term.h"
 
 namespace yas {
 class FieldValueIndexReader {
@@ -39,7 +40,7 @@ class PointFieldsIndexReader {
 
 class InvertFieldsIndexReader {
  public:
-  virtual TermReader* get_reader(void* term) = 0;
+  virtual TermReader* get_reader(Term* term) = 0;
   virtual int open() = 0;
   virtual int close() = 0;
 };

@@ -88,7 +88,7 @@ int IndexReader::open() {
   int ret = scandir(files);
   for (size_t i = 0; i < files.size(); ++i) {
     std::shared_ptr<SegmentIndexReader> segment_reader =
-        new SegmentIndexReader(files[i],field_infos_);
+        new SegmentIndexReader(files[i], field_infos_);
     segment_reader->open();
     sub_index_readers_.push_back(segment_reader);
   }

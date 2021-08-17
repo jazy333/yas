@@ -7,6 +7,7 @@
 namespace yas {
 class Query {
  public:
+  virtual ~Query() = default;
   virtual Query* rewrite() = 0;
   virtual std::unique_ptr<Matcher> matcher(SubIndexReader* sub_reader) = 0;
 };
