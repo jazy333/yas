@@ -1,13 +1,13 @@
 #include "index_reader.h"
+#include "log.h"
+#include "segment_files.h"
 
 #include <dirent.h>
 #include <unistd.h>
-
 #include <cstdlib>
 #include <set>
 
-#include "log.h"
-#include "segment_files.h"
+
 
 namespace yas {
 IndexReader::IndexReader(IndexOption option) : option_(option) {}

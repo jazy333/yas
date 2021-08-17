@@ -11,5 +11,5 @@ add_library(search SHARED ${LIB_SEARCH_SRC})
 target_link_libraries(search pthread algorithm tokenizer)
 
 add_subdirectory(match)
-add_subdirectory(relevance)
+#add_subdirectory(relevance)
 add_subdirectory(query)

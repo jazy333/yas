@@ -1,8 +1,8 @@
 #include "index_writer.h"
-
+#include "memory_index_reader.h"
 #include <mutex>
 
-#include "memory_index_reader.h"
+
 namespace {
 IndexWriter::IndexWriter() : option_(IndexOption()) {}
 

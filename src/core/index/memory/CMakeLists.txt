@@ -1,5 +1,15 @@
-LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src/algorithm CMAKE_SOURCE_DIR}/src/core/search)
-include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algorithm {CMAKE_SOURCE_DIR}/src/core/search)
-SET (LIB_INDEX_SRC document.cpp term_reader.cpp term.cpp)
-add_library(hash_db SHARED ${LIB_INDEX_SRC})
-target_link_libraries(hash_db common pthread algorithm)
+link_directories(${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src/algorithm 
+                ${CMAKE_SOURCE_DIR}/src/core/search)
+
+include_directories(${CMAKE_SOURCE_DIR}/src/core/index ${CMAKE_SOURCE_DIR}/src/core/algorithm 
+                    ${CMAKE_SOURCE_DIR}/src/core/search ${CMAKE_SOURCE_DIR}/src/core/db
+                    ${CMAKE_SOURCE_DIR}/src/core/search/match ${CMAKE_SOURCE_DIR}/src/core/document
+                    ${CMAKE_SOURCE_DIR}/src/core/tokenizer)
+
+set(LIB_MEMORY_INDEX_SRC memory_field_values_index_reader_wrapper.cpp 
+                            memory_point_values_index_reader_wrapper.cpp
+                            memory_index_reader.cpp)
+
+add_library(memory_index SHARED ${LIB_MEMORY_INDEX_SRC})
+
+target_link_libraries(memory_index common pthread algorithm)

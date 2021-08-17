@@ -19,7 +19,7 @@ class FieldValuesIndexReader {
  public:
   virtual int open() = 0;
   virtual int close() = 0;
-  virtual FieldValueIndexReader* get_reader(const std::string& field_name) = 0;
+  virtual std::shared_ptr<FieldValueIndexReader> get_reader(const std::string& field_name) = 0;
 };
 
 class PointFieldIndexReader {
@@ -33,9 +33,9 @@ class PointFieldsIndexReader {
  public:
   virtual int open() = 0;
   virtual int close() = 0;
-  virtual std::unique_ptr<PointFieldIndexReader> get_reader(
+  virtual std::shared_ptr<PointFieldIndexReader> get_reader(
       const std::string& field_name,
-      std::unique_ptr<PointFieldIndexReader> init_reader) = 0;
+      std::shared_ptr<PointFieldIndexReader> init_reader) = 0;
 };
 
 class InvertFieldsIndexReader {

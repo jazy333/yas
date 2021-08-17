@@ -13,7 +13,7 @@ class SegmentIndexReader : public SubIndexReader {
       const std::unordered_map<std::string, FieldInfo>& field_infos);
   virtual ~SegmentIndexReader();
   std::shared_ptr<InvertFieldsIndexReader> invert_index_reader() override;
-  std::shared_ptr<FieldValuesReader>  field_values_reader() override;
+  std::shared_ptr<FieldValuesIndexReader>  field_values_reader() override;
   std::shared_ptr<PointFieldsIndexReader> point_fields_reader() override;
   int open() override;
   int close() override;

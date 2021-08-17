@@ -43,8 +43,6 @@ std::string MemoryTermReader::name() { return "MemoryTermReader"; }
 
 float MemoryTermReader::score() { return 0.0f; }
 
-Scorer* MemoryTermReader::scorer() {}
-
 int MemoryTermReader::freq() { return position_lists_[index_].size(); }
 
 int MemoryTermReader::next_postion() {

@@ -1,19 +1,21 @@
-#include "memory_field_values_index_reader_wrapper.h"
+#include "memory_point_values_index_reader_wrapper.h"
 
 namespace yas {
 MemoryPointValuesIndexReaderWrapper::MemoryPointValuesIndexReaderWrapper(
-    std::unordered_map<std::string, FieldIndexWriter*>* field_index_writers)
-    : field_index_writers_(field_index_writers) {}
+    std::unordered_map<std::string, std::shared_ptr<PointFieldIndexReader>>*
+        field_index_readers)
+    : field_index_readers_(field_index_readers) {}
 
 int MemoryPointValuesIndexReaderWrapper::open() { return 0; }
 
 int MemoryPointValuesIndexReaderWrapper::close() { return 0; }
 
-PointValueIndexReader* MemoryPointValuesIndexReaderWrapper::get_reader(
+std::shared_ptr<PointFieldIndexReader>
+MemoryPointValuesIndexReaderWrapper::get_reader(
     const std::string& field_name,
-    std::unique_ptr<PointFieldIndexReader> init_reader) {
-  if (field_index_writers_->count(field_name) == 1)
-    return field_index_writers_[field_name];
+    std::shared_ptr<PointFieldIndexReader> init_reader) {
+  if (field_index_readers_->count(field_name) == 1)
+    return (*field_index_readers_)[field_name];
   else
     return nullptr;
 }

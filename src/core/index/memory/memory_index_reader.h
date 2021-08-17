@@ -8,11 +8,12 @@
 namespace yas {
 class MemoryIndexReader : public SubIndexReader {
   MemoryIndexReader(
-      std::shared_ptr<InvertFieldsIndexWriter>* invert_field_index_writer,
-      std::unordered_map<std::string, std::unique_ptr<FieldIndexWriter>>*
-          point_fields_index_writers,
-      std::unordered_map<std::string, std::unique_ptr<FieldIndexWriter>>*
-          field_values_index_writers);
+      std::shared_ptr<InvertFieldsIndexReader> invert_field_index_reader,
+      std::unordered_map<std::string, std::shared_ptr<PointFieldIndexReader>>*
+          point_fields_index_readers,
+      std::unordered_map<std::string, std::shared_ptr<FieldValueIndexReader>>*
+          field_values_index_readers);
+  virtual ~MemoryIndexReader()=default;
   std::shared_ptr<InvertFieldsIndexReader> invert_index_reader() override;
   std::shared_ptr<FieldValuesIndexReader> field_values_reader() override;
   std::shared_ptr<PointFieldsIndexReader> point_fields_reader() override;
@@ -20,11 +21,11 @@ class MemoryIndexReader : public SubIndexReader {
   int close() override;
 
  private:
-  std::shared_ptr<InvertFieldsIndexWriter> invert_field_index_writer_;
-  std::unordered_map<std::string, std::unique_ptr<FieldIndexWriter>>*
-      point_fields_index_writers_;
-  std::unordered_map<std::string, std::unique_ptr<FieldIndexWriter>>*
-      field_values_index_writers_;
+  std::shared_ptr<InvertFieldsIndexReader> invert_field_index_reader_;
+  std::unordered_map<std::string, std::shared_ptr<PointFieldIndexReader>>*
+      point_fields_index_readers_;
+  std::unordered_map<std::string, std::shared_ptr<FieldValueIndexReader>>*
+      field_values_index_readers_;
 };
 
 }  // namespace yas
