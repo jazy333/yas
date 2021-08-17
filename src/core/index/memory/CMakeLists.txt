@@ -1,0 +1,5 @@
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src/algorithm CMAKE_SOURCE_DIR}/src/core/search)
+include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algorithm {CMAKE_SOURCE_DIR}/src/core/search)
+SET (LIB_INDEX_SRC document.cpp term_reader.cpp term.cpp)
+add_library(hash_db SHARED ${LIB_INDEX_SRC})
+target_link_libraries(hash_db common pthread algorithm)
