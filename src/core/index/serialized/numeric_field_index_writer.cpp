@@ -29,7 +29,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
     size_t size = fvd->size();
     fvm->write(&size, sizeof(size_t));  // docids offset
     // docids index with roaring doclists
-    uint16_t jump_table_entry_count = RoaringPostingList::make(docids_, fvd);
+    uint16_t jump_table_entry_count = RoaringPostingList::flush(docids_, fvd);
     size = fvd->size();
     fvm->write(&size, sizeof(size_t));  // docids length
     fvm->write(&jump_table_entry_count,
@@ -85,7 +85,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc, Index,
 }
 
 void NumericFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field>  field) {
-  NumericField* nf = dynamic_cast<NumericField*>(field->get());
+  NumericField* nf = dynamic_cast<NumericField*>(field.get());
   uint64_t value = nf->get_value();
   docids_.push_back(docid);
   values_.push_back(value);

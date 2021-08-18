@@ -13,4 +13,4 @@ set(LIB_SERIALIZED_INDEX_SRC invert_fields_index_writer.cpp block_term_reader.cp
 
 add_library(serialized_index SHARED ${LIB_SERIALIZED_INDEX_SRC})
 
-target_link_libraries(serialized_index common pthread algorithm)
+target_link_libraries(serialized_index common pthread algorithm hash_db)

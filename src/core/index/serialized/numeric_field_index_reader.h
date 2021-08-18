@@ -13,6 +13,7 @@ class NumericFieldIndexReader : public FieldValueIndexReader {
   NumericFieldIndexReader(NumericFieldMeta* meta, File* fvd);
   virtual ~NumericFieldIndexReader();
   uint64_t get(uint32_t docid);
+  void get(uint32_t docid, std::vector<char>& value);
 
  private:
   uint64_t get_value(uint32_t index);

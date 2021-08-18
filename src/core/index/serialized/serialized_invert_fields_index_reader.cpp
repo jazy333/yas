@@ -1,5 +1,4 @@
-#include "serialized_invert_field_index_reader.h"
-
+#include "serialized_invert_fields_index_reader.h"
 #include "block_term_reader.h"
 
 namespace yas {

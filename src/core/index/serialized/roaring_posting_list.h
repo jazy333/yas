@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <vector>
 
 #include "file.h"
@@ -6,17 +7,20 @@
 #include "posting_list.h"
 
 namespace yas {
-class RoaringPostingList {
+class RoaringPostingList : public PostingList {
  public:
-  RoaringPostingList(File* in,loff_t off,loff_t length,int jump_table_entry_count,long cost);
-  ~RoaringPostingList();
+  RoaringPostingList(File* in, uin64_t off, uint64_t length,
+                     int jump_table_entry_count, long cost);
+  virtual ~RoaringPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
   long cost() override;
   std::string name() override;
-  static uint16_t make(std::vector<uint32_t>& docids, File* out);
-  uint32_t index();
+  float score() override;
+  static uint16_t flush(File* out, std::vector<uint32_t>& docids);
+  static void flush(File* out, std::vector<uint32_t>& docids, int from, int to,
+                    int cardinality, uint16_t block) uint32_t index();
   bool test(uint32_t target);
 
  private:
@@ -27,9 +31,9 @@ class RoaringPostingList {
   int type_;
   int jump_table_entry_count_;
   File* in_;
-  FileSlice* jump_table_slice_;
-  FileSlice*  block_slice_;
-  loff_t block_end_;
+  std::unique_ptr<FileSlice> jump_table_slice_;
+  std::unique_ptr<FileSlice> block_slice_;
+  uint64_t block_end_;
 };
 
 }  // namespace yas
