@@ -1,5 +1,4 @@
 #pragma once
-
 #include <vector>
 
 #include "term_reader.h"
@@ -7,8 +6,8 @@
 namespace yas {
 class MemoryTermReader : public TermReader {
  public:
-  MemoryTermReader(std::vector<uint32_t>* posting_lists,
-                   std::vector<std::vector<int>>* position_lists);
+  MemoryTermReader(std::vector<uint32_t>& posting_lists,
+                   std::vector<std::vector<uint32_t>>& position_lists);
   ~MemoryTermReader() = default;
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
@@ -21,7 +20,7 @@ class MemoryTermReader : public TermReader {
 
  private:
   std::vector<uint32_t> posting_lists_;
-  std::vector<std::vector<int>> position_lists_;
+  std::vector<std::vector<uint32_t>> position_lists_;
   int index_;
   int position_index_;
 };

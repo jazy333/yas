@@ -2,61 +2,69 @@
 #include "file_slice.h"
 #include "term_reader.h"
 #include "term_scorer.h"
+#include "db.h"
+#include "term.h"
 
 namespace yas {
+
 class BlockTermReader : public TermReader {
  public:
-  struct JumptTableEntry {
+  struct JumpTableEntry {
     uint32_t max_docid;
-    uint32_t posting_list_offset;
-    uint32_t position_list_offset;
+    uint64_t posting_list_offset;
+    uint64_t position_list_offset;
   };
 
   struct InvertIndexMeta {
     uint32_t max_doc;
     int doc_num;
+    uint32_t last_unit_posting_list_compress_size;
+    uint32_t last_unit_position_compress_size;
+    uint64_t posting_list_start;
+    uint64_t position_list_start;
     int jump_table_entry_count;
-    uint32_t posting_list_offset;
-    uint32_t position_list_offset;
   };
 
-  BlockTermReader(DB* db,Term* term);
-  ~BlockTermReader();
-  virtual uint32_t next() override;
+  struct compare_with_jump_table_entry {
+    bool operator()(JumpTableEntry a, uint32_t target) {
+      return a.max_docid < target;
+    }
+  };
+
+  BlockTermReader(DB* db, Term* term);
+  virtual ~BlockTermReader();
+  uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
   long cost() override;
-  std::string name() { return "BlockTermReader"; }
-  float score() { return 0.0f; }
-  Scorer* scorer() override;
+  std::string name() override;
+  float score() override;
   int freq() override;
   int next_postion() override;
 
  private:
   void next_unit(uint32_t target);
-  void read_data();
+  int read_data();
   void reset_current_unit();
-  bool compare_with_jump_table_entry(JumptTableEntry* a, uint32_t target);
 
  private:
-  DB* hdb_;
+  DB* db_;
   Term* term_;
   uint32_t max_doc_;
   int num_docs_;
-  int jump_table_entry_count_;
+  uint32_t docid_;
   int current_jump_table_entry_index_;
-  JumptTableEntry* entries;
+  JumpTableEntry* entries_;
   InvertIndexMeta* meta_;
   std::string invert_index_;
-  FileSlice* posting_list_slice_;
-  FileSlice* position_list_slice_;
 
   // current jump table entry
-  int current_unit_;
-  JumptTableEntry* current_entry_;
-  uint32_t current_unit_index_;
+  JumpTableEntry* current_entry_;
+  int current_unit_index_;
+  uint32_t current_unit_max_docid_;
   uint32_t current_unit_position_index_;
   std::vector<uint32_t> current_unit_docids_;
+  size_t unit_size_;
   std::vector<std::vector<uint32_t>> current_unit_positions_;
 };
 }  // namespace yas

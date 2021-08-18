@@ -69,4 +69,9 @@ off64_t MemoryFile::seek(off64_t offset) {
   offset_ = offset;
   return offset;
 }
+
+char* MemoryFile::content(){
+  return data_.data();
+}
+
 }  // namespace yas

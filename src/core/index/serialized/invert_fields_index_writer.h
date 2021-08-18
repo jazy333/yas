@@ -11,11 +11,18 @@
 
 namespace yas {
 class InvertFieldsIndexWriter : public FieldIndexWriter,
-                               public InvertFieldIndexReader {
+                                public InvertFieldsIndexReader {
+  struct JumptTableEntry {
+    uint32_t max_docid;
+    uint64_t posting_list_offset;
+    uint64_t position_list_offset;
+  };
+
  public:
   InvertFieldsIndexWriter();
   virtual ~InvertFieldsIndexWriter();
-  void flush(FieldInfo fi, uint32_t max_doc,const IndexOption& option) override;
+  void flush(FieldInfo fi, uint32_t max_doc,
+             const IndexOption& option) override;
   void add(uint32_t docid, std::shared_ptr<Field> field) override;
   int open() override;
   int close() override;
@@ -24,7 +31,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
  private:
   Tokenizer* tokenizer_;
   std::unordered_map<std::string, std::vector<uint32_t>> posting_lists_;
-  std::unordered_map<std::string, std::vector<std::vector<int>>>
+  std::unordered_map<std::string, std::vector<std::vector<uint32_t>>>
       position_lists_;
 };
 

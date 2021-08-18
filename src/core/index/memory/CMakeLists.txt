@@ -8,7 +8,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/core/index ${CMAKE_SOURCE_DIR}/src/c
 
 set(LIB_MEMORY_INDEX_SRC memory_field_values_index_reader_wrapper.cpp 
                             memory_point_values_index_reader_wrapper.cpp
-                            memory_index_reader.cpp)
+                            memory_index_reader.cpp memory_term_reader.cpp)
 
 add_library(memory_index SHARED ${LIB_MEMORY_INDEX_SRC})
 

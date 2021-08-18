@@ -4,3 +4,4 @@ include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algori
 #add_library(index SHARED ${LIB_INDEX_SRC})
 #target_link_libraries(index common pthread algorithm)
 add_subdirectory(memory)
+add_subdirectory(serialized)

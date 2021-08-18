@@ -20,6 +20,7 @@ class MemoryFile : public File {
   off64_t seek(off64_t offset) override;
   size_t size() override;
   std::unique_ptr<File> make() override;
+  char* content();
 
  private:
   bool writable_;

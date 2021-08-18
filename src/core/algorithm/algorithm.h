@@ -24,7 +24,7 @@ ForwardIt max_element(ForwardIt first, ForwardIt last) {
 
 template <class ForwardIt, class T, class Compare>
 ForwardIt exponential_search(ForwardIt first, ForwardIt last, const T& value,
-                        Compare comp) {
+                             Compare comp) {
   int bound = 1;
   ForwardIt pre;
   do {
@@ -32,7 +32,7 @@ ForwardIt exponential_search(ForwardIt first, ForwardIt last, const T& value,
     std::advance(first, bound);
     bound <<= 1;
   } while (first < last && comp(*first, value));
-  first = std::lower_bound(pre, first<last?first,last, value, comp);
+  first = std::lower_bound(pre, first < last ? first : last, value, comp);
   return first;
 }
 

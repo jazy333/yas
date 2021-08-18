@@ -27,9 +27,8 @@ __attribute__((always_inline)) static inline __m128i simd_delta(__m128i curr,
       curr, _mm_or_si128(_mm_slli_si128(curr, 4), _mm_srli_si128(prev, 12)));
 }
 
-__attribute__((always_inline)) static __m128i run_prefix_sum(__m128i initOffset,
-                                                             uint32_t* pData,
-                                                             size_t TotalQty) {
+static __m128i run_prefix_sum(__m128i initOffset, uint32_t* pData,
+                              size_t TotalQty) {
   const size_t QtyDivBy4 = TotalQty / 4;
   // The block should contain 8N 32-bit integers, where N is some integer
   assert(QtyDivBy4 % 2 == 0);
