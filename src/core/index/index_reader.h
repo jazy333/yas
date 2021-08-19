@@ -21,7 +21,7 @@ class IndexReader {
   int close();
 
  private:
-  int scan_dir(std::vector<SegmentFiles>& files);
+  int get_segement_files(std::vector<SegmentFiles>& files);
 
  private:
   std::vector<std::shared_ptr<SubIndexReader>> sub_index_readers_;

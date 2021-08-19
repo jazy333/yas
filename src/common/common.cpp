@@ -93,7 +93,7 @@ uint8_t uint2uchar(uint32_t value) {
 }
 
 uint32_t uchar2uint(uint8_t value) {
-  int shift = value >> 3 - 1;
+  int shift = (value >> 3) - 1;
   if (shift == -1) return value;
 
   int fraction = value & 0x07;

@@ -14,7 +14,7 @@ std::string DefaultFormatter::do_format(LogSeverity severity,
   char buffer[kMaxLogLength] = {0};
   char* ptr = buffer;
   std::string seve = SeverityStrings[severity];
-  char* header_format = 0;
+  const char* header_format = 0;
   if (!file_name)
     header_format = "[%s][%s][%5u]";
   else

@@ -12,8 +12,8 @@ include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algori
 set(LIB_SERIALIZED_INDEX_SRC invert_fields_index_writer.cpp block_term_reader.cpp
                             roaring_posting_list.cpp numeric_field_index_writer.cpp
                             numeric_field_index_reader.cpp binary_field_index_writer.cpp
-                            binary_field_index_reader.cpp serialized_field_values_reader.cpp
-                            serialized_invert_fields_index_reader.cpp)
+                            binary_field_index_reader.cpp serialized_field_values_index_reader.cpp
+                            serialized_invert_fields_index_reader.cpp segment_index_reader.cpp)
 
 add_library(serialized_index SHARED ${LIB_SERIALIZED_INDEX_SRC})
 

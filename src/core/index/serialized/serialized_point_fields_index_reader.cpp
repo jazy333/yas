@@ -18,10 +18,10 @@ SerializedPointFieldsIndexReader::~SerializedPointFieldsIndexReader() {
   close();
 }
 
-std::unique_ptr<PointFieldIndexReader>
+std::shared_ptr<PointFieldIndexReader>
 SerializedPointFieldsIndexReader::get_reader(
     const std::string& field_name,
-    std::unique_ptr<PointFieldIndexReader> init_reader) {
+   std::shared_ptr<PointFieldIndexReader> init_reader) {
   if (field_infos_.count(field_name) == 1) {
     int field_id = field_infos_[field_name].get_field_id();
     init_reader->init(field_id, kdm_infos_[field_id], kdi_, kdm_);
@@ -32,30 +32,28 @@ SerializedPointFieldsIndexReader::get_reader(
 }
 
 int SerializedPointFieldsIndexReader::open() {
-  kdm_ = new MMapFile(files_.kdm, false);
-  kdm_->open();
-  kdi_ = new MMapFile(files_.kdi, false);
-  kdi_->open();
-  kdd_ = new MMapFile(files_.kdd, false);
-  kdd_->open();
+  kdm_ = new MMapFile(;
+  kdm_->open(files_.kdm, false));
+  kdi_ = new MMapFile();
+  kdi_->open(files_.kdi, false);
+  kdd_ = new MMapFile();
+  kdd_->open(files_.kdd, false);
   loff_t off = 0;
   while (true) {
-    MetaFieldInfo mfi;
-    int ret = kdm_->read_vint(mfi.field_id_, &off);
-    if (mfi.field_id_ == 0) break;
-    ret = kdm_->read_vint(mfi.num_dims_, &off);
-    ret = kdm_->read_vint(mfi.max_count_per_leaf_, &off);
-    ret = kdm_->read_vint(mfi.bytes_per_dim_, &off);
-    ret = kdm_->read_vint(mfi.num_leaves_, &off);
-    u_char* min_data = mfi.min_.bytes();
-    u_char* max_data = mfi.max_.bytes();
-    int bytes_len = mfi.num_dims_ * mfi.bytes_per_dim_;
-    ret = kdm_->read(min_data, bytes_len, &off);
-    ret = kdm_->read(max_data, bytes_len, &off);
-    ret = kdm_->read_vint(mfi.count_, &off);
-    ret = kdm_->read_vint(mfi.data_fp_, &off);
-    ret = kdm_->read_vint(mfi.index_fp_, &off);
-    kdm_infos_[mfi.field_id_] = mfi;
+    PointFieldMeta pfm;
+    int ret = kdm_->read_vint(pfm.field_id_, &off);
+    if (pfm.field_id_ == 0) break;
+    ret = kdm_->read_vint(pfm.num_dims_, &off);
+    ret = kdm_->read_vint(pfm.max_count_per_leaf_, &off);
+    ret = kdm_->read_vint(pfm.bytes_per_dim_, &off);
+    ret = kdm_->read_vint(pfm.num_leaves_, &off);
+    int bytes_len = pfm.num_dims_ * pfm.bytes_per_dim_;
+    ret = kdm_->read(pfm.min_, bytes_len, &off);
+    ret = kdm_->read(pfm.max_, bytes_len, &off);
+    ret = kdm_->read_vint(pfm.count_, &off);
+    ret = kdm_->read_vint(pfm.data_fp_, &off);
+    ret = kdm_->read_vint(pfm.index_fp_, &off);
+    kdm_infos_[pfm.field_id_] = pfm;
   }
   return 0;
 }

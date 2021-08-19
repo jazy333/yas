@@ -1,18 +1,19 @@
 #include "index_reader.h"
-#include "log.h"
-#include "segment_files.h"
 
 #include <dirent.h>
 #include <unistd.h>
+
 #include <cstdlib>
 #include <set>
 
-
+#include "log.h"
+#include "segment_files.h"
+#include "segment_index_reader.h"
 
 namespace yas {
 IndexReader::IndexReader(IndexOption option) : option_(option) {}
 
-IndexReader::IndexReader() option_(IndexOption()) {}
+IndexReader::IndexReader() : option_(IndexOption()) {}
 
 IndexReader::~IndexReader() { close(); }
 
@@ -21,7 +22,7 @@ IndexReader::get_sub_index_readers() {
   return sub_index_readers_;
 }
 
-int IndexReader::scan_dir(std::vector<SegmentFiles>& files) {
+int IndexReader::get_segement_files(std::vector<SegmentFiles>& files) {
   struct dirent** namelist;
   int n;
 
@@ -33,7 +34,7 @@ int IndexReader::scan_dir(std::vector<SegmentFiles>& files) {
     std::set<uint64_t> seqs;
     while (n--) {
       LOG_INFO("index dir :%s", namelist[n]->d_name);
-      string file_name = namelist[n]->d_name;
+      std::string file_name = namelist[n]->d_name;
       free(namelist[n]);
       if (file_name.find(option_.segment_prefix) == 0) {
         size_t pos = option_.segment_prefix.size();
@@ -46,34 +47,34 @@ int IndexReader::scan_dir(std::vector<SegmentFiles>& files) {
         SegmentFiles sf;
         std::string full_path_prefix =
             option_.dir + "/" + option_.segment_prefix + std::to_string(seq);
-        std::string index_file = full_path + ".hdb";
+        std::string index_file = full_path_prefix + ".hdb";
         if (access(index_file.c_str(), R_OK) == 0) {
           sf.invert_index_file = index_file;
         }
 
-        index_file = full_path + ".fvm";
+        index_file = full_path_prefix + ".fvm";
         if (access(index_file.c_str(), R_OK) == 0) {
           sf.fvm = index_file;
         }
 
-        index_file = full_path + ".fvd";
+        index_file = full_path_prefix + ".fvd";
         if (access(index_file.c_str(), R_OK) == 0) {
           sf.fvd = index_file;
         }
 
-        index_file = full_path + ".kvm";
+        index_file = full_path_prefix + ".kvm";
         if (access(index_file.c_str(), R_OK) == 0) {
-          sf.kvm = index_file;
+          sf.kdm = index_file;
         }
 
-        index_file = full_path + ".kvi";
+        index_file = full_path_prefix + ".kvi";
         if (access(index_file.c_str(), R_OK) == 0) {
-          sf.kvi = index_file;
+          sf.kdi = index_file;
         }
 
-        index_file = full_path + ".kvd";
+        index_file = full_path_prefix + ".kvd";
         if (access(index_file.c_str(), R_OK) == 0) {
-          sf.kvd = index_file;
+          sf.kdd = index_file;
         }
 
         files.push_back(sf);
@@ -81,22 +82,25 @@ int IndexReader::scan_dir(std::vector<SegmentFiles>& files) {
     }
     free(namelist);
   }
+  return 0;
 }
 
 int IndexReader::open() {
   std::vector<SegmentFiles> files;
-  int ret = scandir(files);
+  int ret = get_segement_files(files);
   for (size_t i = 0; i < files.size(); ++i) {
     std::shared_ptr<SegmentIndexReader> segment_reader =
-        new SegmentIndexReader(files[i], field_infos_);
+        std::shared_ptr<SegmentIndexReader>(
+            new SegmentIndexReader(files[i], field_infos_));
     segment_reader->open();
     sub_index_readers_.push_back(segment_reader);
   }
+  return 0;
 }
 
 void IndexReader::add(std::shared_ptr<SubIndexReader> reader) {
   sub_index_readers_.push_back(reader);
 }
 
-int IndexReader::close() {}
+int IndexReader::close() { return 0; }
 }  // namespace yas

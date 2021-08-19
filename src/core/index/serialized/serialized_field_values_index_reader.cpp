@@ -1,24 +1,24 @@
-#include "serialized_field_values_reader.h"
+#include "serialized_field_values_index_reader.h"
 #include "binary_field_index_reader.h"
 #include "numeric_field_index_reader.h"
 #include "mmap_file.h"
 
 namespace yas {
-SerializedFieldValuesReader::SerializedFieldValuesReader(
+SerializedFieldValuesIndexReader::SerializedFieldValuesIndexReader(
     const std::string& meta_file, const std::string& data_file)
     : meta_file_(meta_file),
       data_file_(data_file),
       field_values_meta_(nullptr),
       field_values_data_(nullptr) {}
 
-SerializedFieldValuesReader::~SerializedFieldValuesReader() {
+SerializedFieldValuesIndexReader::~SerializedFieldValuesIndexReader() {
   close();
   for (auto&& item : field_index_metas_) {
     delete item.second;
   }
 }
 
-int SerializedFieldValuesReader::open() {
+int SerializedFieldValuesIndexReader::open() {
   field_values_meta_ = new MMapFile();
   field_values_meta_->open(meta_file_, false);
   field_values_data_ = new MMapFile();
@@ -48,7 +48,7 @@ int SerializedFieldValuesReader::open() {
   return 0;
 }
 
-int SerializedFieldValuesReader::close() {
+int SerializedFieldValuesIndexReader::close() {
   field_values_meta_->close();
   field_values_data_->close();
   delete field_values_meta_;
@@ -56,7 +56,7 @@ int SerializedFieldValuesReader::close() {
   return 0;
 }
 
-void SerializedFieldValuesReader::read_numeric(const std::string& field_name) {
+void SerializedFieldValuesIndexReader::read_numeric(const std::string& field_name) {
   NumericFieldMeta* meta = new NumericFieldMeta;
 
   field_values_meta_->read(&meta->docids_offset, sizeof(meta->docids_offset));
@@ -76,7 +76,7 @@ void SerializedFieldValuesReader::read_numeric(const std::string& field_name) {
   field_index_metas_[field_name] = meta;
 }
 
-void SerializedFieldValuesReader::read_binary(const std::string& field_name) {
+void SerializedFieldValuesIndexReader::read_binary(const std::string& field_name) {
   BinaryFieldMeta* meta = new BinaryFieldMeta();
   field_values_meta_->read(&meta->docids_offset, sizeof(meta->docids_offset));
   field_values_meta_->read(&meta->docids_length, sizeof(meta->docids_length));
@@ -98,7 +98,7 @@ void SerializedFieldValuesReader::read_binary(const std::string& field_name) {
   }
 }
 
-std::shared_ptr<FieldValueIndexReader> SerializedFieldValuesReader::get_reader(
+std::shared_ptr<FieldValueIndexReader> SerializedFieldValuesIndexReader::get_reader(
     const std::string& field_name) {
   FieldIndexMeta* meta = nullptr;
   if (field_index_metas_.count(field_name) == 0) {

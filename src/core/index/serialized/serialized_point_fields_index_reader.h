@@ -18,9 +18,9 @@ class SerializedPointFieldsIndexReader : public PointFieldsIndexReader {
   virtual ~SerializedPointFieldsIndexReader();
   int open() override;
   int close() override;
-  std::unique_ptr<PointFieldIndexReader> get_reader(
+  std::shared_ptr<PointFieldIndexReader> get_reader(
       const std::string& field_name,
-      std::unique_ptr<PointFieldIndexReader> init_reader) override;
+      std::shared_ptr<PointFieldIndexReader> init_reader) override;
 
  private:
   std::unordered_map<std::string, FieldInfo> field_infos_;

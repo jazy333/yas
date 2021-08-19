@@ -4,6 +4,7 @@
 
 #include "segment_files.h"
 #include "sub_index_reader.h"
+#include "field_info.h"
 
 namespace yas {
 class SegmentIndexReader : public SubIndexReader {
@@ -22,7 +23,7 @@ class SegmentIndexReader : public SubIndexReader {
   SegmentFiles files_;
   std::unordered_map<std::string, FieldInfo> field_infos_;
   std::shared_ptr<PointFieldsIndexReader> point_fields_index_reader_;
-  std::shared_ptr<FieldValuesReader> field_values_index_reader_;
-  std::shared_ptr<InvertFieldsIndexReader> invert_fields_index_readesr_;
+  std::shared_ptr<FieldValuesIndexReader> field_values_index_reader_;
+  std::shared_ptr<InvertFieldsIndexReader> invert_fields_index_reader_;
 };
 }  // namespace yas

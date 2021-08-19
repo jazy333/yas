@@ -8,11 +8,11 @@
 #include "file.h"
 
 namespace yas {
-class SerializedFieldValuesReader : public FieldValuesIndexReader {
+class SerializedFieldValuesIndexReader : public FieldValuesIndexReader {
  public:
-  SerializedFieldValuesReader(const std::string& meta_file,
+  SerializedFieldValuesIndexReader(const std::string& meta_file,
                               const std::string& data_file);
-  virtual ~SerializedFieldValuesReader();
+  virtual ~SerializedFieldValuesIndexReader();
   int open() override;
   int close() override;
   std::shared_ptr<FieldValueIndexReader> get_reader(const std::string& field_name) override;

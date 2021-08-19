@@ -1,5 +1,6 @@
 #include "segment_index_reader.h"
-#include "serialized_field_values_reader.h"
+
+#include "serialized_field_values_index_reader.h"
 #include "serialized_invert_fields_index_reader.h"
 #include "serialized_point_fields_index_reader.h"
 
@@ -12,11 +13,12 @@ SegmentIndexReader::SegmentIndexReader(
 SegmentIndexReader::~SegmentIndexReader() {}
 
 std::shared_ptr<InvertFieldsIndexReader>
-iSegmentIndexReader::invert_index_reader() {
+SegmentIndexReader::invert_index_reader() {
   return invert_fields_index_reader_;
 }
 
-std::shared_ptr<FieldValuesReader> SegmentIndexReader::field_values_reader() {
+std::shared_ptr<FieldValuesIndexReader>
+SegmentIndexReader::field_values_reader() {
   return field_values_index_reader_;
 }
 
@@ -26,16 +28,17 @@ SegmentIndexReader::point_fields_reader() {
 }
 
 int SegmentIndexReader::open() {
-  point_fields_index_reader_ = new SerializedPointFieldsIndexReader(
-      field_infos_, files_.kdm, files_.kdi, files_.kdd);
+  point_fields_index_reader_ = std::shared_ptr<PointFieldsIndexReader>(
+      new SerializedPointFieldsIndexReader(field_infos_, files_.kdm, files_.kdi,
+                                           files_.kdd));
   point_fields_index_reader_->open();
 
-  invert_fields_index_reader_ =
-      new SerializedInvertFieldsIndexReader(files_.invert_index_file);
+  invert_fields_index_reader_ = std::shared_ptr<InvertFieldsIndexReader>(
+      new SerializedInvertFieldsIndexReader(files_.invert_index_file));
   invert_fields_index_reader_->open();
 
-  field_values_index_reader_ =
-      new SerializedFieldValuesIndexReadr(files_.fvm, files_.fvd);
+  field_values_index_reader_ = std::shared_ptr<FieldValuesIndexReader>(
+      new SerializedFieldValuesIndexReader(files_.fvm, files_.fvd));
   field_values_index_reader_->open();
 
   return 0;
@@ -43,8 +46,9 @@ int SegmentIndexReader::open() {
 
 int SegmentIndexReader::close() {
   if (point_fields_index_reader_) point_fields_index_reader_->close();
-  if (invert_field_index_reader_) invert_field_index_reader_->close();
+  if (invert_fields_index_reader_) invert_fields_index_reader_->close();
   if (field_values_index_reader_) field_values_index_reader_->close();
+  return 0;
 }
 
 }  // namespace yas

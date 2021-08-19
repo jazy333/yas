@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "field_index_meta.h"
 #include "file.h"
 #include "memory_file.h"
 #include "mmap_file.h"
@@ -46,6 +47,21 @@ class BkdTree {
     }
   }
 
+  BkdTree(PointFieldMeta meta, File* kdi, File* kdd)
+      : kdi_(kdi), kdd_(kdd), readable_(true) {
+    MetaFieldInfo mfi;
+    mfi.field_id_ = meta.field_id_;
+    mfi.num_dims_ = meta.num_dims_;
+    mfi.max_count_per_leaf_ = meta.max_count_per_leaf_;
+    mfi.num_leaves_ = meta.num_leaves_;
+    mfi.min_ = Point<T, D>(meta.min_);
+    mfi.max_ = Point<T, D>(meta.max_);
+    mfi.count_ = meta.count_;
+    mfi.data_fp_ = meta.data_fp_;
+    mfi.index_fp_ = meta.index_fp_;
+
+    kdm_infos_[mfi.field_id] = mfi;
+  }
   virtual ~BkdTree() {}
 
   struct IntersectState {
