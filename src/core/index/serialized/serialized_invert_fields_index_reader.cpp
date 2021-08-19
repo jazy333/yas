@@ -1,5 +1,6 @@
 #include "serialized_invert_fields_index_reader.h"
 #include "block_term_reader.h"
+#include "hash_db.h"
 
 namespace yas {
 SerializedInvertFieldsIndexReader::SerializedInvertFieldsIndexReader(
@@ -12,14 +13,14 @@ SerializedInvertFieldsIndexReader::~SerializedInvertFieldsIndexReader() {
 
 TermReader* SerializedInvertFieldsIndexReader::get_reader(Term* term) {
   if (db_)
-    return BlockTermReader(db_, term);
+    return new BlockTermReader(db_, term);
   else
     return nullptr;
 }
 
 int SerializedInvertFieldsIndexReader::open() {
-  db_ = new HashDB(files_.invert_index_file);
-  return db_->open();
+  db_ = new HashDB();
+  return db_->open(invert_index_file_);
 }
 
 int SerializedInvertFieldsIndexReader::close() {

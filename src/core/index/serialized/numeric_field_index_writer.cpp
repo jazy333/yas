@@ -33,11 +33,11 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     fvm->append(&tmp1, sizeof(tmp1));  // docids jump table entry count
   } else {
     size_t size = fvd->size();
-    fvm->append(&size, sizeof(size_t));  // docids offset
+    fvm->append(&size, sizeof(size));  // docids offset
     // docids index with roaring doclists
     uint16_t jump_table_entry_count = RoaringPostingList::flush(fvd, docids_);
-    size = fvd->size();
-    fvm->append(&size, sizeof(size_t));  // docids length
+    size = fvd->size()-size;
+    fvm->append(&size, sizeof(size));  // docids length
     fvm->append(&jump_table_entry_count,
                 sizeof(uint16_t));  // docids jump table entry count
   }
@@ -73,7 +73,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     fvm->append(&min_value_, sizeof(uint64_t));  // min value
     fvm->append(&igcd, sizeof(uint64_t));        // gcd
     size_t size = fvd->size();
-    fvm->append(&size, sizeof(size_t));  // field value offset;
+    fvm->append(&size, sizeof(size));  // field value offset;
     size_t field_value_len;
     BitPackingCompression bpc(num_bits);
     size_t out_size = values_.size();

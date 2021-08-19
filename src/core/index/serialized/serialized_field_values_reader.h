@@ -6,7 +6,6 @@
 #include "field_index_meta.h"
 #include "field_index_reader.h"
 #include "file.h"
-#include "numeric_field_index_reader.h"
 
 namespace yas {
 class SerializedFieldValuesReader : public FieldValuesIndexReader {
@@ -16,7 +15,7 @@ class SerializedFieldValuesReader : public FieldValuesIndexReader {
   virtual ~SerializedFieldValuesReader();
   int open() override;
   int close() override;
-  FieldValueIndexReader* get(const std::string& field_name) override;
+  std::shared_ptr<FieldValueIndexReader> get_reader(const std::string& field_name) override;
 
  private:
   void read_numeric(const std::string& field_name);

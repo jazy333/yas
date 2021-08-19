@@ -37,7 +37,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
 
   size_t num_value = values_.size();
 
-  if (num_value == max_doc) {
+  if (num_value == max_doc) {//TODO:check whether index docids
     uint64_t tmp = -1;
     fvm->append(&tmp, sizeof(tmp));  // docids offset
     tmp = 0;
@@ -71,6 +71,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   }
   offset = fvd->size() - offset;
   fvm->append(&offset, sizeof(offset));  // value data len
+  
   if (min_length_ != max_length_) {
     // write value len index compress
     uint8_t max_bits = gccbits(*(lens.rbegin()));

@@ -19,7 +19,7 @@
 
 namespace yas {
 
-uint64_t primary_hash(std::string key, uint64_t buckets) {
+static uint64_t primary_hash(std::string key, uint64_t buckets) {
   MurmurHash2 mh2;
   return (mh2.hash64(key, 20181220)) % buckets;
 };
