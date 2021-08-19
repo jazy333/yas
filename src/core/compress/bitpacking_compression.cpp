@@ -1,8 +1,7 @@
 #include "bitpacking_compression.h"
+#include "common.h"
 
 #include <cstring>
-
-#include "common.h"
 
 namespace yas {
 BitPackingCompression::BitPackingCompression(int max_bit)

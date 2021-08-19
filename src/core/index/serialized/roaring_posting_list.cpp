@@ -26,6 +26,7 @@ bool RoaringPostingList::advance_exact_in_block(uint32_t target) {
   switch (type_) {
     case 0: {
       uint16_t doc;
+      uint32_t next_index = index_ + cardinality_;
       for (; index_ < next_index; ++index_) {
         block_slice_->read(doc);
         if (doc >= target_in) {
@@ -45,47 +46,51 @@ bool RoaringPostingList::advance_exact_in_block(uint32_t target) {
       int word_index = target_in % 64;
       uint64_t word;
       uint16_t min;
-      block_slice->read(min);
-      block_slice->read(bit_index * sizeof(uint64_t), word);
+      block_slice_->read(min);
+      block_slice_->read(bit_index * sizeof(uint64_t), word);
+      // TODO:find the next valid docid
       word = word >> word_index;
       if (word & 1) {
         docid_ = target;
+        index_ += target_in;
         return true;
       } else {
         return false;
       }
     }
     default:
+      return false;
       break;
   }
 }
 
-void RoaringPostingList::read_block_header() {
+int RoaringPostingList::read_block_header() {
   uint16_t block;
   block_slice_->read(block);
-  uint16_t cardinality;
-  block_slice_->read(cardinality);
-  int num = cardinality + 1;
+  block_slice_->read(cardinality_);
+  int num = cardinality_ + 1;
   if (num < 4096) {
     type_ = 0;
-    block_end_ = block_slice_->seek() + num << 1;  // uint16,size==2
+    block_end_ = block_slice_->seek() + (num << 1);  // uint16,sizeof==2
   } else if (num == 65536) {
     type_ = 1;
-    block_end_ = block_slice->seek();
+    block_end_ = block_slice_->seek();
   } else {
     type_ = 2;
     block_end_ = block_slice_->seek() + (num + 1) * 8 / 64;
   }
+  return 0;
 }
 
 int RoaringPostingList::advance_block(uint32_t target) {
-  int block = target >> 16;
+  int block = target >> 16 & 0x0000ffff;
   if (block > jump_table_entry_count_) block = jump_table_entry_count_ - 1;
   int offset;
-  jump_table_slice_->read(block * 2 * sizeof(int), index_);
-  jump_table_slice_->read(block * 2 * sizeof(int), offset);
+  uint64_t start_offset = block * 2 * sizeof(int);
+  jump_table_slice_->read(start_offset, index_);  // total cardinality
+  jump_table_slice_->read(start_offset + sizeof(int), offset);
   block_slice_->seek(offset);
-  read_block_header();
+  return read_block_header();
 }
 
 uint32_t RoaringPostingList::advance(uint32_t target) {
@@ -102,7 +107,7 @@ uint32_t RoaringPostingList::advance(uint32_t target) {
 }
 
 bool RoaringPostingList::advance_exact(uint32_t target) {
-  uint16_t target_block = target >> 16& 0xffff;
+  uint16_t target_block = target >> 16 & 0xffff;
   if (block_ < target_block) {
     advance_block(target);
   }
@@ -118,49 +123,51 @@ long RoaringPostingList::cost() { return cost_; }
 
 std::string RoaringPostingList::name() { return "RoaringPostingList"; }
 
-int RoaringPostingList::index() { return index_; }
-
-void RoaringPostingList::add_jumps(std::vector<int>& jump_tables, int from,
-                                   int to, int cardinality, uint64_t offset) {
-  for (; from < to; ++from) {
-    jump_tables.push_back({cardinality, static_cast<uint32_t>(offset)});
-  }
-}
-
-uint16_t RoaringPostingList::flush_jumps(File* out,
-                                         std::vector<int>& jump_tables) {
-  out.write(jump_tables.data(), jump_tables.size() * sizeof(int));
-  return static_cast<uint16_t>(jump_tables.size());
-}
+uint32_t RoaringPostingList::index() { return index_; }
 
 void RoaringPostingList::flush(File* out, std::vector<uint32_t>& docids,
                                int from, int to, int cardinality,
                                uint16_t block) {
-  out.write(&block, 2);  // block num
+  out->append(&block, 2);  // block num
   uint16_t cardi = static_cast<uint16_t>(cardinality - 1);
-  out.write(&cardi, 2);  // cardinality-1
+  out->append(&cardi, 2);  // cardinality-1
 
   if (cardi > 4095) {  // dense
     if (cardi != 66535) {
       uint16_t min = (docids[from] >> 16) & 0xffff;
       uint16_t max = (docids[to - 1] >> 16) & 0xffff;
       uint16_t bit_num = max - min;
-      FixedBitSet<bit_num> bitset;
-      out.append(&min, sizeof(min));
+      FixedBitSet bitset(bit_num);
+      out->append(&min, sizeof(min));
 
       for (; from < to; ++from) {
-        bitset.set((docids[from] >> 16) & 0xffff - min);
+        bitset.set(((docids[from] >> 16) & 0xffff) - min);
       }
       uint64_t* bits = bitset.bits();
       uint16_t cap = static_cast<uint16_t>(bitset.capcity());
-      out.append(bits, cap * sizeof(uint64_t));
+      out->append(bits, cap * sizeof(uint64_t));
     }  // full,do nothing
 
   } else {
-    out.append(docids.data() + i, (to - from) * sizeof(uint32_t));
+    out->append(docids.data(), (to - from) * sizeof(uint32_t));
   }
 }
 
+uint16_t RoaringPostingList::flush_jumps(File* out,
+                                         std::vector<int>& jump_tables) {
+  out->append(jump_tables.data(), jump_tables.size() * sizeof(int));
+  return static_cast<uint16_t>(jump_tables.size());
+}
+
+void RoaringPostingList::add_jumps(std::vector<int>& jump_tables, int from,
+                                   int to, int cardinality, uint64_t offset) {
+  for (; from < to; ++from) {
+    jump_tables.insert(jump_tables.end(),
+                       {cardinality, static_cast<int>(offset)});
+  }
+}
+
+// docids are strictly ordered
 uint16_t RoaringPostingList::flush(File* out, std::vector<uint32_t>& docids) {
   size_t start_offset = out->size();
   uint64_t total_cardinality = 0;
@@ -170,10 +177,11 @@ uint16_t RoaringPostingList::flush(File* out, std::vector<uint32_t>& docids) {
   int start_index = 0;
   int jump_block = 0;
   std::vector<int> jump_tables;
-  for (int i = 0; i < docids.size(); ++i) {
-    block = docids[i] >> 16;
+  int i = 0;
+  for (; i < docids.size(); ++i) {
+    block = (docids[i] >> 16) & 0x0000ffff;
     if (pre_block != -1 && block != pre_block) {
-      uint64_t block_offset = out.size() - start_offset;
+      uint64_t block_offset = out->size() - start_offset;
       add_jumps(jump_tables, jump_block, pre_block + 1, total_cardinality,
                 block_offset);
       flush(out, docids, start_index, i, block_cardinality, pre_block);
@@ -188,7 +196,7 @@ uint16_t RoaringPostingList::flush(File* out, std::vector<uint32_t>& docids) {
   }
 
   if (block_cardinality > 0) {
-    uint64_t block_offset = out.size() - start_offset;
+    uint64_t block_offset = out->size() - start_offset;
     add_jumps(jump_tables, jump_block, pre_block + 1, total_cardinality,
               block_offset);
     flush(out, docids, start_index, i, block_cardinality, pre_block);

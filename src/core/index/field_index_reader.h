@@ -12,7 +12,7 @@ namespace yas {
 class FieldValueIndexReader {
  public:
   virtual void get(uint32_t docid, uint64_t& value) = 0;
-  virtual void get(uint32_t docid, std::vector<char>& value) = 0;
+  virtual void get(uint32_t docid, std::vector<uint8_t>& value) = 0;
 };
 
 class FieldValuesIndexReader {

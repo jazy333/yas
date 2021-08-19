@@ -6,10 +6,9 @@
 #include "common.h"
 
 namespace yas {
-template <uint64_t N>
 class FixedBitSet : public BitSet {
  public:
-  FixedBitSet() {
+  FixedBitSet(uint64_t N) :N_(N){
     capcity_ = round(N, kNBits) / kNBits;
     bits_ = new uint64_t[capcity_]();
   }
@@ -32,7 +31,7 @@ class FixedBitSet : public BitSet {
     }
   }
 
-  size_t size() override { return N; }
+  size_t size() override { return N_; }
 
   size_t capcity() override { return capcity_; }
 
@@ -61,8 +60,8 @@ class FixedBitSet : public BitSet {
   uint64_t* bits_;
   size_t capcity_;
   static const int kNBits;
+  uint64_t N_;
 };
-template <uint64_t N>
-const int FixedBitSet<N>::kNBits = sizeof(uint64_t) * 8;
+const int FixedBitSet::kNBits = sizeof(uint64_t) * 8;
 
 }  // namespace yas

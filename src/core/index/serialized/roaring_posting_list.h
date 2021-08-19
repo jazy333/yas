@@ -9,7 +9,7 @@
 namespace yas {
 class RoaringPostingList : public PostingList {
  public:
-  RoaringPostingList(File* in, uin64_t off, uint64_t length,
+  RoaringPostingList(File* in, uint64_t off, uint64_t length,
                      int jump_table_entry_count, long cost);
   virtual ~RoaringPostingList();
   uint32_t next() override;
@@ -19,15 +19,26 @@ class RoaringPostingList : public PostingList {
   std::string name() override;
   float score() override;
   static uint16_t flush(File* out, std::vector<uint32_t>& docids);
-  static void flush(File* out, std::vector<uint32_t>& docids, int from, int to,
-                    int cardinality, uint16_t block) uint32_t index();
+  uint32_t index();
   bool test(uint32_t target);
+  bool advance_exact(uint32_t target);
+
+ private:
+  static void add_jumps(std::vector<int>& jump_tables, int from, int to,
+                        int cardinality, uint64_t offset);
+  static uint16_t flush_jumps(File* out, std::vector<int>& jump_tables);
+  static void flush(File* out, std::vector<uint32_t>& docids, int from, int to,
+                    int cardinality, uint16_t block);
+  int advance_block(uint32_t target);
+  int read_block_header();
+  bool advance_exact_in_block(uint32_t target);
 
  private:
   uint32_t docid_;
   uint32_t index_;
   long cost_;
   uint16_t block_;
+  uint16_t cardinality_;
   int type_;
   int jump_table_entry_count_;
   File* in_;

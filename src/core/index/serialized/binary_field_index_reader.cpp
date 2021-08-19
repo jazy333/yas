@@ -1,18 +1,18 @@
 #include "binary_field_index_reader.h"
 
 namespace yas {
-BinaryFieldIndexReader::BinaryFieldIndexReader(BinaryFieldMeta* meta,
-                                               File* fvd) {
-  field_values_slice_ = new FileSlice(fvd, meta_->field_values_data_len,
-                                      meta_->field_values_data_offset);
+BinaryFieldIndexReader::BinaryFieldIndexReader(BinaryFieldMeta* meta, File* fvd)
+    : meta_(meta) {
+  field_values_slice_ = std::unique_ptr<FileSlice>(new FileSlice(
+      fvd, meta_->field_values_data_len, meta_->field_values_data_offset));
   if (meta_->max_len != meta_->max_len) {
-    field_values_len_slice_ = new FileSlice(
-        fvd, meta->field_lengths_data_offset, meta_->field_lengths_data_len);
+    field_values_len_slice_ = std::unique_ptr<FileSlice>(new FileSlice(
+        fvd, meta_->field_lengths_data_offset, meta_->field_lengths_data_len));
   }
-  if (meta->docids_offset != 0)
-    posting_lists_ =
-        new RoaringPostingList(fvd, meta->docids_offset, meta->docids_offset,
-                               meta->jump_table_entry_count, meta->num_values);
+  if (meta_->docids_offset != 0)
+    posting_lists_ = std::unique_ptr<RoaringPostingList>(new RoaringPostingList(
+        fvd, meta_->docids_offset, meta_->docids_offset,
+        meta_->jump_table_entry_count, meta_->num_values));
 }
 
 BinaryFieldIndexReader::~BinaryFieldIndexReader() {}
@@ -25,29 +25,30 @@ uint64_t BinaryFieldIndexReader::get_value(int index) {
   uint64_t mask = ~0L << most_sig_bits;
   mask = mask >> most_sig_bits;
   if (bit_index <= most_sig_bits) {
-    field_values_len_slice_.seek(block_index);
+    field_values_len_slice_->seek(block_index);
     uint64_t block_value;
     field_values_len_slice_->read(&block_value, sizeof(block_value));
     return (block_value >> bit_index) & mask;
   } else {
-    field_values_len_slice_.seek(block_index);
+    field_values_len_slice_->seek(block_index);
     uint64_t block_values[2];
-    field_values_len_slice_->read(block_values, 2 * sizeof(block_value));
+    field_values_len_slice_->read(block_values, 2 * sizeof(block_values));
     int end_bits = 64 - bit_index;
     return (block_values[0] >> bit_index) | (block_values[1] << end_bits);
   }
 }
 
-std::vector<uint8_t> BinaryFieldIndexReader::get(uint32_t docid) {
+void BinaryFieldIndexReader::get(uint32_t docid, std::vector<uint8_t>& value) {
   uint32_t index = 0;
   if (posting_lists_) {
     index = docid;
   } else {
-    bool exsit = posting_lists_->advance_exact(docid);
+    bool exist = posting_lists_->advance_exact(docid);
     if (exist) {
       index = posting_lists_->index();
     } else
-      return {};
+      value= {};
+      return;
   }
 
   if (meta_->max_len != meta_->min_len) {
@@ -58,12 +59,14 @@ std::vector<uint8_t> BinaryFieldIndexReader::get(uint32_t docid) {
     std::vector<uint8_t> buffer(len, 0);
     field_values_slice_->seek(start_offset);
     field_values_slice_->read(buffer.data(), len);
-    return buffer;
+    value=buffer;
   } else {
     field_values_slice_->seek(index * meta_->max_len);
     std::vector<uint8_t> buffer(meta_->max_len, 0);
     field_values_slice_->read(buffer.data(), meta_->max_len);
-    return buffer;
+    value=buffer;
   }
 }
+
+void BinaryFieldIndexReader::get(uint32_t docid, uint64_t& value) {}
 }  // namespace yas

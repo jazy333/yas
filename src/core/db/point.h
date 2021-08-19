@@ -2,8 +2,8 @@
 
 #include <sys/types.h>
 
-#include <cstddef>
 #include <cassert>
+#include <cstddef>
 #include <cstring>
 #include <initializer_list>
 #include <iostream>
@@ -25,6 +25,10 @@ class Point {
       u_char* dim_data = point.bytes + i * bytes_per_dim;
       sortable_bytes_encode(T(), dim_data);
     }
+  }
+
+  Point(u_char* sortable_bytes) : docid_(-1) {
+    memcpy(point.bytes, sortable_bytes, bytes_length);
   }
 
   Point(std::initializer_list<T> v, int docid) {
@@ -56,7 +60,7 @@ class Point {
   virtual ~Point() = default;
 
   int get_docid() { return docid_; }
-  void set_docid(uint32_t docid) { docid_=docid; }
+  void set_docid(uint32_t docid) { docid_ = docid; }
 
   T get(int dim) const {
     T d;

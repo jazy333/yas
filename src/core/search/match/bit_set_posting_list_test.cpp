@@ -7,7 +7,7 @@
 namespace yas {
 
 TEST(BitSetPostingList, constructor) {
-  std::unique_ptr<FixedBitSet<1000>> fbs(new FixedBitSet<1000>);
+  std::unique_ptr<FixedBitSet> fbs(new FixedBitSet(1000));
   fbs->set(1);
   fbs->set(111);
   fbs->set(133);
@@ -16,7 +16,7 @@ TEST(BitSetPostingList, constructor) {
 }
 
 TEST(BitSetPostingList, next) {
-  std::unique_ptr<FixedBitSet<1000>> fbs(new FixedBitSet<1000>);
+   std::unique_ptr<FixedBitSet> fbs(new FixedBitSet(1000));
   fbs->set(1);
   fbs->set(111);
   fbs->set(133);
@@ -32,7 +32,7 @@ TEST(BitSetPostingList, next) {
 }
 
 TEST(BitSetPostingList, advance) {
-  std::unique_ptr<FixedBitSet<1000>> fbs(new FixedBitSet<1000>);
+   std::unique_ptr<FixedBitSet> fbs(new FixedBitSet(1000));
   fbs->set(1);
   fbs->set(111);
   fbs->set(133);

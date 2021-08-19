@@ -23,6 +23,7 @@ class FileSlice {
   int read(void* buf, size_t size);
   int read(loff_t off, void* buf, size_t size);
   void seek(loff_t off);
+  uint64_t seek();
 
  private:
   File* file_;

@@ -71,9 +71,9 @@ void BlockTermReader::next_unit(uint32_t target) {
   VariableByteCompression<true> vbc;
   VariableByteCompression<false> vbc_no_delta;
   if (current_entry_ != last) {
-    bool special_unit = false;
+    bool last_unit = false;
     if (current_entry_ == last - 1 && num_docs_ % 128 != 0) {
-      special_unit = true;
+      last_unit = true;
     }
 
     current_jump_table_entry_index_ = current_entry_ - entries_;
@@ -81,7 +81,7 @@ void BlockTermReader::next_unit(uint32_t target) {
     uint8_t* position_len_start = nullptr;
     size_t in_size=0;
     size_t out_size = current_unit_docids_.size() * sizeof(uint32_t);
-    if (!special_unit) {
+    if (!last_unit) {
       position_len_start = sbc.decompress(
           reinterpret_cast<const uint8_t*>(invert_index_.data()) +
               current_entry_->posting_list_offset,
@@ -98,7 +98,7 @@ void BlockTermReader::next_unit(uint32_t target) {
     std::vector<uint32_t> position_lens(128);
     size_t position_lens_len = 4 * 128;
 
-    if (!special_unit)
+    if (!last_unit)
       sbc_position_lens.decompress(position_len_start, in_size,
                                    position_lens.data(), position_lens_len);
     else {

@@ -15,4 +15,6 @@ int FileSlice::read(loff_t off, void* buf, size_t size) {
 }
 
 void FileSlice::seek(loff_t off) { off_ = off; }
+
+uint64_t FileSlice::seek() { return off_; }
 }  // namespace

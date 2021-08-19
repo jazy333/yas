@@ -3,21 +3,21 @@
 namespace yas {
 NumericFieldIndexReader::NumericFieldIndexReader(NumericFieldMeta* meta,
                                                  File* fvd)
-    : meta_(meta), field_values_data_(fvd) {
-  field_values_slice_ = new FileSlice(fvd, meta_->field_values_data_len,
-                                      meta_->field_values_data_offset);
-  if (meta->docids_offset != 0)
-    posting_lists_ =
-        new RoaringPostingList(fvd, meta->docids_offset, meta->docids_offset,
-                               meta->jump_table_entry_count, meta->num_values);
+    : meta_(meta) {
+  field_values_slice_ = std::unique_ptr<FileSlice>(new FileSlice(
+      fvd, meta_->field_values_data_len, meta_->field_values_data_offset));
+  if (meta_->docids_offset != 0)
+    posting_lists_ = std::unique_ptr<RoaringPostingList>(new RoaringPostingList(
+        fvd, meta_->docids_offset, meta_->docids_offset,
+        meta_->jump_table_entry_count, meta_->num_values));
 }
 
 uint64_t NumericFieldIndexReader::get_value(uint32_t index) {
-  uint64_t* in = int most_sig_bits = 64 - meta->num_bits_;
+  int most_sig_bits = 64 - meta_->num_bits;
   uint64_t mask = ~0L << most_sig_bits;
   mask = mask >> most_sig_bits;
 
-  uint64_t total_bits = index * meta->num_bits_;
+  uint64_t total_bits = index * meta_->num_bits;
   int block_index = total_bits / 64;
   field_values_slice_->seek(block_index);
   int bit_index = total_bits % 64;
@@ -31,30 +31,32 @@ uint64_t NumericFieldIndexReader::get_value(uint32_t index) {
     uint64_t in[2];
     field_values_slice_->read(&in, sizeof(in));
     int end_bits = 64 - bit_index;
-    value = (in[0] >> bit_index  |
-            (in[1] <<end_bits) * meta_->gcd + meta_->min_value;
+    value = ((in[0] >> bit_index) | (in[1] << end_bits)) * meta_->gcd +
+            meta_->min_value;
   }
   return value;
 }
 
 NumericFieldIndexReader::~NumericFieldIndexReader() {}
 
-uint64_t NumericFieldIndexReader::get(uint32_t docid) {
+void NumericFieldIndexReader::get(uint32_t docid, uint64_t& value) {
   uint32_t index = 0;
   if (posting_lists_) {
     index = docid;
   } else {
-    bool exsit = posting_lists_->advance_exact(docid);
+    bool exist = posting_lists_->advance_exact(docid);
     if (exist) {
       index = posting_lists_->index();
     } else
-      return -1;
+      value = -1;
   }
 
   if (meta_->num_bits == 0) {
-    return meta_->min_value;
+    value = meta_->min_value;
   } else {
-    return get_value(index);
+    value = get_value(index);
   }
 }
+
+void NumericFieldIndexReader::get(uint32_t docid, std::vector<uint8_t>& value) {}
 }  // namespace yas

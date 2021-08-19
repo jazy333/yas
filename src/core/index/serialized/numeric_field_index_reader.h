@@ -12,15 +12,14 @@ class NumericFieldIndexReader : public FieldValueIndexReader {
  public:
   NumericFieldIndexReader(NumericFieldMeta* meta, File* fvd);
   virtual ~NumericFieldIndexReader();
-  uint64_t get(uint32_t docid);
-  void get(uint32_t docid, std::vector<char>& value);
+  void get(uint32_t docid, uint64_t& value) override;
+  void get(uint32_t docid, std::vector<uint8_t>& value) override;
 
  private:
   uint64_t get_value(uint32_t index);
 
  private:
   NumericFieldMeta* meta_;
-  File* field_values_data_;
   std::unique_ptr<FileSlice> field_values_slice_;
   std::unique_ptr<RoaringPostingList> posting_lists_;
 };

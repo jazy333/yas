@@ -10,11 +10,11 @@ class NumericFieldIndexWriter : public FieldIndexWriter,
  public:
   NumericFieldIndexWriter() = default;
   virtual ~NumericFieldIndexWriter() = default;
-  void flush(FieldInfo fi, uint32_t max_doc, Index,
+  void flush(FieldInfo fi, uint32_t max_doc,
              const IndexOption& option) override;
   void add(uint32_t docid, std::shared_ptr<Field> field) override;
   void get(uint32_t docid, uint64_t& value) override;
-  void get(uint32_t docid, std::vector<char>& value) override;
+  void get(uint32_t docid, std::vector<uint8_t>& value) override;
 
  private:
   uint32_t last_docid_;
