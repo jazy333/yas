@@ -2,7 +2,7 @@
 
 namespace yas {
 MemoryPointValuesIndexReaderWrapper::MemoryPointValuesIndexReaderWrapper(
-    std::unordered_map<std::string, std::shared_ptr<PointFieldIndexReader>>*
+    std::unordered_map<std::string, PointFieldIndexReader*>*
         field_index_readers)
     : field_index_readers_(field_index_readers) {}
 
@@ -10,10 +10,10 @@ int MemoryPointValuesIndexReaderWrapper::open() { return 0; }
 
 int MemoryPointValuesIndexReaderWrapper::close() { return 0; }
 
-std::shared_ptr<PointFieldIndexReader>
+PointFieldIndexReader*
 MemoryPointValuesIndexReaderWrapper::get_reader(
     const std::string& field_name,
-    std::shared_ptr<PointFieldIndexReader> init_reader) {
+    PointFieldIndexReader* init_reader) {
   if (field_index_readers_->count(field_name) == 1)
     return (*field_index_readers_)[field_name];
   else

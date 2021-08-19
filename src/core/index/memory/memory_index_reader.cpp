@@ -5,7 +5,7 @@
 namespace yas {
 MemoryIndexReader::MemoryIndexReader(
     std::shared_ptr<InvertFieldsIndexReader> invert_field_index_reader,
-    std::unordered_map<std::string, std::shared_ptr<PointFieldIndexReader>>*
+    std::unordered_map<std::string, PointFieldIndexReader*>*
         point_fields_index_readers,
     std::unordered_map<std::string, std::shared_ptr<FieldValueIndexReader>>*
         field_values_index_readers)

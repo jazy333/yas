@@ -5,8 +5,8 @@
 
 #include "field_index_meta.h"
 #include "file.h"
-#include "term_reader.h"
 #include "term.h"
+#include "term_reader.h"
 
 namespace yas {
 class FieldValueIndexReader {
@@ -19,7 +19,8 @@ class FieldValuesIndexReader {
  public:
   virtual int open() = 0;
   virtual int close() = 0;
-  virtual std::shared_ptr<FieldValueIndexReader> get_reader(const std::string& field_name) = 0;
+  virtual std::shared_ptr<FieldValueIndexReader> get_reader(
+      const std::string& field_name) = 0;
 };
 
 class PointFieldIndexReader {
@@ -33,9 +34,8 @@ class PointFieldsIndexReader {
  public:
   virtual int open() = 0;
   virtual int close() = 0;
-  virtual std::shared_ptr<PointFieldIndexReader> get_reader(
-      const std::string& field_name,
-      std::shared_ptr<PointFieldIndexReader> init_reader) = 0;
+  virtual PointFieldIndexReader* get_reader(
+      const std::string& field_name, PointFieldIndexReader* init_reader) = 0;
 };
 
 class InvertFieldsIndexReader {
