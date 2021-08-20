@@ -123,6 +123,8 @@ long RoaringPostingList::cost() { return cost_; }
 
 std::string RoaringPostingList::name() { return "RoaringPostingList"; }
 
+float RoaringPostingList::score() { return 0.0; }
+
 uint32_t RoaringPostingList::index() { return index_; }
 
 void RoaringPostingList::flush(File* out, std::vector<uint32_t>& docids,

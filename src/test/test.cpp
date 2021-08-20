@@ -79,7 +79,7 @@ class TestIntroSorter : public IntroSorter {
  public:
   TestIntroSorter(initializer_list<int> v) : _data(v) {}
 
-  void sort(void* cookie) { IntroSorter::sort(0, _data.size(), cookie); }
+  void sort1(void* cookie) { IntroSorter::sort(0, _data.size(), cookie); }
 
   void print() {
     copy(_data.begin(), _data.end(), ostream_iterator<int>(cout, ","));
@@ -362,7 +362,7 @@ int main(int argc, char* argv[]) {
                        15, 51,  5333, 137, 56456, 8,   2,   4,  7,
                        0,  100, 100,  100, 200,   399, 1399});
   tis.print();
-  tis.sort(nullptr);
+  tis.sort1(nullptr);
   // tis.heap_sort(0,25,0);
   // tis.quick_sort(0,25,0);
   tis.print();

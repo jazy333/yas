@@ -6,6 +6,7 @@ namespace yas {
 class SequencePostingList : public PostingList {
  public:
   SequencePostingList(std::vector<uint32_t>& docids);
+   SequencePostingList(std::vector<uint32_t>&& docids);
   virtual ~SequencePostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;

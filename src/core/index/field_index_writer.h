@@ -11,6 +11,7 @@
 namespace yas {
 class FieldIndexWriter {
  public:
+  virtual ~FieldIndexWriter() = default;
   virtual void flush(FieldInfo fi, uint32_t max_doc,
                      const IndexOption& option) = 0;
   virtual void add(uint32_t docid, std::shared_ptr<Field> field) = 0;

@@ -1,4 +1,5 @@
 #include "serialized_point_fields_index_reader.h"
+
 #include "serialized_point_field_index_reader.h"
 
 namespace yas {
@@ -18,10 +19,8 @@ SerializedPointFieldsIndexReader::~SerializedPointFieldsIndexReader() {
   close();
 }
 
-PointFieldIndexReader*
-SerializedPointFieldsIndexReader::get_reader(
-    const std::string& field_name,
-   PointFieldIndexReader* init_reader) {
+PointFieldIndexReader* SerializedPointFieldsIndexReader::get_reader(
+    const std::string& field_name, PointFieldIndexReader* init_reader) {
   if (field_infos_.count(field_name) == 1) {
     int field_id = field_infos_[field_name].get_field_id();
     init_reader->init(field_id, kdm_infos_[field_id], kdi_, kdm_);
@@ -32,12 +31,12 @@ SerializedPointFieldsIndexReader::get_reader(
 }
 
 int SerializedPointFieldsIndexReader::open() {
-  kdm_ = new MMapFile(;
-  kdm_->open(files_.kdm, false));
-  kdi_ = new MMapFile();
-  kdi_->open(files_.kdi, false);
-  kdd_ = new MMapFile();
-  kdd_->open(files_.kdd, false);
+  kdm_ = std::shared_ptr<MMapFile>(new MMapFile());
+  kdm_->open(meta_file_, false);
+  kdi_ = std::shared_ptr<MMapFile>(new MMapFile());
+  kdi_->open(index_file_, false);
+  kdd_ = std::shared_ptr<MMapFile>(new MMapFile());
+  kdd_->open(data_file_, false);
   loff_t off = 0;
   while (true) {
     PointFieldMeta pfm;

@@ -1,5 +1,5 @@
 link_directories(${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src/algorithm 
-                    ${CMAKE_SOURCE_DIR}/src/core/search)
+                    ${CMAKE_SOURCE_DIR}/src/core/search ${CMAKE_SOURCE_DIR}/src/core/compress )
 
 include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algorithm 
                     ${CMAKE_SOURCE_DIR}/src/core/search ${CMAKE_SOURCE_DIR}/src/core/document
@@ -10,7 +10,8 @@ include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algori
 
 set(LIB_INDEX_SRC index_reader.cpp index_writer.cpp)
 add_library(index SHARED ${LIB_INDEX_SRC})
-target_link_libraries(index common pthread algorithm serialized_index)
+target_link_libraries(index common pthread algorithm  document hash_db 
+                        log serialized_index memory_index compression)
 
 add_subdirectory(memory)
 add_subdirectory(serialized)

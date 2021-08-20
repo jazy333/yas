@@ -7,7 +7,7 @@ namespace yas {
 class BitPackingCompression {
  public:
   BitPackingCompression(int max_bits);
-   BitPackingCompression();
+  BitPackingCompression();
   virtual ~BitPackingCompression();
   void compress(const uint64_t* in, size_t in_size, uint8_t* out,
                 size_t& out_size);

@@ -4,9 +4,11 @@
 #include "field_index_reader.h"
 #include "sequence_posting_list.h"
 
+#include <algorithm>
+
 namespace yas {
 
-template <class T, class D>
+template <class T, int D>
 class SerializedPointFieldIndexReader : public PointFieldIndexReader {
  public:
   SerializedPointFieldIndexReader(int field_id, PointFieldMeta meta,
@@ -25,7 +27,7 @@ class SerializedPointFieldIndexReader : public PointFieldIndexReader {
     Point<T, D> min_point = Point<T, D>(min);
     Point<T, D> max_point = Point<T, D>(max);
     bkd.intersect(meta_, min_point, max_point,kdi_.get(),kdd_.get(), docids);
-    sort(docids.begin(), docids.end());
+    std::sort(docids.begin(), docids.end());
     return new SequencePostingList(std::move(docids));
   }
   void init(int field_id, PointFieldMeta meta, std::shared_ptr<File> kdi,

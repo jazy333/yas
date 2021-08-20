@@ -1,6 +1,6 @@
 #include "file_slice.h"
 
-namespace {
+namespace yas {
 FileSlice::FileSlice(File* file, loff_t off, loff_t length)
     : file_(file), off_(off), length_(length) {}
 

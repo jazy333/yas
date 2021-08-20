@@ -102,5 +102,10 @@ void IndexReader::add(std::shared_ptr<SubIndexReader> reader) {
   sub_index_readers_.push_back(reader);
 }
 
-int IndexReader::close() { return 0; }
+int IndexReader::close() {
+  for (auto&& reader : sub_index_readers_) {
+    reader->close();
+  }
+  return 0;
+}
 }  // namespace yas

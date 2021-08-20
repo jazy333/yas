@@ -9,6 +9,11 @@ SequencePostingList::SequencePostingList(std::vector<uint32_t>& docids)
   if (docids_.size() == 0) docid_ = NDOCID;
 }
 
+SequencePostingList::SequencePostingList(std::vector<uint32_t>&& docids)
+    : docids_(docids), index_(0), docid_(0) {
+  if (docids_.size() == 0) docid_ = NDOCID;
+}
+
 SequencePostingList::~SequencePostingList() {}
 
 uint32_t SequencePostingList::next() {
@@ -39,7 +44,7 @@ uint32_t SequencePostingList::advance(uint32_t target) {
 
 uint32_t SequencePostingList::docid() {
   if (docid_ == 0) {
-    if (docids_.size() > 0) return  docids_[index_];
+    if (docids_.size() > 0) return docids_[index_];
   }
   return docid_;
 }

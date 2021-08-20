@@ -32,7 +32,7 @@ class BlockTermReader : public TermReader {
   };
 
   BlockTermReader(DB* db, Term* term);
-  virtual ~BlockTermReader();
+  virtual ~BlockTermReader()=default;
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;

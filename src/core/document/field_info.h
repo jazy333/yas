@@ -3,7 +3,7 @@
 namespace yas {
 class FieldInfo {
  public:
-  FieldInfo();
+  FieldInfo()=default;
   int get_field_id() { return filed_id_; }
 
  private:

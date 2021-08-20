@@ -1,4 +1,4 @@
-LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src/algorithm 
+link_directories(${CMAKE_SOURCE_DIR}/src/common ${CMAKE_SOURCE_DIR}/src/algorithm 
                     ${CMAKE_SOURCE_DIR}/src/index  ${CMAKE_SOURCE_DIR}/src/search/match
                     ${CMAKE_SOURCE_DIR}/src/search/relevance)
 
