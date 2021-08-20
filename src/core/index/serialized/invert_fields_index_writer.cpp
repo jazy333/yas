@@ -131,7 +131,7 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
 void InvertFieldsIndexWriter::add(uint32_t docid,
                                   std::shared_ptr<Field> field) {
   TextField* tf = dynamic_cast<TextField*>(field.get());
-  TermIterator* ti = tokenizer_->get_term_iterator(tf->get_value());
+  auto ti = tokenizer_->get_term_iterator(tf->get_value());
   while (ti->next()) {
     Term term = ti->term();
     term.set_field(tf->get_name());
