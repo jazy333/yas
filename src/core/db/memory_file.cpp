@@ -59,6 +59,7 @@ int MemoryFile::size(int64_t* size) {
   return 0;
 }
 size_t MemoryFile::size() { return data_.size(); }
+
 std::unique_ptr<File> MemoryFile::make() {
   return std::unique_ptr<File>(new MemoryFile());
 }

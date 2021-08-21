@@ -1,9 +1,9 @@
 #pragma once
+#include "db.h"
 #include "file_slice.h"
+#include "term.h"
 #include "term_reader.h"
 #include "term_scorer.h"
-#include "db.h"
-#include "term.h"
 
 namespace yas {
 
@@ -13,17 +13,17 @@ class BlockTermReader : public TermReader {
     uint32_t max_docid;
     uint64_t posting_list_offset;
     uint64_t position_list_offset;
-  };
+  } __attribute__((packed));
 
   struct InvertIndexMeta {
     uint32_t max_doc;
-    int doc_num;
+    uint64_t doc_num;
     uint32_t last_unit_posting_list_compress_size;
     uint32_t last_unit_position_compress_size;
     uint64_t posting_list_start;
     uint64_t position_list_start;
     int jump_table_entry_count;
-  };
+  } __attribute__((packed));
 
   struct compare_with_jump_table_entry {
     bool operator()(JumpTableEntry a, uint32_t target) {
@@ -32,7 +32,7 @@ class BlockTermReader : public TermReader {
   };
 
   BlockTermReader(DB* db, Term* term);
-  virtual ~BlockTermReader()=default;
+  virtual ~BlockTermReader() = default;
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
@@ -50,7 +50,6 @@ class BlockTermReader : public TermReader {
  private:
   DB* db_;
   Term* term_;
-  uint32_t max_doc_;
   int num_docs_;
   uint32_t docid_;
   int current_jump_table_entry_index_;

@@ -6,6 +6,7 @@
 #include "field_index_reader.h"
 #include "field_index_writer.h"
 #include "hash_db.h"
+#include "simple_tokenizer.h"
 #include "term.h"
 #include "tokenizer.h"
 
@@ -16,10 +17,11 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
     uint32_t max_docid;
     uint64_t posting_list_offset;
     uint64_t position_list_offset;
-  };
+  }__attribute__((packed));
 
  public:
   InvertFieldsIndexWriter();
+  InvertFieldsIndexWriter(std::unique_ptr<Tokenizer> tokenizer);
   virtual ~InvertFieldsIndexWriter();
   void flush(FieldInfo fi, uint32_t max_doc,
              const IndexOption& option) override;
@@ -29,7 +31,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
   TermReader* get_reader(Term* term) override;
 
  private:
-  Tokenizer* tokenizer_;
+  std::unique_ptr<Tokenizer> tokenizer_;
   std::unordered_map<std::string, std::vector<uint32_t>> posting_lists_;
   std::unordered_map<std::string, std::vector<std::vector<uint32_t>>>
       position_lists_;

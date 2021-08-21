@@ -71,7 +71,7 @@ int HashDB::save_meta(bool finish) {
 int HashDB::load_meta() {
   char meta[METADATA_SIZE];
   int ret = file_->read(0, meta, METADATA_SIZE);
-  if (ret != 0) {
+  if (ret != METADATA_SIZE) {
     return ret;
   }
   if (std::memcmp(meta, META_MAGIC_DATA, sizeof(META_MAGIC_DATA)) != 0) {
@@ -144,7 +144,7 @@ int HashDB::init() {
   while (size > 0) {
     const int64_t write_size = std::min<int64_t>(size, PAGE_SIZE);
     ret = file_->write(offset, empty.data(), write_size);
-    if (ret != 0) {
+    if (ret <= 0) {
       break;
     }
     offset += write_size;
@@ -162,6 +162,8 @@ int64_t HashDB::read_bucket_index(int index) {
   int offset = METADATA_SIZE + index * offset_width_;
   string buf;
   int ret = file_->read(offset, buf, offset_width_);
+  LOG_ERROR_IF(ret < 0, "read offset");
+  if (ret < 0) return ret;
   int64_t new_offset = 0;
   memcpy(&new_offset, buf.data(), offset_width_);
   return new_offset;
@@ -179,13 +181,14 @@ int HashDB::read_bucket_keys(int index, std::set<string>& keys) {
     while (current_offset > 0) {
       string buf;
       status = file_->read(current_offset, buf, sizeof(record_header));
-      if (status != 0) return status;
+      if (status <= 0) return status;
       const record_header* rh = (record_header*)(const_cast<char*>(buf.data()));
       cout << "rh keysize:" << rh->key_size_
            << ",child offset:" << rh->child_offset_ << endl;
       string current_key;
       status = file_->read(current_offset + sizeof(record_header), current_key,
                            rh->key_size_);
+      LOG_ERROR_IF(status <= 0, "read current key error");
       int type = rh->type_;
       switch (type) {
         case 0:
@@ -219,11 +222,11 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
                         size_t& old_value_size, bool& deleted) {
   current_offset = bottom_offset;
   int status = 0;
-  cout << "bottom offset:" << bottom_offset << endl;
+  // cout << "bottom offset:" << bottom_offset << endl;
   while (current_offset > 0) {
     string buf;
     status = file_->read(current_offset, buf, sizeof(record_header));
-    if (status != 0) return status;
+    if (status <= 0) return status;
     const record_header* rh = (record_header*)(const_cast<char*>(buf.data()));
     cout << "rh keysize:" << rh->key_size_
          << ",child offset:" << rh->child_offset_ << endl;
@@ -233,7 +236,8 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
       string current_key;
       status = file_->read(current_offset + sizeof(record_header), current_key,
                            rh->key_size_);
-      if (status != 0) {
+      if (status <= 0) {
+        LOG_ERROR("read key error");
         return status;
       }
       cout << "current_key:" << current_key << endl;
@@ -250,7 +254,6 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
           status = file_->read(
               current_offset + sizeof(record_header) + rh->key_size_, *value,
               rh->value_size_);
-          cout << "value:" << *value << endl;
         }
         return status;
       }
@@ -268,9 +271,7 @@ int HashDB::append_record(char type, const std::string& key,
                      key.size() + value.size();
   const int32_t align = 1 << align_pow_;
   size_t real_size = round(base_size, align);
-  // char* buf = new char[real_size];
-  unique_ptr<char[]> arr(new char[real_size]);
-  cout << "base_size:" << base_size << ",real_size:" << real_size << endl;
+  unique_ptr<char[]> arr(new char[real_size]());
   char* buf = arr.get();
   record_header* rh = (record_header*)buf;
   rh->type_ = type;
@@ -278,7 +279,6 @@ int HashDB::append_record(char type, const std::string& key,
 
   size_t key_size = key.size();
   rh->key_size_ = key_size;
-  cout << "key size:" << key_size << endl;
   size_t value_size = value.size();
   rh->value_size_ = value_size;
   buf += sizeof(record_header);
@@ -288,7 +288,6 @@ int HashDB::append_record(char type, const std::string& key,
   buf += value_size;
 
   int status = file_->append(arr.get(), real_size, offset);
-  // delete[] start;
   return status;
 }
 
@@ -299,7 +298,7 @@ int HashDB::delete_record(const std::string& key, int64_t old_offset,
   bool deleted = false;
   int status = find_record(old_offset, key, parent_offset, current_offset,
                            child_offset, nullptr, old_value_size, deleted);
-  if (status == 0 && current_offset != 0) {
+  if (status >= 0 && current_offset != 0) {
     status = write_child_offset(parent_offset, child_offset);
   }
   return status;
@@ -367,29 +366,37 @@ int HashDB::do_process(int type, const std::string& key,
   int64_t parent_offset = 0;
 
   int status = append_record(type, key, value, &offset);
-  std::cout << "status:" << status << ",offset:" << offset
-            << ",old offset:" << old_offset << ",bucket_index:" << bucket_index
-            << std::endl;
+  //std::cout << "status:" << status << ",offset:" << offset
+    //      << ",old offset:" << old_offset << ",bucket_index:" << bucket_index
+      //  << std::endl;
   int64_t current_offset = -1;
   size_t old_value_size = 0;
 
-  if (status == 0) {
+  if (status > 0) {
+    // update the bucket index,the offset is the last record's initial size
     status = write_bucket_index(bucket_index, offset);
-    if (status == 0) {
+    if (status > 0) {
+      // delete from the list when update previously
       status = delete_record(key, old_offset, offset, current_offset,
                              old_value_size);
+    } else {
+      LOG_ERROR("write bucket index error");
+      return -1;
     }
+  } else {
+    LOG_ERROR("append_record error");
+    return -1;
   }
 
-  std::cout << "current_offset after do process:" << current_offset
-            << ",old_value_size:" << old_value_size << endl;
-  if (status == 0) {
+  // std::cout << "current_offset after do process:" << current_offset
+  //        << ",old_value_size:" << old_value_size << endl;
+  if (status >= 0) {
     switch (type) {
       case 0: {
         if (current_offset == 0) {
           eff_data_size_ += key.size() + value.size();
           num_records_.fetch_add(1);
-        } else {
+        } else {//exists
           eff_data_size_ += value.size() - old_value_size;
         }
         break;
@@ -404,8 +411,10 @@ int HashDB::do_process(int type, const std::string& key,
       default:
         break;
     }
+  } else {
+    return -1;
   }
-  return status;
+  return 0;
 }
 
 int HashDB::do_read(int type, const std::string& key, std::string& value) {
@@ -421,13 +430,13 @@ int HashDB::do_read(int type, const std::string& key, std::string& value) {
   bool deleted = false;
   switch (type) {
     case 2: {
-      find_record(old_offset, key, parent_offset, current_offset, child_offset,
-                  &value, old_value_size, deleted);
+      status = find_record(old_offset, key, parent_offset, current_offset,
+                           child_offset, &value, old_value_size, deleted);
       break;
     }
     case 3: {
-      find_record(old_offset, key, parent_offset, current_offset, child_offset,
-                  nullptr, old_value_size, deleted);
+      status = find_record(old_offset, key, parent_offset, current_offset,
+                           child_offset, nullptr, old_value_size, deleted);
       break;
     }
     default:
@@ -436,13 +445,16 @@ int HashDB::do_read(int type, const std::string& key, std::string& value) {
   std::cout << "status:" << status << ",current_offset" << current_offset
             << ",offset:" << offset << ",bucket_index:" << bucket_index
             << std::endl;
+
+  if (status < 0) return status;
+
   if (current_offset == 0) {
     if (deleted)
       return 2;
     else
       return 1;
   }
-  return status;
+  return 0;
 }
 
 int HashDB::get(const std::string& key, std::string& value) {

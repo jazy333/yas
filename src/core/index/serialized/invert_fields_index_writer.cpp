@@ -10,7 +10,12 @@
 #include "variable_byte_compression.h"
 
 namespace yas {
-InvertFieldsIndexWriter::InvertFieldsIndexWriter() {}
+InvertFieldsIndexWriter::InvertFieldsIndexWriter()
+    : tokenizer_(std::unique_ptr<Tokenizer>(new SimpleTokenizer(2))) {}
+
+InvertFieldsIndexWriter::InvertFieldsIndexWriter(
+    std::unique_ptr<Tokenizer> tokenizer)
+    : tokenizer_(std::move(tokenizer)) {}
 
 InvertFieldsIndexWriter::~InvertFieldsIndexWriter() {}
 
@@ -20,7 +25,7 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   std::string db_path = option.dir + "/" + option.segment_prefix +
                         std::to_string(option.current_segment_no) + ".hdb";
   db->open(db_path);
-  size_t unit_reserve_size = 1024;
+  size_t unit_reserve_size = 2000;
   uint8_t* unit = new uint8_t[unit_reserve_size];
   for (auto&& item : posting_lists_) {
     std::string key = item.first;
@@ -54,7 +59,7 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
         bc_posting_list.compress(docids.data() + i, unit_docid_num, unit,
                                  unit_reserve_size);
 
-        bc_posting_list.set_init(docids[i]);
+        bc_posting_list.set_init(entry.max_docid);
       } else {
         vbc_delta.compress(docids.data() + i, unit_docid_num, unit,
                            unit_reserve_size);
@@ -66,7 +71,8 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
       jump_table.push_back(entry);  // positions list offset
       std::vector<uint32_t> position_lens;
       for (int j = i; j < i + unit_docid_num; ++j) {
-        size_t one_doc_positions_len = positions[j].size() * 2 * 4;
+        size_t one_doc_positions_len =
+            positions[j].size() * 2 * sizeof(uint32_t);
         uint8_t* one_doc_positions = new uint8_t[one_doc_positions_len];
         vbc_delta.compress(positions[j].data(), positions[j].size(),
                            one_doc_positions, one_doc_positions_len);
@@ -74,12 +80,11 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
         compressed_positionlist_buffer.insert(
             compressed_positionlist_buffer.end(), one_doc_positions,
             one_doc_positions + one_doc_positions_len);
-        position_lens.push_back(one_doc_positions_len);
         delete[] one_doc_positions;
       }
 
       // compress position lens
-      unit_reserve_size = 1024;
+      unit_reserve_size = 2000;
 
       if (unit_docid_num == 128) {
         bc_position_length.compress(position_lens.data(), unit_docid_num, unit,
@@ -113,16 +118,26 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     uint64_t position_list_offset =
         jump_table_entry_count * sizeof(JumptTableEntry) +
         compressed_postinglist_buffer.size();
-    buffer.append(&posting_list_offset, sizeof(uint64_t));
-    buffer.append(&position_list_offset, sizeof(uint64_t));
-    buffer.append(&jump_table_entry_count, 4);
+    buffer.append(&posting_list_offset, sizeof(posting_list_offset));
+    buffer.append(&position_list_offset, sizeof(position_list_offset));
+    buffer.append(&jump_table_entry_count, sizeof(jump_table_entry_count));
+
     buffer.append(jump_table.data(),
                   jump_table_entry_count * sizeof(JumptTableEntry));
     buffer.append(compressed_postinglist_buffer.data(),
                   compressed_postinglist_buffer.size());
     buffer.append(compressed_positionlist_buffer.data(),
                   compressed_positionlist_buffer.size());
-    db->set(key, buffer.content(), buffer.size());
+    std::string value;
+    value.append(buffer.content(), buffer.size());
+    db->set(key, value);
+    LOG_INFO(
+        "key=%s,value "
+        "size=%lu,max_doc=%u,doc_num=%d,last_unit_docids_compress_size=%u,last_"
+        "unit_positions_compress_size=%u,jump_table_entry_count=%d",
+        key.c_str(), buffer.size(), max_doc, doc_num,
+        last_unit_docids_compress_size,
+        last_unit_positions_compress_size,jump_table_entry_count);
   }
   delete[] unit;
   db->close();

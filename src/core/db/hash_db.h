@@ -16,6 +16,7 @@
 #include "core/algorithm/murmur_hash2.h"
 #include "db.h"
 #include "mmap_file.h"
+#include "log.h"
 
 namespace yas {
 

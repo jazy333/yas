@@ -18,4 +18,12 @@ set(LIB_SERIALIZED_INDEX_SRC invert_fields_index_writer.cpp block_term_reader.cp
 
 add_library(serialized_index SHARED ${LIB_SERIALIZED_INDEX_SRC})
 
-target_link_libraries(serialized_index common pthread algorithm hash_db compression)
+target_link_libraries(serialized_index common pthread algorithm 
+                        hash_db compression tokenizer document
+                        memory_index)
+
+#unit test
+set (TEST_SERIALIZED_SRC invert_fields_index_writer_test.cpp 
+                        serialized_invert_fields_index_reader_test.cpp)
+add_executable(serialized_index_test ${TEST_SERIALIZED_SRC}) 
+target_link_libraries(serialized_index_test gtest gtest_main serialized_index document  )
