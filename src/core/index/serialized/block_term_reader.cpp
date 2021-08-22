@@ -58,7 +58,7 @@ void BlockTermReader::next_unit(uint32_t target) {
     read_data();
   }
 
-  // not not entry,return
+  // not get entry,return
   if (!entries_) {
     return;
   }
@@ -86,6 +86,8 @@ void BlockTermReader::next_unit(uint32_t target) {
 
     current_jump_table_entry_index_ = current_entry_ - entries_;
     current_unit_max_docid_ = current_entry_->max_docid;
+
+    //decompress posting list data
     uint8_t* position_len_start = nullptr;
     size_t in_size = 0;
     size_t out_size = current_unit_docids_.size() * sizeof(uint32_t);
@@ -96,13 +98,15 @@ void BlockTermReader::next_unit(uint32_t target) {
       position_len_start = sbc.decompress(
           posting_list_data_start + current_entry_->posting_list_offset,
           in_size, current_unit_docids_.data(), out_size);
-      sbc.set_init(*(current_unit_docids_.rbegin()));
+      sbc.set_init(*(current_unit_docids_.rbegin()));//set next unit 's first docid
     } else {
       in_size = meta_->last_unit_posting_list_compress_size;
       position_len_start = vbc.decompress(
           posting_list_data_start + current_entry_->posting_list_offset,
           in_size, current_unit_docids_.data(), out_size);
     }
+
+    //decompress position lens
     unit_size_ = out_size;
     std::vector<uint32_t> position_lens(128);
     size_t position_lens_len = 4 * 128;
@@ -111,10 +115,12 @@ void BlockTermReader::next_unit(uint32_t target) {
       sbc_position_lens.decompress(position_len_start, in_size,
                                    position_lens.data(), position_lens_len);
     else {
-      in_size = meta_->last_unit_position_compress_size;
+      in_size = meta_->last_unit_position_lens_compress_size;
       vbc_no_delta.decompress(position_len_start, in_size, position_lens.data(),
                               position_lens_len);
     }
+
+    //decompress position data
     uint64_t position_data_offset = sizeof(InvertIndexMeta) + meta_->position_list_start +
                                     current_entry_->position_list_offset;
     uint8_t* position_data_start =
@@ -122,10 +128,9 @@ void BlockTermReader::next_unit(uint32_t target) {
         position_data_offset;
     for (int i = 0; i < unit_size_; ++i) {
       size_t len = position_lens[i];
-      size_t freq = len;
-      std::vector<uint32_t> positions(len);
+      std::vector<uint32_t> positions(len,0);
       position_data_start =
-          vbc.decompress(position_data_start, len, positions.data(), freq);
+          vbc.decompress(position_data_start, len, positions.data(), len);
       current_unit_positions_.push_back(std::move(positions));
     }
   } else {
@@ -135,14 +140,15 @@ void BlockTermReader::next_unit(uint32_t target) {
 
 uint32_t BlockTermReader::advance(uint32_t target) {
   current_unit_position_index_ = 0;
-  if (docid_ == NDOCID) return NDOCID;
 
   if (target > current_unit_max_docid_) {
     next_unit(target);
   }
 
+  if (docid_ == NDOCID) return NDOCID;
+
   auto iter = std::lower_bound(current_unit_docids_.begin(),
-                               current_unit_docids_.end(), target);
+                               current_unit_docids_.begin()+unit_size_, target);
   if (iter != current_unit_docids_.end()) {
     current_unit_index_ = std::distance(iter, current_unit_docids_.begin());
     docid_ = current_unit_docids_[current_unit_index_];

@@ -19,7 +19,7 @@ class BlockTermReader : public TermReader {
     uint32_t max_doc;
     uint64_t doc_num;
     uint32_t last_unit_posting_list_compress_size;
-    uint32_t last_unit_position_compress_size;
+    uint32_t last_unit_position_lens_compress_size;
     uint64_t posting_list_start;
     uint64_t position_list_start;
     int jump_table_entry_count;

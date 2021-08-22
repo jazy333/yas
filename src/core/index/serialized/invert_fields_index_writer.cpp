@@ -36,7 +36,7 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     SIMDBinaryCompression<true> bc_posting_list;
     SIMDBinaryCompression<false> bc_position_length;
     VariableByteCompression<true> vbc_delta;
-    VariableByteCompression<true> vbc_no_delta;
+    VariableByteCompression<false> vbc_no_delta;
     std::vector<uint8_t> compressed_postinglist_buffer;
     std::vector<uint8_t> compressed_positionlist_buffer;
     std::vector<JumptTableEntry> jump_table;
@@ -46,7 +46,7 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     size_t unit_docid_num = 0;
     for (int i = 0; i < doc_num; i += unit_docid_num) {
       JumptTableEntry entry;
-      unit_reserve_size = 1024;
+      unit_reserve_size = 2000;
       if (i + 128 <= doc_num) {
         unit_docid_num = 128;
       } else {
@@ -55,6 +55,7 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
       entry.max_docid = docids[i + unit_docid_num - 1];
       entry.posting_list_offset = compressed_postinglist_buffer.size();
 
+      // compress docids
       if (unit_docid_num == 128) {
         bc_posting_list.compress(docids.data() + i, unit_docid_num, unit,
                                  unit_reserve_size);
@@ -67,8 +68,11 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
       }
       compressed_postinglist_buffer.insert(compressed_postinglist_buffer.end(),
                                            unit, unit + unit_reserve_size);
-      entry.position_list_offset = compressed_positionlist_buffer.size();
-      jump_table.push_back(entry);  // positions list offset
+
+      // comress positions
+      entry.position_list_offset =
+          compressed_positionlist_buffer.size();  // positions list offset
+      jump_table.push_back(entry);
       std::vector<uint32_t> position_lens;
       for (int j = i; j < i + unit_docid_num; ++j) {
         size_t one_doc_positions_len =
@@ -77,9 +81,17 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
         vbc_delta.compress(positions[j].data(), positions[j].size(),
                            one_doc_positions, one_doc_positions_len);
         position_lens.push_back(one_doc_positions_len);
+#if 0
+        for(int k=0;k<positions[j].size();++k){
+          LOG_INFO("one_doc_positions[%d]:%d",i,one_doc_positions[k]);
+        }
+        LOG_INFO("one_doc_positions_len:%d,key=%s",one_doc_positions_len,key.c_str());
+
+#endif
         compressed_positionlist_buffer.insert(
             compressed_positionlist_buffer.end(), one_doc_positions,
             one_doc_positions + one_doc_positions_len);
+
         delete[] one_doc_positions;
       }
 
@@ -93,6 +105,16 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
       } else {
         vbc_no_delta.compress(position_lens.data(), unit_docid_num, unit,
                               unit_reserve_size);
+#if 0
+        for(int k=0;k<position_lens.size();++k){
+          LOG_INFO("position_lens[%d]:%d",k,position_lens[k]);
+        }
+        LOG_INFO(
+            "key=%s,position_lens.size=%d,unit_docid_num=%d,unit_reserve_size=%"
+            "d",
+            key.c_str(), position_lens.size(), unit_docid_num,
+            unit_reserve_size);
+#endif
         last_unit_positions_compress_size = unit_reserve_size;
       }
       compressed_postinglist_buffer.insert(compressed_postinglist_buffer.end(),
@@ -131,13 +153,13 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     std::string value;
     value.append(buffer.content(), buffer.size());
     db->set(key, value);
-    LOG_INFO(
+    LOG_DEBUG(
         "key=%s,value "
         "size=%lu,max_doc=%u,doc_num=%d,last_unit_docids_compress_size=%u,last_"
         "unit_positions_compress_size=%u,jump_table_entry_count=%d",
         key.c_str(), buffer.size(), max_doc, doc_num,
-        last_unit_docids_compress_size,
-        last_unit_positions_compress_size,jump_table_entry_count);
+        last_unit_docids_compress_size, last_unit_positions_compress_size,
+        jump_table_entry_count);
   }
   delete[] unit;
   db->close();
