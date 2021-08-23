@@ -10,7 +10,7 @@ class FileSlice {
   void read(T& val) {
     static_assert(std::is_integral<T>::value,
                   "file slice read only support:integral");
-    file_->read(off_, &val, sizeof(T));
+    file_->read(original_off_ + off_, &val, sizeof(T));
     off_ += sizeof(T);
   }
 
@@ -18,7 +18,7 @@ class FileSlice {
   void read(loff_t off, T& val) {
     static_assert(std::is_integral<T>::value,
                   "file slice read only support:integral");
-    file_->read(off, &val, sizeof(T));
+    file_->read(original_off_ + off, &val, sizeof(T));
   }
   int read(void* buf, size_t size);
   int read(loff_t off, void* buf, size_t size);
@@ -28,6 +28,7 @@ class FileSlice {
  private:
   File* file_;
   loff_t off_;
+  loff_t original_off_;
   loff_t length_;
 };
 }  // namespace yas

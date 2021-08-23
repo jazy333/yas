@@ -1,5 +1,7 @@
 #include "roaring_posting_list.h"
 
+#include <algorithm>
+
 #include "file_slice.h"
 #include "fixed_bit_set.h"
 
@@ -8,13 +10,16 @@ RoaringPostingList::RoaringPostingList(File* in, uint64_t off, uint64_t length,
                                        int jump_table_entry_count, long cost)
     : docid_(0),
       cost_(cost),
+      block_(-1),
+      block_start_cardinality_(0),
       jump_table_entry_count_(jump_table_entry_count),
       in_(in) {
   size_t jump_table_length = jump_table_entry_count * 2 * sizeof(int);
   loff_t jump_off = length - jump_table_length;
   jump_table_slice_ = std::unique_ptr<FileSlice>(
       new FileSlice(in, jump_off, jump_table_length));
-  block_slice_ = std::unique_ptr<FileSlice>(new FileSlice(in, off, length));
+  block_slice_ = std::unique_ptr<FileSlice>(
+      new FileSlice(in, off, length - jump_table_length));
 }
 
 RoaringPostingList::~RoaringPostingList() {}
@@ -26,11 +31,15 @@ bool RoaringPostingList::advance_exact_in_block(uint32_t target) {
   switch (type_) {
     case 0: {
       uint16_t doc;
-      uint32_t next_index = index_ + cardinality_;
-      for (; index_ < next_index; ++index_) {
-        block_slice_->read(doc);
-        if (doc >= target_in) {
-          docid_ = block_ << 16 | doc;
+      std::vector<uint16_t> docids(cardinality_ + 1, 0);
+      block_slice_->read(block_slice_->seek(), docids.data(),
+                         docids.size() * sizeof(uint16_t));
+      auto iter = std::lower_bound(docids.begin(), docids.end(), target_in);
+      if (iter != docids.end()) {
+        if (*iter == target_in) {
+          size_t distance = iter - docids.begin();
+          index_ = block_start_cardinality_ + distance;
+          docid_ = block_ << 16 | *iter;
           return true;
         }
       }
@@ -38,21 +47,31 @@ bool RoaringPostingList::advance_exact_in_block(uint32_t target) {
     }
     case 1: {
       docid_ = target;
-      index_ += target_in;
+      index_ = block_start_cardinality_ + target_in;
       return true;
     }
     case 2: {
-      int bit_index = target_in >> 6;
-      int word_index = target_in % 64;
+      int bit_index = (target_in) >> 6;
+      int word_index = (target_in) % 64;
       uint64_t word;
-      uint16_t min;
-      block_slice_->read(min);
-      block_slice_->read(bit_index * sizeof(uint64_t), word);
+
+      block_slice_->read(block_slice_->seek() + bit_index * sizeof(uint64_t),
+                         word);
       // TODO:find the next valid docid
-      word = word >> word_index;
-      if (word & 1) {
+      uint64_t left = word >> word_index;
+      if (left & 1) {
         docid_ = target;
-        index_ += target_in;
+        int index = 0;
+        std::vector<uint64_t> bits(bit_index + 1, 0);
+        block_slice_->read(block_slice_->seek(), bits.data(),
+                           bits.size() * sizeof(uint64_t));
+        for (int i = 0; i < bit_index; ++i) {
+          uint64_t tmp = bits[i];
+          index += __builtin_popcountl(tmp);
+        }
+
+        index += __builtin_popcountl(word << (64 - word_index));
+        index_ = block_start_cardinality_ + index;
         return true;
       } else {
         return false;
@@ -67,16 +86,18 @@ bool RoaringPostingList::advance_exact_in_block(uint32_t target) {
 int RoaringPostingList::read_block_header() {
   uint16_t block;
   block_slice_->read(block);
+  block_ = block;
   block_slice_->read(cardinality_);
   int num = cardinality_ + 1;
-  if (num < 4096) {
+  if (num <= 4096) {  // sparse
     type_ = 0;
     block_end_ = block_slice_->seek() + (num << 1);  // uint16,sizeof==2
-  } else if (num == 65536) {
+  } else if (num == 65536) {                         // all
     type_ = 1;
     block_end_ = block_slice_->seek();
-  } else {
+  } else {  // dense
     type_ = 2;
+    block_slice_->read(min_);
     block_end_ = block_slice_->seek() + (num + 1) * 8 / 64;
   }
   return 0;
@@ -84,17 +105,19 @@ int RoaringPostingList::read_block_header() {
 
 int RoaringPostingList::advance_block(uint32_t target) {
   int block = target >> 16 & 0x0000ffff;
-  if (block > jump_table_entry_count_) block = jump_table_entry_count_ - 1;
+  // target greater than max docid
+  if (block >= jump_table_entry_count_) block = jump_table_entry_count_ - 1;
   int offset;
   uint64_t start_offset = block * 2 * sizeof(int);
-  jump_table_slice_->read(start_offset, index_);  // total cardinality
+  jump_table_slice_->read(start_offset,
+                          block_start_cardinality_);  // total cardinality
   jump_table_slice_->read(start_offset + sizeof(int), offset);
   block_slice_->seek(offset);
   return read_block_header();
 }
 
 uint32_t RoaringPostingList::advance(uint32_t target) {
-  uint16_t block = target >> 16 & 0xffff;
+  int block = target >> 16 & 0xffff;
   if (block_ < block) {
     advance_block(block);
   }
@@ -107,8 +130,8 @@ uint32_t RoaringPostingList::advance(uint32_t target) {
 }
 
 bool RoaringPostingList::advance_exact(uint32_t target) {
-  uint16_t target_block = target >> 16 & 0xffff;
-  if (block_ < target_block) {
+  int target_block = target >> 16 & 0x0000ffff;
+  if (block_ != target_block) {
     advance_block(target);
   }
   if (block_ == target_block && advance_exact_in_block(target))
@@ -135,30 +158,38 @@ void RoaringPostingList::flush(File* out, std::vector<uint32_t>& docids,
   out->append(&cardi, 2);  // cardinality-1
 
   if (cardi > 4095) {  // dense
-    if (cardi != 66535) {
-      uint16_t min = (docids[from] >> 16) & 0xffff;
-      uint16_t max = (docids[to - 1] >> 16) & 0xffff;
+    if (cardi != 65535) {
+      uint16_t min = (docids[from]) & 0xffff;
+      uint16_t max = (docids[to - 1]) & 0xffff;
       uint16_t bit_num = max - min;
-      FixedBitSet bitset(bit_num);
+      FixedBitSet bitset(65536);
       out->append(&min, sizeof(min));
 
-      for (; from < to; ++from) {
-        bitset.set(((docids[from] >> 16) & 0xffff) - min);
+      for (int i = from; i < to; ++i) {
+        uint16_t docid_in_block = docids[i] & 0x0000ffff;
+        bitset.set(docid_in_block);
       }
       uint64_t* bits = bitset.bits();
       uint16_t cap = static_cast<uint16_t>(bitset.capcity());
       out->append(bits, cap * sizeof(uint64_t));
     }  // full,do nothing
 
-  } else {
-    out->append(docids.data(), (to - from) * sizeof(uint32_t));
+  } else {  // sparse
+    // out->append(docids.data(), (to - from) * sizeof(uint32_t));
+    std::vector<uint16_t> docids_in_block;
+    for (; from < to; ++from) {
+      uint16_t docid_in_block = docids[from] & 0x0000ffff;
+      docids_in_block.push_back(docid_in_block);
+    }
+    out->append(docids_in_block.data(),
+                docids_in_block.size() * sizeof(uint16_t));
   }
 }
 
 uint16_t RoaringPostingList::flush_jumps(File* out,
                                          std::vector<int>& jump_tables) {
   out->append(jump_tables.data(), jump_tables.size() * sizeof(int));
-  return static_cast<uint16_t>(jump_tables.size());
+  return static_cast<uint16_t>(jump_tables.size() / 2);
 }
 
 void RoaringPostingList::add_jumps(std::vector<int>& jump_tables, int from,

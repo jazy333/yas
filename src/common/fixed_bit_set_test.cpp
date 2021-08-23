@@ -21,6 +21,13 @@ TEST(FixedBitSet, next) {
   EXPECT_EQ(3, bitset.next(3));
   EXPECT_EQ(-1, bitset.next(4));
   EXPECT_EQ(3, bitset.next(2));
+
+  bitset.set(88);
+  EXPECT_EQ(88, bitset.next(4));
+  EXPECT_EQ(3, bitset.next(2));
+  uint64_t* bits = bitset.bits();
+  EXPECT_EQ(1, __builtin_popcountl(bits[0]));
+  EXPECT_EQ(1, __builtin_popcountl(bits[1]));
 }
 
 }  // namespace yas

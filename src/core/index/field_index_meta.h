@@ -5,7 +5,7 @@
 
 namespace yas {
 struct FieldIndexMeta {
-  int32_t filed_id;
+  int32_t field_id;
   uint8_t type;
   uint64_t docids_offset;
   uint64_t docids_length;

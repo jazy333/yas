@@ -16,15 +16,15 @@ class FixedBitSet : public BitSet {
   virtual ~FixedBitSet() { delete[] bits_; }
 
   void set(uint64_t target) override {
-    int index = target / capcity_;
+    int index = target / kNBits;
     int offset = target % kNBits;
-    bits_[index] |= 1 << offset;
+    bits_[index] |= 1UL << offset;
   }
 
   bool get(uint64_t target) {
-    int index = target / capcity_;
+    int index = target / kNBits;
     int offset = target % kNBits;
-    if (1 << offset & bits_[index]) {
+    if (1UL << offset & bits_[index]) {
       return true;
     } else {
       return false;

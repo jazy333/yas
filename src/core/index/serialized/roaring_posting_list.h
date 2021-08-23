@@ -37,14 +37,16 @@ class RoaringPostingList : public PostingList {
   uint32_t docid_;
   uint32_t index_;
   long cost_;
-  uint16_t block_;
+  int block_;
   uint16_t cardinality_;
+  uint32_t block_start_cardinality_;
   int type_;
   int jump_table_entry_count_;
   File* in_;
   std::unique_ptr<FileSlice> jump_table_slice_;
   std::unique_ptr<FileSlice> block_slice_;
   uint64_t block_end_;
+  uint16_t min_;
 };
 
 }  // namespace yas

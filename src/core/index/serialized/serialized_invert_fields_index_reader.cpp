@@ -1,4 +1,5 @@
 #include "serialized_invert_fields_index_reader.h"
+
 #include "block_term_reader.h"
 #include "hash_db.h"
 
