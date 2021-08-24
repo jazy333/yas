@@ -49,7 +49,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     fvm->append(&offset, sizeof(offset));  // field data offset
     // docids index with roaring doclists
     uint16_t jump_table_entry_count = RoaringPostingList::flush(fvd, docids_);
-    size_t size = fvd->size();
+    size_t size = fvd->size()-offset;
     fvm->append(&size, sizeof(size));  // docids length
     fvm->append(
         &jump_table_entry_count,
@@ -66,7 +66,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   for (int i = 0; i < values_.size(); ++i) {
     fvd->append(values_[i].data(), values_[i].size());
     if (min_length_ != max_length_) {
-      lens[i] = lens[i - 1] + values_[i].size();
+      lens[i+1] = lens[i] + values_[i].size();
     }
   }
   offset = fvd->size() - offset;

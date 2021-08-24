@@ -5,10 +5,10 @@ NumericFieldIndexReader::NumericFieldIndexReader(NumericFieldMeta* meta,
                                                  File* fvd)
     : meta_(meta) {
   field_values_slice_ = std::unique_ptr<FileSlice>(new FileSlice(
-      fvd, meta_->field_values_data_len, meta_->field_values_data_offset));
-  if (meta_->docids_offset != 0)
+      fvd, meta_->field_values_data_offset, meta_->field_values_data_len));
+  if (meta_->docids_length != 0)
     posting_lists_ = std::unique_ptr<RoaringPostingList>(new RoaringPostingList(
-        fvd, meta_->docids_offset, meta_->docids_offset,
+        fvd, meta_->docids_offset, meta_->docids_length,
         meta_->jump_table_entry_count, meta_->num_values));
 }
 
@@ -19,7 +19,7 @@ uint64_t NumericFieldIndexReader::get_value(uint32_t index) {
 
   uint64_t total_bits = index * meta_->num_bits;
   int block_index = total_bits / 64;
-  field_values_slice_->seek(block_index);
+  field_values_slice_->seek(block_index*sizeof(uint64_t));
   int bit_index = total_bits % 64;
 
   uint64_t value;
@@ -41,14 +41,16 @@ NumericFieldIndexReader::~NumericFieldIndexReader() {}
 
 void NumericFieldIndexReader::get(uint32_t docid, uint64_t& value) {
   uint32_t index = 0;
-  if (posting_lists_) {
+  if (!posting_lists_) {
     index = docid;
   } else {
     bool exist = posting_lists_->advance_exact(docid);
     if (exist) {
       index = posting_lists_->index();
-    } else
+    } else {
       value = -1;
+      return;
+    }
   }
 
   if (meta_->num_bits == 0) {
@@ -58,5 +60,6 @@ void NumericFieldIndexReader::get(uint32_t docid, uint64_t& value) {
   }
 }
 
-void NumericFieldIndexReader::get(uint32_t docid, std::vector<uint8_t>& value) {}
+void NumericFieldIndexReader::get(uint32_t docid, std::vector<uint8_t>& value) {
+}
 }  // namespace yas

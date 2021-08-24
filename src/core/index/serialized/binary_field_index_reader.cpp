@@ -4,14 +4,14 @@ namespace yas {
 BinaryFieldIndexReader::BinaryFieldIndexReader(BinaryFieldMeta* meta, File* fvd)
     : meta_(meta) {
   field_values_slice_ = std::unique_ptr<FileSlice>(new FileSlice(
-      fvd, meta_->field_values_data_len, meta_->field_values_data_offset));
-  if (meta_->max_len != meta_->max_len) {
+      fvd, meta_->field_values_data_offset, meta_->field_values_data_len));
+  if (meta_->max_len != meta_->min_len) {
     field_values_len_slice_ = std::unique_ptr<FileSlice>(new FileSlice(
         fvd, meta_->field_lengths_data_offset, meta_->field_lengths_data_len));
   }
-  if (meta_->docids_offset != 0)
+  if (meta_->docids_length != 0)
     posting_lists_ = std::unique_ptr<RoaringPostingList>(new RoaringPostingList(
-        fvd, meta_->docids_offset, meta_->docids_offset,
+        fvd, meta_->docids_offset, meta_->docids_length,
         meta_->jump_table_entry_count, meta_->num_values));
 }
 
@@ -25,7 +25,7 @@ uint64_t BinaryFieldIndexReader::get_value(int index) {
   uint64_t mask = ~0L << most_sig_bits;
   mask = mask >> most_sig_bits;
   if (bit_index <= most_sig_bits) {
-    field_values_len_slice_->seek(block_index);
+    field_values_len_slice_->seek(block_index*sizeof(uint64_t));
     uint64_t block_value;
     field_values_len_slice_->read(&block_value, sizeof(block_value));
     return (block_value >> bit_index) & mask;
@@ -40,15 +40,16 @@ uint64_t BinaryFieldIndexReader::get_value(int index) {
 
 void BinaryFieldIndexReader::get(uint32_t docid, std::vector<uint8_t>& value) {
   uint32_t index = 0;
-  if (posting_lists_) {
+  if (!posting_lists_) {
     index = docid;
   } else {
     bool exist = posting_lists_->advance_exact(docid);
     if (exist) {
       index = posting_lists_->index();
-    } else
-      value= {};
+    } else {
+      value = {};
       return;
+    }
   }
 
   if (meta_->max_len != meta_->min_len) {
@@ -59,12 +60,12 @@ void BinaryFieldIndexReader::get(uint32_t docid, std::vector<uint8_t>& value) {
     std::vector<uint8_t> buffer(len, 0);
     field_values_slice_->seek(start_offset);
     field_values_slice_->read(buffer.data(), len);
-    value=buffer;
+    value = buffer;
   } else {
     field_values_slice_->seek(index * meta_->max_len);
     std::vector<uint8_t> buffer(meta_->max_len, 0);
     field_values_slice_->read(buffer.data(), meta_->max_len);
-    value=buffer;
+    value = buffer;
   }
 }
 

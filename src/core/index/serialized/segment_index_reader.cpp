@@ -8,7 +8,11 @@ namespace yas {
 SegmentIndexReader::SegmentIndexReader(
     SegmentFiles files,
     const std::unordered_map<std::string, FieldInfo>& field_infos)
-    : files_(files), field_infos_(field_infos) {}
+    : files_(files), field_infos_(field_infos) {
+  for (auto&& item : field_infos) {
+    id2name_[item.second.get_field_id()] = item.first;
+  }
+}
 
 SegmentIndexReader::~SegmentIndexReader() {}
 
@@ -38,7 +42,7 @@ int SegmentIndexReader::open() {
   invert_fields_index_reader_->open();
 
   field_values_index_reader_ = std::shared_ptr<FieldValuesIndexReader>(
-      new SerializedFieldValuesIndexReader(files_.fvm, files_.fvd));
+      new SerializedFieldValuesIndexReader(files_.fvm, files_.fvd, id2name_));
   field_values_index_reader_->open();
 
   return 0;

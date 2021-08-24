@@ -12,7 +12,7 @@ TEST(SerializedInvertFieldsIndexReader, constructor) {
   Term term("百度", "content");
   TermReader* reader = invert_index_reader.get_reader(&term);
   while (reader->next() != NDOCID) {
-    std::cout << "docid:" << reader->docid() << std::endl;
+    //std::cout << "docid:" << reader->docid() << std::endl;
   }
 }
 }  // namespace yas

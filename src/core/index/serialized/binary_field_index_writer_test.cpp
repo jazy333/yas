@@ -25,11 +25,29 @@ TEST(BinaryFieldIndexWriter, flush) {
   BinaryFieldIndexWriter bfiw;
   for (int i = 0; i < 100; ++i) {
     auto field = std::shared_ptr<TextField>(
-        new TextField("source", std::to_string(i + 100000)));
+        new TextField("binary", std::to_string(i + 100000)));
     bfiw.add(i + 1, field);
   }
 
   FieldInfo fi(113);
+  uint32_t max_doc = 1000;
+  IndexOption option;
+  option.current_segment_no = 1;
+  option.dir = "data/index";
+  option.segment_prefix = "segment.";
+  bfiw.flush(fi, max_doc, option);
+}
+
+
+TEST(BinaryFieldIndexWriter, flush_var) {
+  BinaryFieldIndexWriter bfiw;
+  for (int i = 0; i < 100; ++i) {
+    auto field = std::shared_ptr<TextField>(
+        new TextField("binary_var", std::to_string(i)));
+    bfiw.add(i + 1, field);
+  }
+
+  FieldInfo fi(114);
   uint32_t max_doc = 1000;
   IndexOption option;
   option.current_segment_no = 1;

@@ -12,6 +12,7 @@
 
 #include "common/common.h"
 #include "common/const.h"
+#include "log.h"
 
 namespace yas {
 
@@ -142,7 +143,8 @@ int MMapFile::read(int64_t off, void* buf, size_t size) {
   pthread_rwlock_rdlock(&rwlock_);
   int64_t read_end = off + size;
   if (read_end > file_size_) {
-    std::cout << "read exceed end:" << std::endl;
+    LOG_ERROR("read excced end,read_end=%ld,size=%lu,file_size=%ld", read_end,
+              size, file_size_);
     pthread_rwlock_unlock(&rwlock_);
     return -1;
   }
@@ -159,7 +161,7 @@ int MMapFile::read(int64_t off, void* buf, size_t size) {
 int MMapFile::read(void* buf, size_t size) {
   pthread_rwlock_rdlock(&rwlock_);
   int64_t read_end = offset_ + size;
-  if (read_end >= file_size_) {
+  if (read_end > file_size_) {
     std::cout << "read exceed end:" << std::endl;
     return -1;
     pthread_rwlock_unlock(&rwlock_);
