@@ -31,5 +31,6 @@ class MMapFile : public File {
   bool writable_;
   int32_t open_options_;
   pthread_rwlock_t rwlock_;
+  off_t offset_;
 };
 }  // namespace yas

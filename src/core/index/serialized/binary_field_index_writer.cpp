@@ -37,7 +37,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
 
   size_t num_value = values_.size();
 
-  if (num_value == max_doc) {//TODO:check whether index docids
+  if (docids_.size() == max_doc) {
     uint64_t tmp = -1;
     fvm->append(&tmp, sizeof(tmp));  // docids offset
     tmp = 0;
@@ -71,7 +71,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   }
   offset = fvd->size() - offset;
   fvm->append(&offset, sizeof(offset));  // value data len
-  
+
   if (min_length_ != max_length_) {
     // write value len index compress
     uint8_t max_bits = gccbits(*(lens.rbegin()));
@@ -108,7 +108,7 @@ void BinaryFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
 void BinaryFieldIndexWriter::get(uint32_t docid, std::vector<uint8_t>& value) {
   auto iter = std::lower_bound(docids_.begin(), docids_.end(), docid);
   if (iter != docids_.end()) {
-    int index = std::distance(iter, docids_.begin());
+    int index = std::distance(docids_.begin(), iter);
     value = values_[index];
   }
 

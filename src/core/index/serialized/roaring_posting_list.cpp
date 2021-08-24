@@ -37,7 +37,7 @@ bool RoaringPostingList::advance_exact_in_block(uint32_t target) {
       auto iter = std::lower_bound(docids.begin(), docids.end(), target_in);
       if (iter != docids.end()) {
         if (*iter == target_in) {
-          size_t distance = iter - docids.begin();
+          size_t distance = std::distance(docids.begin(),iter);
           index_ = block_start_cardinality_ + distance;
           docid_ = block_ << 16 | *iter;
           return true;

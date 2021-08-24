@@ -1,7 +1,8 @@
 #include "serialized_field_values_index_reader.h"
+
 #include "binary_field_index_reader.h"
-#include "numeric_field_index_reader.h"
 #include "mmap_file.h"
+#include "numeric_field_index_reader.h"
 
 namespace yas {
 SerializedFieldValuesIndexReader::SerializedFieldValuesIndexReader(
@@ -24,7 +25,7 @@ int SerializedFieldValuesIndexReader::open() {
   field_values_data_ = new MMapFile();
   field_values_data_->open(meta_file_, false);
   while (true) {
-    int field_id;
+    int field_id = -1;
     field_values_meta_->read(&field_id, sizeof(field_id));
     if (field_id == -1) {
       break;
@@ -56,50 +57,53 @@ int SerializedFieldValuesIndexReader::close() {
   return 0;
 }
 
-void SerializedFieldValuesIndexReader::read_numeric(const std::string& field_name) {
+void SerializedFieldValuesIndexReader::read_numeric(
+    const std::string& field_name) {
   NumericFieldMeta* meta = new NumericFieldMeta;
 
   field_values_meta_->read(&meta->docids_offset, sizeof(meta->docids_offset));
   field_values_meta_->read(&meta->docids_length, sizeof(meta->docids_length));
   field_values_meta_->read(&meta->jump_table_entry_count,
-             sizeof(meta->jump_table_entry_count));
+                           sizeof(meta->jump_table_entry_count));
   field_values_meta_->read(&meta->num_values, sizeof(meta->num_values));
   field_values_meta_->read(&meta->num_bits, sizeof(meta->num_bits));
   field_values_meta_->read(&meta->min_value, sizeof(meta->min_value));
   if (meta->num_bits != 0) {
     field_values_meta_->read(&meta->gcd, sizeof(meta->gcd));
     field_values_meta_->read(&meta->field_values_data_offset,
-               sizeof(meta->field_values_data_offset));
+                             sizeof(meta->field_values_data_offset));
     field_values_meta_->read(&meta->field_values_data_len,
-               sizeof(meta->field_values_data_len));
+                             sizeof(meta->field_values_data_len));
   }
   field_index_metas_[field_name] = meta;
 }
 
-void SerializedFieldValuesIndexReader::read_binary(const std::string& field_name) {
+void SerializedFieldValuesIndexReader::read_binary(
+    const std::string& field_name) {
   BinaryFieldMeta* meta = new BinaryFieldMeta();
   field_values_meta_->read(&meta->docids_offset, sizeof(meta->docids_offset));
   field_values_meta_->read(&meta->docids_length, sizeof(meta->docids_length));
   field_values_meta_->read(&meta->jump_table_entry_count,
-             sizeof(meta->jump_table_entry_count));
+                           sizeof(meta->jump_table_entry_count));
   field_values_meta_->read(&meta->num_values, sizeof(meta->num_values));
   field_values_meta_->read(&meta->min_len, sizeof(meta->min_len));
   field_values_meta_->read(&meta->max_len, sizeof(meta->max_len));
   field_values_meta_->read(&meta->field_values_data_offset,
-             sizeof(meta->field_values_data_offset));
-  field_values_meta_->read(&meta->field_values_data_len, sizeof(meta->field_values_data_len));
+                           sizeof(meta->field_values_data_offset));
+  field_values_meta_->read(&meta->field_values_data_len,
+                           sizeof(meta->field_values_data_len));
   if (meta->min_len != meta->max_len) {
     field_values_meta_->read(&meta->field_lengths_num_bits,
-               sizeof(meta->field_lengths_num_bits));
+                             sizeof(meta->field_lengths_num_bits));
     field_values_meta_->read(&meta->field_lengths_data_offset,
-               sizeof(meta->field_lengths_data_offset));
+                             sizeof(meta->field_lengths_data_offset));
     field_values_meta_->read(&meta->field_lengths_data_len,
-               sizeof(meta->field_lengths_data_len));
+                             sizeof(meta->field_lengths_data_len));
   }
 }
 
-std::shared_ptr<FieldValueIndexReader> SerializedFieldValuesIndexReader::get_reader(
-    const std::string& field_name) {
+std::shared_ptr<FieldValueIndexReader>
+SerializedFieldValuesIndexReader::get_reader(const std::string& field_name) {
   FieldIndexMeta* meta = nullptr;
   if (field_index_metas_.count(field_name) == 0) {
     return nullptr;
