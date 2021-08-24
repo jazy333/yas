@@ -1,22 +1,28 @@
 #pragma once
 #include <algorithm>
 
+#include "and_posting_list.h"
 #include "bkd_tree.h"
 #include "field_index_reader.h"
+#include "field_index_writer.h"
+#include "field_info.h"
 #include "file.h"
 #include "memory_points.h"
+#include "none_posting_list.h"
+#include "point_field.h"
 #include "posting_list.h"
+#include "sequence_posting_list.h"
 #include "skip_list.h"
 
 namespace yas {
-template <class T, class D>
+template <class T, int D>
 class PointFieldIndexWriter : public FieldIndexWriter,
                               public PointFieldIndexReader {
  public:
   PointFieldIndexWriter() = default;
   virtual ~PointFieldIndexWriter() = default;
-  void flush(FieldInfo fi, uint32_t max_doc, Index,
-             const IndexWriterOption& option) override {
+  void flush(FieldInfo fi, uint32_t max_doc,
+             const IndexOption& option) override {
     BkdTree<T, D> bkd;
     std::string file_kdm = option.dir + "/" + option.segment_prefix +
                            std::to_string(option.current_segment_no) + ".kdm";
@@ -43,10 +49,10 @@ class PointFieldIndexWriter : public FieldIndexWriter,
   }
 
   void add(uint32_t docid, std::shared_ptr<Field> field) override {
-    PointField<T, D>* pf = dynamic_cast<Point<T, D>*>(field->get());
+    PointField<T, D>* pf = dynamic_cast<PointField<T, D>*>(field.get());
     auto point = pf->get_value();
-    for (int i = 0; i < point.dim(); ++i) {
-      skip_list[i].insert(point.get(i), docid);
+    for (int i = 0; i < D; ++i) {
+      skip_lists_[i].insert(point.get(i), docid);
     }
     point.set_docid(docid);
     points_.write(point);
@@ -72,11 +78,14 @@ class PointFieldIndexWriter : public FieldIndexWriter,
     } else if (pls.size() == 1) {
       return pls[0];
     } else
-      return new AndPostingList(std::move(pls));
+      return new AndPostingList(pls);
   }
+
+  void init(int field_id, PointFieldMeta meta, std::shared_ptr<File> kdi,
+            std::shared_ptr<File> kdd) {}
 
  private:
   MemoryPoints<T, D> points_;
-  SkipList<T, uint32_t> skip_list[D];
+  SkipList<T, uint32_t> skip_lists_[D];
 };
 }  // namespace yas

@@ -7,7 +7,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algori
                     ${CMAKE_SOURCE_DIR}/src/core/search/match ${CMAKE_SOURCE_DIR}/src/core/tokenizer
                     ${CMAKE_SOURCE_DIR}/src/core/document ${CMAKE_SOURCE_DIR}/src/core/compress
                     ${CMAKE_SOURCE_DIR}/src/common   ${CMAKE_SOURCE_DIR}/src/core/search/query
-                    ${CMAKE_SOURCE_DIR}/src/core/search/relevance)
+                    ${CMAKE_SOURCE_DIR}/src/core/search/relevance ${CMAKE_SOURCE_DIR}/src/core/search/match)
 
 set(LIB_SERIALIZED_INDEX_SRC invert_fields_index_writer.cpp block_term_reader.cpp
                             roaring_posting_list.cpp numeric_field_index_writer.cpp
@@ -20,14 +20,15 @@ add_library(serialized_index SHARED ${LIB_SERIALIZED_INDEX_SRC})
 
 target_link_libraries(serialized_index common pthread algorithm 
                         hash_db compression tokenizer document
-                        memory_index)
+                        memory_index match)
 
 #unit test
 set (TEST_SERIALIZED_SRC invert_fields_index_writer_test.cpp 
                         serialized_invert_fields_index_reader_test.cpp
                         roaring_posting_list_test.cpp
                         numeric_field_index_writer_test.cpp binary_field_index_writer_test.cpp
-                        serialized_field_values_index_reader_test.cpp)
+                        serialized_field_values_index_reader_test.cpp
+                        point_field_index_writer_test.cpp)
 
 add_executable(serialized_index_test ${TEST_SERIALIZED_SRC}) 
 target_link_libraries(serialized_index_test gtest gtest_main serialized_index document db)

@@ -20,7 +20,7 @@ class AndPostingList : public PostingList {
   uint32_t do_next();
 
  private:
-  PostingList *lead1_, *lead2_;// minimum cost ,the secodary minimum
+  PostingList *lead1_, *lead2_;  // minimum cost ,the secodary minimum
   std::vector<PostingList *> others_;
   uint32_t docid_;
 };

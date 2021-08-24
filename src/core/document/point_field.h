@@ -2,20 +2,26 @@
 
 #include "field.h"
 #include "field_index_reader.h"
+#include "field_index_writer.h"
+#include "point_field_index_writer.h"
 
 namespace yas {
-template <class T, class D>
+template <class T, int D>
+class PointFieldIndexWriter;
+
+template <class T, int D>
 class PointField : public Field {
+  //class PointFieldIndexWriter<T, D>;
+ public:
   PointField(const std::string& name, const Point<T, D>& value)
       : Field(name), value_(value) {}
   virtual ~PointField() = default;
   Point<T, D> get_value() { return value_; }
   FieldIndexWriter* make_field_index_writer() override {
-    return std::unique_ptr<FieldIndexWriter>(new PointFieldIndexWriter<T, D>);
+    return new PointFieldIndexWriter<T, D>;
   }
 
-  std::unique_ptr<PointFieldIndexReader> make_serialized_field_index_reader()
-      override {
+  std::unique_ptr<PointFieldIndexReader> make_serialized_field_index_reader() {
     return std::unique_ptr<PointFieldIndexReader>(
         new PointFieldIndexWriter<T, D>());
   }
