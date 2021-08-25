@@ -16,12 +16,15 @@
 
 namespace yas {
 template <class T, int D>
+class PointField;
+
+template <class T, int D>
 class PointFieldIndexWriter : public FieldIndexWriter,
                               public PointFieldIndexReader {
  public:
   PointFieldIndexWriter() = default;
   virtual ~PointFieldIndexWriter() = default;
-  
+
   void flush(FieldInfo fi, uint32_t max_doc,
              const IndexOption& option) override {
     BkdTree<T, D> bkd;
@@ -70,6 +73,7 @@ class PointFieldIndexWriter : public FieldIndexWriter,
       std::vector<uint32_t> docids;
       while (low != high) {
         docids.push_back(low->value);
+        low = low->next();
       }
       sort(docids.begin(), docids.end());
       pls.push_back(new SequencePostingList(std::move(docids)));

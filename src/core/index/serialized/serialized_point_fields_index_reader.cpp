@@ -41,17 +41,29 @@ int SerializedPointFieldsIndexReader::open() {
   while (true) {
     PointFieldMeta pfm;
     int ret = kdm_->read_vint(pfm.field_id_, &off);
-    if (pfm.field_id_ == 0) break;
+    if (ret < 0) break;
+    if (pfm.field_id_ == -1) break;
     ret = kdm_->read_vint(pfm.num_dims_, &off);
+    if (ret < 0) break;
     ret = kdm_->read_vint(pfm.max_count_per_leaf_, &off);
+    if (ret < 0) break;
     ret = kdm_->read_vint(pfm.bytes_per_dim_, &off);
+    if (ret < 0) break;
     ret = kdm_->read_vint(pfm.num_leaves_, &off);
+    if (ret < 0) break;
     int bytes_len = pfm.num_dims_ * pfm.bytes_per_dim_;
+    pfm.min_ = new u_char[bytes_len]();
     ret = kdm_->read(pfm.min_, bytes_len, &off);
+    if (ret < 0) break;
+    pfm.max_ = new u_char[bytes_len]();
     ret = kdm_->read(pfm.max_, bytes_len, &off);
+    if (ret < 0) break;
     ret = kdm_->read_vint(pfm.count_, &off);
+    if (ret < 0) break;
     ret = kdm_->read_vint(pfm.data_fp_, &off);
+    if (ret < 0) break;
     ret = kdm_->read_vint(pfm.index_fp_, &off);
+    if (ret < 0) break;
     kdm_infos_[pfm.field_id_] = pfm;
   }
   return 0;

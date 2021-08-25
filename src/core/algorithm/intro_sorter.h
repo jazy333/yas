@@ -24,7 +24,4 @@ class IntroSorter : public Sorter {
   void select(int from, int to, int k, int d, int l, void* cookie);
   int histogram[257];
 };
-
-const int IntroSorter::LEVEL_THRESHOLD = 8;
-const int IntroSorter::LENGTH_THRESHOLD = 16;
 }  // namespace yas

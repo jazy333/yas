@@ -1,7 +1,8 @@
 #pragma once
-#include <cstdint>
-#include <cstddef>
 #include <sys/types.h>
+
+#include <cstddef>
+#include <cstdint>
 
 namespace yas {
 struct FieldIndexMeta {
@@ -33,6 +34,11 @@ struct BinaryFieldMeta : public FieldIndexMeta {
 };
 
 struct PointFieldMeta {
+  PointFieldMeta() : field_id_(-1), min_(nullptr), max_(nullptr) {}
+  ~PointFieldMeta() {
+    if (min_) delete[] min_;
+    if (max_) delete[] max_;
+  }
   int field_id_;
   int num_dims_;
   int max_count_per_leaf_;

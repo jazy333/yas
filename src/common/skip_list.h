@@ -24,7 +24,7 @@ class SkipList {
  public:
   using node_type = SkipListNode<Key, Value>;
 
-  SkipList() : level_(1),size_(0) { head_ = new node_type(kMaxLevel); }
+  SkipList() : level_(1), size_(0) { head_ = new node_type(kMaxLevel); }
 
   ~SkipList() {
     auto cur = head_;
@@ -104,7 +104,8 @@ class SkipList {
                             std::vector<node_type*>* update) {
     if (!start) return nullptr;
     auto cur = start, pre = start;
-    int node_level = start->level.size();
+    int node_level =
+        start->level.size() > level_ ? level_ : start->level.size();
     for (int i = node_level - 1; i >= 0; i--) {
       cur = pre;
       do {
@@ -121,7 +122,8 @@ class SkipList {
   node_type* do_upper_bound(node_type* start, Key up,
                             std::vector<node_type*>* update) {
     if (!start) return nullptr;
-    int node_level = start->level.size();
+    int node_level =
+        start->level.size() > level_ ? level_ : start->level.size();
     auto cur = start, pre = start;
     for (int i = node_level - 1; i >= 0; i--) {
       cur = pre;

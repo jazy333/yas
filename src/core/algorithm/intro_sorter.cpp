@@ -5,6 +5,9 @@
 
 namespace yas {
 
+const int IntroSorter::LEVEL_THRESHOLD = 8;
+const int IntroSorter::LENGTH_THRESHOLD = 16;
+
 void IntroSorter::sort(int from, int to, void* cookie) {
   quick_sort(from, to, 2 * static_cast<int>(log2(to - from)), cookie);
 }

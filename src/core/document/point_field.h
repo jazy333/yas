@@ -11,19 +11,18 @@ class PointFieldIndexWriter;
 
 template <class T, int D>
 class PointField : public Field {
-  //class PointFieldIndexWriter<T, D>;
  public:
   PointField(const std::string& name, const Point<T, D>& value)
       : Field(name), value_(value) {}
+  PointField() : Field("") {}
   virtual ~PointField() = default;
   Point<T, D> get_value() { return value_; }
   FieldIndexWriter* make_field_index_writer() override {
     return new PointFieldIndexWriter<T, D>;
   }
 
-  std::unique_ptr<PointFieldIndexReader> make_serialized_field_index_reader() {
-    return std::unique_ptr<PointFieldIndexReader>(
-        new PointFieldIndexWriter<T, D>());
+  PointFieldIndexReader* make_serialized_field_index_reader() {
+    return new PointFieldIndexWriter<T, D>();
   }
 
  private:

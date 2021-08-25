@@ -28,7 +28,8 @@ set (TEST_SERIALIZED_SRC invert_fields_index_writer_test.cpp
                         roaring_posting_list_test.cpp
                         numeric_field_index_writer_test.cpp binary_field_index_writer_test.cpp
                         serialized_field_values_index_reader_test.cpp
-                        point_field_index_writer_test.cpp)
+                        point_field_index_writer_test.cpp
+                        serialized_point_fields_index_reader_test.cpp)
 
 add_executable(serialized_index_test ${TEST_SERIALIZED_SRC}) 
 target_link_libraries(serialized_index_test gtest gtest_main serialized_index document db)

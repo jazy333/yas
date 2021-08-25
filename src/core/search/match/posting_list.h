@@ -8,6 +8,7 @@
 namespace yas {
 class PostingList : public Scorer {
  public:
+  virtual ~PostingList() = default;
   virtual uint32_t next() = 0;
   virtual uint32_t advance(uint32_t target) = 0;
   virtual uint32_t docid() = 0;

@@ -78,5 +78,5 @@ class Sorter {
  private:
   int _pivot_index;
 };
-const int Sorter::BINARY_SORT_THRESHOLD = 16;
+
 }  // namespace yas
