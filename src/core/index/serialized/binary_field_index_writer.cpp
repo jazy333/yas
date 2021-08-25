@@ -22,12 +22,12 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
                                    const IndexOption& option) {
   std::string file_fvm = option.dir + "/" + option.segment_prefix +
                          std::to_string(option.current_segment_no) + ".fvm";
-  File* fvm = new MMapFile;
+  auto fvm = std::unique_ptr<File>(new MMapFile);
   fvm->open(file_fvm, true);
 
   std::string file_fvd = option.dir + "/" + option.segment_prefix +
                          std::to_string(option.current_segment_no) + ".fvd";
-  File* fvd = new MMapFile;
+  auto fvd = std::unique_ptr<File>(new MMapFile);
   fvd->open(file_fvd, true);
 
   int field_id = fi.get_field_id();
@@ -48,8 +48,8 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     loff_t offset = fvd->size();
     fvm->append(&offset, sizeof(offset));  // field data offset
     // docids index with roaring doclists
-    uint16_t jump_table_entry_count = RoaringPostingList::flush(fvd, docids_);
-    size_t size = fvd->size()-offset;
+    uint16_t jump_table_entry_count = RoaringPostingList::flush(fvd.get(), docids_);
+    size_t size = fvd->size() - offset;
     fvm->append(&size, sizeof(size));  // docids length
     fvm->append(
         &jump_table_entry_count,
@@ -66,7 +66,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   for (int i = 0; i < values_.size(); ++i) {
     fvd->append(values_[i].data(), values_[i].size());
     if (min_length_ != max_length_) {
-      lens[i+1] = lens[i] + values_[i].size();
+      lens[i + 1] = lens[i] + values_[i].size();
     }
   }
   offset = fvd->size() - offset;
@@ -80,7 +80,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     offset = fvd->size();
     fvm->append(&offset, sizeof(offset));  // value lens data offset
     size_t compress_out_size = lens.size();
-    uint64_t* compress_out = new uint64_t[compress_out_size];
+    uint64_t* compress_out = new uint64_t[compress_out_size]();
     compress_out_size = compress_out_size >> 3;
     bc.compress(lens.data(), lens.size(),
                 reinterpret_cast<uint8_t*>(compress_out), compress_out_size);
@@ -88,6 +88,8 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     fvm->append(&compress_out_size, sizeof(compress_out_size));
     delete[] compress_out;
   }
+  fvd->close();
+  fvm->close();
 }
 
 void BinaryFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {

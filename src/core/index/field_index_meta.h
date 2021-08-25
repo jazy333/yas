@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
 namespace yas {
 struct FieldIndexMeta {
@@ -34,11 +35,119 @@ struct BinaryFieldMeta : public FieldIndexMeta {
 };
 
 struct PointFieldMeta {
-  PointFieldMeta() : field_id_(-1), min_(nullptr), max_(nullptr) {}
+  PointFieldMeta()
+      : field_id_(-1),
+        num_dims_(0),
+        max_count_per_leaf_(0),
+        bytes_per_dim_(0),
+        num_leaves_(0),
+        min_(nullptr),
+        max_(nullptr),
+        count_(0),
+        data_fp_(0),
+        index_fp_(0) {}
+
   ~PointFieldMeta() {
     if (min_) delete[] min_;
+    min_ = nullptr;
     if (max_) delete[] max_;
+    max_ = nullptr;
   }
+
+  PointFieldMeta(const PointFieldMeta& other) {
+    field_id_ = other.field_id_;
+    num_dims_ = other.num_dims_;
+    max_count_per_leaf_ = other.max_count_per_leaf_;
+    bytes_per_dim_ = other.bytes_per_dim_;
+    num_leaves_ = other.num_leaves_;
+    min_ = new u_char[bytes_per_dim_ * num_dims_]();
+    memcpy(min_, other.min_, bytes_per_dim_ * num_dims_);
+    max_ = new u_char[bytes_per_dim_ * num_dims_]();
+    memcpy(max_, other.max_, bytes_per_dim_ * num_dims_);
+
+    count_ = other.count_;
+    data_fp_ = other.data_fp_;
+    index_fp_ = other.index_fp_;
+  }
+
+  PointFieldMeta(PointFieldMeta&& other) {
+    field_id_ = other.field_id_;
+    other.field_id_ = -1;
+    num_dims_ = other.num_dims_;
+    other.num_dims_ = 0;
+    max_count_per_leaf_ = other.max_count_per_leaf_;
+    other.max_count_per_leaf_ = 0;
+    bytes_per_dim_ = other.bytes_per_dim_;
+    other.bytes_per_dim_ = 0;
+    num_leaves_ = other.num_leaves_;
+    other.num_leaves_ = 0;
+    if (min_) delete[] min_;
+    min_ = other.min_;
+    other.min_ = nullptr;
+    if (max_) delete[] max_;
+    max_ = other.max_;
+    other.max_ = nullptr;
+    count_ = other.count_;
+    other.count_ = 0;
+    data_fp_ = other.data_fp_;
+    other.data_fp_ = 0;
+    index_fp_ = other.index_fp_;
+    other.index_fp_ = 0;
+  }
+
+  PointFieldMeta& operator=(const PointFieldMeta& other) {
+    if (&other != this) {
+      field_id_ = other.field_id_;
+      num_dims_ = other.num_dims_;
+      max_count_per_leaf_ = other.max_count_per_leaf_;
+      bytes_per_dim_ = other.bytes_per_dim_;
+      num_leaves_ = other.num_leaves_;
+      if (!min_) {
+        min_ = new u_char[bytes_per_dim_ * num_dims_]();
+      }
+      memcpy(min_, other.min_, bytes_per_dim_ * num_dims_);
+
+      if (!max_) {
+        max_ = new u_char[bytes_per_dim_ * num_dims_]();
+      }
+      memcpy(max_, other.max_, bytes_per_dim_ * num_dims_);
+
+      count_ = other.count_;
+      data_fp_ = other.data_fp_;
+      index_fp_ = other.index_fp_;
+    }
+    return *this;
+  }
+
+  PointFieldMeta& operator=(PointFieldMeta&& other) {
+    if (&other != this) {
+      field_id_ = other.field_id_;
+      other.field_id_ = -1;
+      num_dims_ = other.num_dims_;
+      other.num_dims_ = 0;
+      max_count_per_leaf_ = other.max_count_per_leaf_;
+      other.max_count_per_leaf_ = 0;
+      bytes_per_dim_ = other.bytes_per_dim_;
+      other.bytes_per_dim_ = 0;
+      num_leaves_ = other.num_leaves_;
+      other.num_leaves_ = 0;
+      if (min_) delete[] min_;
+      min_ = other.min_;
+      other.min_ = nullptr;
+      if (max_) delete[] max_;
+      max_ = other.max_;
+      other.max_ = nullptr;
+      count_ = other.count_;
+      other.count_ = 0;
+      data_fp_ = other.data_fp_;
+      other.data_fp_ = 0;
+      index_fp_ = other.index_fp_;
+      other.index_fp_ = 0;
+    }
+
+    return *this;
+  }
+
   int field_id_;
   int num_dims_;
   int max_count_per_leaf_;

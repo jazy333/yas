@@ -30,6 +30,7 @@ class SerializedPointFieldIndexReader : public PointFieldIndexReader {
     std::sort(docids.begin(), docids.end());
     return new SequencePostingList(std::move(docids));
   }
+  
   void init(int field_id, PointFieldMeta meta, std::shared_ptr<File> kdi,
             std::shared_ptr<File> kdd) override {
     field_id_ = field_id;

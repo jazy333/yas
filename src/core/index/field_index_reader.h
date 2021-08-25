@@ -25,6 +25,7 @@ class FieldValuesIndexReader {
 
 class PointFieldIndexReader {
  public:
+  virtual ~PointFieldIndexReader()=default;
   virtual PostingList* get(u_char* min, u_char* max) = 0;
   virtual void init(int field_id, PointFieldMeta meta,
                     std::shared_ptr<File> kdi, std::shared_ptr<File> kdd) = 0;

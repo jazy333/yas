@@ -42,6 +42,8 @@ TEST(SerializedPointFieldsIndexReader, get_reader) {
   EXPECT_EQ(100, pl->next());
   EXPECT_EQ(NDOCID, pl->next());
   delete pl;
+
+  delete field_index_reader;
 }
 
 }  // namespace yas
