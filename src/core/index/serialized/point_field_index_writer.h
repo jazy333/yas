@@ -21,6 +21,7 @@ class PointFieldIndexWriter : public FieldIndexWriter,
  public:
   PointFieldIndexWriter() = default;
   virtual ~PointFieldIndexWriter() = default;
+  
   void flush(FieldInfo fi, uint32_t max_doc,
              const IndexOption& option) override {
     BkdTree<T, D> bkd;
