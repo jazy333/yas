@@ -467,7 +467,7 @@ int main(int argc, char* argv[]) {
   File* kdm_in = new MMapFile();
   kdm_in->open("data/yas.kdm", false);
   BkdTree<int, 2> bkd_in(kdm_in, kdi, kdd);
-  vector<int> result_docids;
+  vector<uint32_t> result_docids;
   bkd_in.intersect(field_id, low, high, kdi, kdd, result_docids);
   cout << "interfect result:";
   for (int i = 0; i < result_docids.size(); ++i) {

@@ -50,7 +50,7 @@ class BkdTree {
   BkdTree(PointFieldMeta meta, File* kdi, File* kdd)
       : kdi_(kdi), kdd_(kdd), readable_(true) {
     MetaFieldInfo mfi;
-    mfi.field_id_ = meta.field_id_;
+    mfi.field_id_=meta.field_id_;
     mfi.num_dims_ = meta.num_dims_;
     mfi.max_count_per_leaf_ = meta.max_count_per_leaf_;
     mfi.num_leaves_ = meta.num_leaves_;
@@ -60,7 +60,7 @@ class BkdTree {
     mfi.data_fp_ = meta.data_fp_;
     mfi.index_fp_ = meta.index_fp_;
 
-    kdm_infos_[mfi.field_id] = mfi;
+    kdm_infos_[meta.field_id_] = mfi;
   }
   virtual ~BkdTree() {}
 
@@ -95,7 +95,7 @@ class BkdTree {
     std::vector<int> _right_children;
     std::vector<std::vector<bool>> neg_;
     std::vector<int> _split_dims;
-    std::vector<int> docids_;
+    std::vector<uint32_t> docids_;
     std::vector<value_type> docvalues_;
     value_type _low;
     value_type _high;
@@ -212,7 +212,7 @@ class BkdTree {
       storage->sort(from, to, &sorted_dim);
       int leaf_cardinality =
           storage->get_cardinality(from, to, common_prefix_lengths);
-      std::vector<int> docids;
+      std::vector<uint32_t> docids;
       for (int i = from; i < to; ++i) {
         docids.push_back(storage->get(i).get_docid());
       }
@@ -353,7 +353,7 @@ class BkdTree {
   }
 
   void intersect(int field_id, value_type low, value_type high, File* kdi,
-                 File* kdd, std::vector<int>& docids) {
+                 File* kdd, std::vector<uint32_t>& docids) {
     if (!readable_) {
       return;
     }
@@ -383,13 +383,13 @@ class BkdTree {
     return num_left;
   }
 
-  void write_docids(File* kdd, std::vector<int>& docids) {
+  void write_docids(File* kdd, std::vector<uint32_t>& docids) {
     int count = docids.size();
     if (count == 0) return;
     kdd->write_vint(count);
     bool sorted = true;
-    int pre = docids[0];
-    int min = docids[0];
+    uint32_t pre = docids[0];
+    uint32_t min = docids[0];
     for (int i = 1; i < docids.size(); ++i) {
       if (pre > docids[i]) {
         sorted = false;
@@ -607,7 +607,7 @@ class BkdTree {
   }
 
   void read_uniq_doc_values(IntersectState& is, int count, value_type& uniq,
-                            std::vector<int>& docids) {
+                            std::vector<uint32_t>& docids) {
     if (!(uniq >= is._low && uniq <= is._high)) {
       return;
     }
@@ -619,7 +619,7 @@ class BkdTree {
   void read_low_cardinality_doc_values(IntersectState& is,
                                        std::vector<int>& common_prefixes,
                                        int count, value_type& incomplete_value,
-                                       std::vector<int>& docids) {
+                                       std::vector<uint32_t>& docids) {
     long fp = is._left_fps[is.level_];
     int i;
     for (i = 0; i < count;) {
@@ -649,7 +649,7 @@ class BkdTree {
                                        std::vector<int>& common_prefixes,
                                        int sorted_dim, int count,
                                        value_type& incomplete_value,
-                                       std::vector<int>& docids) {
+                                       std::vector<uint32_t>& docids) {
     // the byte at `offset` is compressed using run-length compression,
     // other suffix bytes are stored verbatim
     long fp = is._left_fps[is.level_];
@@ -683,7 +683,7 @@ class BkdTree {
     is._left_fps[is.level_] = fp;
   }
 
-  void read_doc_values(IntersectState& is, std::vector<int>& docids) {
+  void read_doc_values(IntersectState& is, std::vector<uint32_t>& docids) {
     std::vector<int> common_prefixes;
     value_type incomplete_value;
     read_common_prefixes(is, common_prefixes, incomplete_value);
@@ -714,7 +714,7 @@ class BkdTree {
     }
   }
 
-  void read_docids(IntersectState& is, std::vector<int>& docids) {
+  void read_docids(IntersectState& is, std::vector<uint32_t>& docids) {
     long fp = is._left_fps[is.level_];
     int count = 0;
     int ret = is.kdd_->read_vint(fp, count);
@@ -769,7 +769,7 @@ class BkdTree {
   }
 
   void intersect_one_block(IntersectState& is) {
-    std::vector<int> docids;
+    std::vector<uint32_t> docids;
     read_docids(is, docids);
     read_doc_values(is, docids);
   }

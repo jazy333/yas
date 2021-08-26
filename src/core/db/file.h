@@ -57,10 +57,8 @@ class File {
 
   template <class Type>
   int read_vint(Type& val, loff_t* off) {
-    static_assert(
-        (std::is_same<Type, long>::value || std::is_same<Type, int>::value ||
-         std::is_same<Type, short>::value),
-        "variable length byte read only support:long,int,short");
+    static_assert(std::is_integral<Type>::value,
+                  "File::read_vint only support:integral");
     if (off == nullptr) return -1;
     char one;
     size_t max = sizeof(Type) + 2;
@@ -83,10 +81,8 @@ class File {
 
   template <class Type>
   int write_vint(Type val) {
-    static_assert(
-        (std::is_same<Type, long>::value || std::is_same<Type, int>::value ||
-         std::is_same<Type, short>::value),
-        "variable length byte write only support:long,int,short");
+    static_assert(std::is_integral<Type>::value,
+                  "File::write_vint only support:integral");
     char output[sizeof(Type) + 2];
     int i = 0;
     for (;; ++i) {

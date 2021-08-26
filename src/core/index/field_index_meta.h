@@ -131,10 +131,8 @@ struct PointFieldMeta {
       other.bytes_per_dim_ = 0;
       num_leaves_ = other.num_leaves_;
       other.num_leaves_ = 0;
-      if (min_) delete[] min_;
       min_ = other.min_;
       other.min_ = nullptr;
-      if (max_) delete[] max_;
       max_ = other.max_;
       other.max_ = nullptr;
       count_ = other.count_;

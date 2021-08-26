@@ -4,6 +4,7 @@
 #include "field_index_reader.h"
 #include "field_index_writer.h"
 #include "point_field_index_writer.h"
+#include "serialized_point_field_index_reader.h"
 
 namespace yas {
 template <class T, int D>
@@ -22,7 +23,7 @@ class PointField : public Field {
   }
 
   PointFieldIndexReader* make_serialized_field_index_reader() {
-    return new PointFieldIndexWriter<T, D>();
+    return new SerializedPointFieldIndexReader<T, D>();
   }
 
  private:
