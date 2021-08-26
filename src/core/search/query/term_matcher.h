@@ -8,8 +8,7 @@
 namespace yas {
 class TermMatcher : public Matcher {
  public:
-  TermMatcher(TermReader* term_reader, Relevance* rel,IndexStat* index_stat,
-             TermStat* term_stat);
+  TermMatcher(TermReader* term_reader, Relevance* rel,IndexStat index_stat);
   virtual ~TermMatcher();
   PostingList* posting_list() override;
   Scorer* scorer() override;

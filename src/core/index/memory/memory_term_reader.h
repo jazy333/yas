@@ -17,6 +17,7 @@ class MemoryTermReader : public TermReader {
   float score() override;
   int freq() override;
   int next_postion() override;
+  int doc_freq() override;
 
  private:
   std::vector<uint32_t> posting_lists_;

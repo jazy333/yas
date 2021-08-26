@@ -178,4 +178,8 @@ int BlockTermReader::next_postion() {
                                 [current_unit_position_index_++];
 }
 
+int BlockTermReader::doc_freq(){
+  return num_docs_;
+}
+
 }  // namespace yas

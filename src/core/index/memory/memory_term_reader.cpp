@@ -49,4 +49,8 @@ int MemoryTermReader::next_postion() {
   return position_lists_[index_][position_index_++];
 }
 
+int MemoryTermReader::doc_freq(){
+  return position_lists_.size();
+}
+
 }  // namespace yass

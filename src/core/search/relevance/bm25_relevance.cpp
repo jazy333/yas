@@ -28,10 +28,10 @@ float BM25Relevance::idf(long doc_freq, long doc_count) {
   return (float)log(1 + (doc_count - doc_freq + 0.5) / (doc_freq + 0.5));
 }
 
-RelevanceScorer* BM25Relevance::scorer(float boost, IndexStat* index_stat,
-                                       TermStat* term_stat) {
-  float weight = idf(term_stat->get_doc_freq(), index_stat->doc_count);
-  float avgdl = index_stat->total_term_freq / index_stat->doc_count;
+RelevanceScorer* BM25Relevance::scorer(float boost, IndexStat index_stat,
+                                       TermStat term_stat) {
+  float weight = idf(term_stat.get_doc_freq(), index_stat.doc_count);
+  float avgdl = index_stat.total_term_freq / index_stat.doc_count;
   init_length(avgdl);
   return new  BM25Scorer(weight, part);
 }

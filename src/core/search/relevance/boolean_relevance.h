@@ -7,7 +7,7 @@ class BooleanRelevance : public Relevance {
  public:
   BooleanRelevance() = default;
   virtual ~BooleanRelevance() = default;
-  RelevanceScorer* scorer(float boost, IndexStat* index_stat,
-                          TermStat* term_stat) override;
+  RelevanceScorer* scorer(float boost, IndexStat index_stat,
+                          TermStat term_stat) override;
 };
 }  // namespace yas

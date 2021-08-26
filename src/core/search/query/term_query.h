@@ -10,14 +10,13 @@
 namespace yas {
 class TermQuery : public Query {
  public:
-  TermQuery(Term* term, IndexStat* index_stat, TermStat* term_stat);
+  TermQuery(Term* term, IndexStat index_stat);
   virtual ~TermQuery();
   Query* rewrite() override;
   std::unique_ptr<Matcher> matcher(SubIndexReader* sub_reader) override;
 
  private:
   Term* term_;
-  IndexStat* index_stat_;
-  TermStat* term_stat_;
+  IndexStat index_stat_;
 };
 }  // namespace yas

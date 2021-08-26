@@ -41,6 +41,7 @@ class BlockTermReader : public TermReader {
   float score() override;
   int freq() override;
   int next_postion() override;
+  int doc_freq() override;
 
  private:
   void next_unit(uint32_t target);

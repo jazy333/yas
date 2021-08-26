@@ -2,9 +2,10 @@
 
 namespace yas {
 TermScorer::TermScorer(TermReader* reader, Relevance* rel,
-                       IndexStat* index_stat, TermStat* term_stat)
+                       IndexStat index_stat)
     : term_reader_(reader) {
-  rel_scorer_ = rel->scorer(1.0, index_stat, term_stat);
+  TermStat ts(Term(), term_reader_->doc_freq(), 1);
+  rel_scorer_ = rel->scorer(1.0, index_stat, ts);
 }
 
 TermScorer::~TermScorer() {}

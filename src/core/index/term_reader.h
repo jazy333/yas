@@ -6,5 +6,6 @@ class TermReader : public PostingList {
  public:
   virtual int freq() = 0;
   virtual int next_postion() = 0;
+  virtual int doc_freq()=0;
 };
 }  // namespace yas

@@ -2,9 +2,9 @@
 
 namespace yas {
 TermMatcher::TermMatcher(TermReader* term_reader, Relevance* rel,
-                         IndexStat* index_stat, TermStat* term_stat)
+                         IndexStat index_stat)
     : term_reader_(term_reader), rel_(rel) {
-  scorer_ = new TermScorer(term_reader_, rel_, index_stat, term_stat);
+  scorer_ = new TermScorer(term_reader_, rel_, index_stat);
 }
 
 TermMatcher::~TermMatcher() {

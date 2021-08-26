@@ -7,8 +7,7 @@
 namespace yas {
 class TermScorer : public Scorer {
  public:
-  TermScorer(TermReader* reader, Relevance* rel, IndexStat* index_stat,
-             TermStat* term_stat);
+  TermScorer(TermReader* reader, Relevance* rel, IndexStat index_stat);
   virtual ~TermScorer();
   float score() override;
 
