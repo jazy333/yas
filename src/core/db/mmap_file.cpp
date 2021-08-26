@@ -99,8 +99,7 @@ int MMapFile::close() {
       ret = -1;
     }
   }
-
-  ::close(fd_);
+  if (fd_ >= 0) ::close(fd_);
   pthread_rwlock_destroy(&rwlock_);
 
   fd_ = -1;

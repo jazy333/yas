@@ -23,7 +23,7 @@ uint32_t MemoryTermReader::advance(uint32_t target) {
   auto iter =
       std::lower_bound(posting_lists_.begin(), posting_lists_.end(), target);
   if (iter != posting_lists_.end()) {
-    index_ = std::distance(iter, posting_lists_.begin());
+    index_ = std::distance(posting_lists_.begin(),iter);
     return *iter;
   } else {
     return NDOCID;

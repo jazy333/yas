@@ -209,5 +209,9 @@ TermReader* InvertFieldsIndexWriter::get_reader(Term* term) {
 
 int InvertFieldsIndexWriter::open() { return 0; }
 
-int InvertFieldsIndexWriter::close() { return 0; }
+int InvertFieldsIndexWriter::close() {
+  posting_lists_.clear();
+  position_lists_.clear();
+  return 0;
+}
 }  // namespace yas

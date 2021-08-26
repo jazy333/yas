@@ -3,6 +3,7 @@
 #include "binary_field_index_writer.h"
 #include "memory_index_reader.h"
 #include "numeric_field_index_writer.h"
+#include "log.h"
 
 namespace yas {
 IndexWriter::IndexWriter() : option_(IndexOption()) {}
@@ -85,6 +86,7 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
       }
       default: {
         // not support
+        LOG_WARN("not support type,type=%d",index_type);
         break;
       }
     }
@@ -97,12 +99,14 @@ void IndexWriter::flush() {
   FieldInfo dummy;
   invert_fields_writer_->flush(dummy, max_doc_, option_);
   invert_fields_writer_->close();
+  invert_fields_writer_->open();
 
   for (auto kv : point_fields_index_writers_) {
     auto field_name = kv.first;
     auto field_index_writer = kv.second;
     FieldInfo field_info = field_infos_[field_name];
     field_index_writer->flush(field_info, max_doc_, option_);
+    delete field_index_writer;
   }
   point_fields_index_writers_.clear();
 

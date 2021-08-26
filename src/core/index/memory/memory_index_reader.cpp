@@ -1,4 +1,5 @@
 #include "memory_index_reader.h"
+
 #include "memory_field_values_index_reader_wrapper.h"
 #include "memory_point_values_index_reader_wrapper.h"
 
@@ -12,7 +13,6 @@ MemoryIndexReader::MemoryIndexReader(
     : invert_field_index_reader_(invert_field_index_reader),
       point_fields_index_readers_(point_fields_index_readers),
       field_values_index_readers_(field_values_index_readers) {}
-
 
 std::shared_ptr<InvertFieldsIndexReader>
 MemoryIndexReader::invert_index_reader() {

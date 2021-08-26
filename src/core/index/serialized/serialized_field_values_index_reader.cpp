@@ -15,10 +15,17 @@ SerializedFieldValuesIndexReader::SerializedFieldValuesIndexReader(
       field_id_name_(field_id_name) {}
 
 SerializedFieldValuesIndexReader::~SerializedFieldValuesIndexReader() {
-  close();
   for (auto&& item : field_index_metas_) {
     delete item.second;
   }
+
+  if (field_values_meta_) {
+    delete field_values_meta_;
+  }
+  if (field_values_data_) {
+    delete field_values_data_;
+  }
+  
 }
 
 int SerializedFieldValuesIndexReader::open() {
@@ -55,10 +62,12 @@ int SerializedFieldValuesIndexReader::open() {
 }
 
 int SerializedFieldValuesIndexReader::close() {
-  field_values_meta_->close();
-  field_values_data_->close();
-  delete field_values_meta_;
-  delete field_values_data_;
+  if (field_values_meta_) {
+    field_values_meta_->close();
+  }
+  if (field_values_data_) {
+    field_values_data_->close();
+  }
   return 0;
 }
 
@@ -81,6 +90,11 @@ void SerializedFieldValuesIndexReader::read_numeric(
     field_values_meta_->read(&meta->field_values_data_len,
                              sizeof(meta->field_values_data_len));
   }
+  if (field_index_metas_.count(field_name) == 1) {
+    delete field_index_metas_[field_name];
+    field_index_metas_.erase(field_name);
+  }
+
   field_index_metas_[field_name] = meta;
 }
 
@@ -109,6 +123,12 @@ void SerializedFieldValuesIndexReader::read_binary(
     field_values_meta_->read(&meta->field_lengths_data_len,
                              sizeof(meta->field_lengths_data_len));
   }
+
+  if (field_index_metas_.count(field_name) == 1) {
+    delete field_index_metas_[field_name];
+    field_index_metas_.erase(field_name);
+  }
+
   field_index_metas_[field_name] = meta;
 }
 

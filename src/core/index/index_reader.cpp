@@ -15,7 +15,7 @@ IndexReader::IndexReader(IndexOption option) : option_(option) {}
 
 IndexReader::IndexReader() : option_(IndexOption()) {}
 
-IndexReader::~IndexReader() { close(); }
+IndexReader::~IndexReader() {}
 
 std::vector<std::shared_ptr<SubIndexReader>>
 IndexReader::get_sub_index_readers() {
@@ -38,7 +38,7 @@ int IndexReader::get_segement_files(std::vector<SegmentFiles>& files) {
       free(namelist[n]);
       if (file_name.find(option_.segment_prefix) == 0) {
         size_t pos = option_.segment_prefix.size();
-        uint64_t seq = std::stoul(file_name, &pos);
+        uint64_t seq = std::stoul(file_name.substr(pos), &pos);
         if (seqs.count(seq) == 1)
           continue;
         else
@@ -62,17 +62,17 @@ int IndexReader::get_segement_files(std::vector<SegmentFiles>& files) {
           sf.fvd = index_file;
         }
 
-        index_file = full_path_prefix + ".kvm";
+        index_file = full_path_prefix + ".kdm";
         if (access(index_file.c_str(), R_OK) == 0) {
           sf.kdm = index_file;
         }
 
-        index_file = full_path_prefix + ".kvi";
+        index_file = full_path_prefix + ".kdi";
         if (access(index_file.c_str(), R_OK) == 0) {
           sf.kdi = index_file;
         }
 
-        index_file = full_path_prefix + ".kvd";
+        index_file = full_path_prefix + ".kdd";
         if (access(index_file.c_str(), R_OK) == 0) {
           sf.kdd = index_file;
         }
@@ -106,6 +106,7 @@ int IndexReader::close() {
   for (auto&& reader : sub_index_readers_) {
     reader->close();
   }
+  sub_index_readers_.clear();
   return 0;
 }
 }  // namespace yas
