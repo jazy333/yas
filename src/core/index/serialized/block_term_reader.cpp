@@ -67,7 +67,7 @@ void BlockTermReader::next_unit(uint32_t target) {
     }
   }
 
-  if (target >= meta_->max_doc) {
+  if (target > meta_->max_doc) {
     docid_ = NDOCID;
     return;
   }
