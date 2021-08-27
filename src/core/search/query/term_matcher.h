@@ -16,6 +16,5 @@ class TermMatcher : public Matcher {
  private:
   TermReader* term_reader_;
   Relevance* rel_;
-  TermScorer* scorer_;
 };
 }  // namespace yas

@@ -8,7 +8,7 @@ class MemoryTermReader : public TermReader {
  public:
   MemoryTermReader(std::vector<uint32_t>& posting_lists,
                    std::vector<std::vector<uint32_t>>& position_lists);
-  ~MemoryTermReader() = default;
+  virtual ~MemoryTermReader();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
@@ -18,12 +18,14 @@ class MemoryTermReader : public TermReader {
   int freq() override;
   int next_postion() override;
   int doc_freq() override;
+  void set_scorer(Scorer* scorer) override;
 
  private:
   std::vector<uint32_t> posting_lists_;
   std::vector<std::vector<uint32_t>> position_lists_;
   int index_;
   int position_index_;
+  Scorer* scorer_;
 };
 
 }  // namespace yas

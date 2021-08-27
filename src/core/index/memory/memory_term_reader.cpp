@@ -9,7 +9,12 @@ MemoryTermReader::MemoryTermReader(
     : posting_lists_(posting_lists),
       position_lists_(position_lists),
       index_(-1),
-      position_index_(0) {}
+      position_index_(0),
+      scorer_(nullptr) {}
+
+MemoryTermReader::~MemoryTermReader() {
+  if (scorer_) delete scorer_;
+}
 
 uint32_t MemoryTermReader::next() {
   if (index_ >= posting_lists_.size()) return NDOCID;
@@ -23,7 +28,7 @@ uint32_t MemoryTermReader::advance(uint32_t target) {
   auto iter =
       std::lower_bound(posting_lists_.begin(), posting_lists_.end(), target);
   if (iter != posting_lists_.end()) {
-    index_ = std::distance(posting_lists_.begin(),iter);
+    index_ = std::distance(posting_lists_.begin(), iter);
     return *iter;
   } else {
     return NDOCID;
@@ -49,8 +54,8 @@ int MemoryTermReader::next_postion() {
   return position_lists_[index_][position_index_++];
 }
 
-int MemoryTermReader::doc_freq(){
-  return position_lists_.size();
-}
+int MemoryTermReader::doc_freq() { return position_lists_.size(); }
 
-}  // namespace yass
+void MemoryTermReader::set_scorer(Scorer* scorer) { scorer_ = scorer; }
+
+}  // namespace yas

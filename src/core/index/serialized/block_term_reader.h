@@ -32,7 +32,7 @@ class BlockTermReader : public TermReader {
   };
 
   BlockTermReader(DB* db, Term* term);
-  virtual ~BlockTermReader() = default;
+  virtual ~BlockTermReader();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
   uint32_t docid() override;
@@ -42,6 +42,7 @@ class BlockTermReader : public TermReader {
   int freq() override;
   int next_postion() override;
   int doc_freq() override;
+  void set_scorer(Scorer* scorer) override;
 
  private:
   void next_unit(uint32_t target);
@@ -66,5 +67,6 @@ class BlockTermReader : public TermReader {
   std::vector<uint32_t> current_unit_docids_;
   size_t unit_size_;
   std::vector<std::vector<uint32_t>> current_unit_positions_;
+  Scorer* scorer_;
 };
 }  // namespace yas

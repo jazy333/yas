@@ -17,6 +17,7 @@ class MatchSet {
   virtual ~MatchSet() = default;
   size_t size();
   void add(const MatchedDoc& doc);
+  bool next(MatchedDoc& doc);
 
  private:
   std::priority_queue<MatchedDoc, std::vector<MatchedDoc>,

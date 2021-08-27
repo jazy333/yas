@@ -18,8 +18,13 @@ BlockTermReader::BlockTermReader(DB* db, Term* term)
       current_entry_(nullptr),
       current_unit_index_(128),
       current_unit_max_docid_(0),
-      unit_size_(0) {
+      unit_size_(0),
+      scorer_(nullptr) {
   current_unit_docids_.resize(128, 0);
+}
+
+BlockTermReader::~BlockTermReader() {
+  if (scorer_) delete scorer_;
 }
 
 uint32_t BlockTermReader::next() {
@@ -167,7 +172,14 @@ long BlockTermReader::cost() { return num_docs_; }
 
 std::string BlockTermReader::name() { return "BlockTermReader"; }
 
-float BlockTermReader::score() { return 0.0f; }
+float BlockTermReader::score() {
+  if (!scorer_)
+    return 0.0f;
+  else {
+    float score = scorer_->score();
+    return score;
+  }
+}
 
 int BlockTermReader::freq() {
   return current_unit_positions_[current_unit_index_].size();
@@ -179,5 +191,7 @@ int BlockTermReader::next_postion() {
 }
 
 int BlockTermReader::doc_freq() { return num_docs_; }
+
+void BlockTermReader::set_scorer(Scorer* scorer) { scorer_ = scorer; }
 
 }  // namespace yas

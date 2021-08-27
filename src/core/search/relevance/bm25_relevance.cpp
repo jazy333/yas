@@ -1,18 +1,18 @@
 #include "bm25_relevance.h"
-#include "bm25_scorer.h"
-#include "common.h"
 
 #include <cmath>
 #include <cstdint>
 #include <mutex>
 
+#include "bm25_scorer.h"
+#include "common.h"
 
 namespace yas {
 float BM25Relevance::part[256];
 
 void BM25Relevance::init_length(float avgdl) {
   for (uint16_t i = 0; i <= 255; ++i) {
-    part[i] = 1.0 / (k1_ * ((1 - b_) + b_ * uchar2uint(i) / avgdl));
+    part[i] = 1.0 / (k1_ * ((1 - b_) + b_ * (uchar2uint(i) / avgdl)));
   }
 }
 
@@ -33,6 +33,6 @@ RelevanceScorer* BM25Relevance::scorer(float boost, IndexStat index_stat,
   float weight = idf(term_stat.get_doc_freq(), index_stat.doc_count);
   float avgdl = index_stat.total_term_freq / index_stat.doc_count;
   init_length(avgdl);
-  return new  BM25Scorer(weight, part);
+  return new BM25Scorer(weight, part);
 }
 }  // namespace yas
