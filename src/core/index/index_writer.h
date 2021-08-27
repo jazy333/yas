@@ -34,7 +34,7 @@ class IndexWriter {
       field_values_index_readers_;
 
   std::unordered_map<std::string, FieldInfo> field_infos_;
-  std::atomic<std::uint32_t> max_doc_;
+  std::atomic<uint32_t> max_doc_;
   IndexOption option_;
   SharedMutex shared_mutex_;
 };

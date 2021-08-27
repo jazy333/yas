@@ -11,7 +11,7 @@ namespace yas {
 float BM25Relevance::part[256];
 
 void BM25Relevance::init_length(float avgdl) {
-  for (uint8_t i = 0; i <= 255; ++i) {
+  for (uint16_t i = 0; i <= 255; ++i) {
     part[i] = 1.0 / (k1_ * ((1 - b_) + b_ * uchar2uint(i) / avgdl));
   }
 }

@@ -1,15 +1,16 @@
 #include "index_writer.h"
 
 #include "binary_field_index_writer.h"
+#include "log.h"
 #include "memory_index_reader.h"
 #include "numeric_field_index_writer.h"
-#include "log.h"
 
 namespace yas {
-IndexWriter::IndexWriter() : option_(IndexOption()) {}
+IndexWriter::IndexWriter() : max_doc_(1), option_(IndexOption()) {
+}
 
 IndexWriter::IndexWriter(const IndexOption& index_writer_option)
-    : option_(index_writer_option) {}
+    : max_doc_(1), option_(index_writer_option) {}
 
 IndexWriter::~IndexWriter() {
   for (auto&& kv : point_fields_index_writers_) {
@@ -86,7 +87,7 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
       }
       default: {
         // not support
-        LOG_WARN("not support type,type=%d",index_type);
+        LOG_WARN("not support type,type=%d", index_type);
         break;
       }
     }

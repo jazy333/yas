@@ -11,7 +11,19 @@
 #include "or_posting_list.h"
 #include "weak_and_posting_list.h"
 namespace yas {
-BooleanQuery::BooleanQuery(std::vector<BooleanExpression*>& expressions) {}
+BooleanQuery::BooleanQuery(std::vector<BooleanExpression*>& expressions)
+    : expressions_(expressions), mm_(0) {
+  for (auto&& expression : expressions_) {
+    if (map_expressions_.count(expression->get_operator()) == 1) {
+      map_expressions_[expression->get_operator()].insert(
+          expression->get_query());
+    } else {
+      std::unordered_set<Query*> queries;
+      queries.insert(expression->get_query());
+      map_expressions_[expression->get_operator()] = queries;
+    }
+  }
+}
 
 BooleanQuery::~BooleanQuery() {}
 
@@ -141,7 +153,7 @@ Query* BooleanQuery::rewrite() {
     }
 #endif
   }
-  return Query::rewrite();
+  return this;
 }
 
 std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
@@ -239,7 +251,6 @@ std::unique_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
 int BooleanQuery::get_mm() { return mm_; }
 
 std::vector<BooleanExpression*> BooleanQuery::get_expressions() {
-  return expressions_;
   return expressions_;
 }
 

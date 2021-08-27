@@ -29,8 +29,8 @@ TEST(IndexWriter, add) {
     auto text = std::shared_ptr<TextField>(new TextField("content", line));
     text->set_index_type(1);
     doc->add_field(text);
-    Point<int, 2> point({count, count * 3}, -1);
 
+    Point<int, 2> point({count, count * 3}, -1);
     auto pfield = std::shared_ptr<PointField<int, 2>>(
         new PointField<int, 2>("point", point));
     pfield->set_index_type(4);
@@ -45,7 +45,8 @@ TEST(IndexWriter, add) {
         new TextField("binary", std::to_string(count)));
     bfield->set_index_type(3);
     doc->add_field(bfield);
-
+    
+    ++count;
     writer.add_document(std::move(doc));
   }
 

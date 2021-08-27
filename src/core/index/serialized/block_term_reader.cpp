@@ -38,7 +38,7 @@ int BlockTermReader::read_data() {
   if (ret < 0 || invert_index_.size() == 0) return ret;
   LOG_INFO("sizeof InvertIndexMeta:%d", sizeof(InvertIndexMeta));
   meta_ = (InvertIndexMeta*)(invert_index_.data());
-  num_docs_ == meta_->doc_num;
+  num_docs_ = meta_->doc_num;
   // LOG_INFO("meta->max_doc=%u,meta->doc_num=%d,last_unit_posting_list_compress_size=%u");
   entries_ = (JumpTableEntry*)(invert_index_.data() + sizeof(InvertIndexMeta));
   return 0;
@@ -152,7 +152,7 @@ uint32_t BlockTermReader::advance(uint32_t target) {
       std::lower_bound(current_unit_docids_.begin() + current_unit_index_,
                        current_unit_docids_.begin() + unit_size_, target);
   if (iter != current_unit_docids_.end()) {
-    current_unit_index_ = std::distance(iter, current_unit_docids_.begin());
+    current_unit_index_ = std::distance(current_unit_docids_.begin(), iter);
     docid_ = current_unit_docids_[current_unit_index_];
     return docid_;
   } else {
@@ -178,8 +178,6 @@ int BlockTermReader::next_postion() {
                                 [current_unit_position_index_++];
 }
 
-int BlockTermReader::doc_freq(){
-  return num_docs_;
-}
+int BlockTermReader::doc_freq() { return num_docs_; }
 
 }  // namespace yas
