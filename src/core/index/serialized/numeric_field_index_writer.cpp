@@ -1,5 +1,7 @@
 #include "numeric_field_index_writer.h"
 
+#include <algorithm>
+
 #include "bitpacking_compression.h"
 #include "common.h"
 #include "mmap_file.h"
@@ -26,8 +28,8 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
 
   fvm->append(&field_id, 4);  // field id
   uint8_t type = 0;
-  fvm->append(&type, sizeof(type));            // field type
-  if (docids_.size() == max_doc) {  // no need to docids index
+  fvm->append(&type, sizeof(type));  // field type
+  if (docids_.size() == max_doc) {   // no need to docids index
     long tmp = -1;
     fvm->append(&tmp, sizeof(tmp));  // docids offset
     tmp = 0;
@@ -80,7 +82,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     size_t size = fvd->size();
     fvm->append(&size, sizeof(size));  // field value offset;
     size_t field_value_len;
-    BitPackingCompression bpc(num_bits);
+    BitPackingCompression bpc(num_bits, min_value_);
     size_t out_size = values_.size();
 
     std::unique_ptr<uint64_t[]> compress_out_ptr(
@@ -100,8 +102,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   delete fvd;
 }
 
-int NumericFieldIndexWriter::add(uint32_t docid,
-                                  std::shared_ptr<Field> field) {
+int NumericFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
   NumericField* nf = dynamic_cast<NumericField*>(field.get());
   uint64_t value = nf->get_value();
   docids_.push_back(docid);
@@ -110,7 +111,7 @@ int NumericFieldIndexWriter::add(uint32_t docid,
   if (first_) {
     max_value_ = value;
     min_value_ = value;
-    first_=false;
+    first_ = false;
   } else {
     if (value > max_value_) {
       max_value_ = value;

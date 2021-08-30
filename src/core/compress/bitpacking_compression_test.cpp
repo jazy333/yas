@@ -6,7 +6,7 @@ TEST(BitPackingCompression, construcotr) {
   BitPackingCompression bpc;
   EXPECT_EQ(-1, bpc.get_max_bits());
 
-  BitPackingCompression bpc1(8);
+  BitPackingCompression bpc1(8,0);
   EXPECT_EQ(8, bpc1.get_max_bits());
 }
 

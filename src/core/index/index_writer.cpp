@@ -93,6 +93,7 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
           field_infos_[norm_field_name] = fi;
         }
         long norm_doc_len = uint2uchar(doc_len);
+        //LOG_INFO("docid=%u,doc_len=%d,norm_doc_len=%ld",max_doc_.load(),doc_len,norm_doc_len);
         auto dl_field =
             std::make_shared<NumericField>(norm_field_name, norm_doc_len);
         process_numeric_field(norm_field_name, dl_field);

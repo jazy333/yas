@@ -48,7 +48,8 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     loff_t offset = fvd->size();
     fvm->append(&offset, sizeof(offset));  // field data offset
     // docids index with roaring doclists
-    uint16_t jump_table_entry_count = RoaringPostingList::flush(fvd.get(), docids_);
+    uint16_t jump_table_entry_count =
+        RoaringPostingList::flush(fvd.get(), docids_);
     size_t size = fvd->size() - offset;
     fvm->append(&size, sizeof(size));  // docids length
     fvm->append(
@@ -76,7 +77,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     // write value len index compress
     uint8_t max_bits = gccbits(*(lens.rbegin()));
     fvm->append(&max_bits, sizeof(max_bits));
-    BitPackingCompression bc(max_bits);
+    BitPackingCompression bc(max_bits, 0);
     offset = fvd->size();
     fvm->append(&offset, sizeof(offset));  // value lens data offset
     size_t compress_out_size = lens.size();

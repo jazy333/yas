@@ -1,13 +1,14 @@
 #include "bitpacking_compression.h"
-#include "common.h"
 
 #include <cstring>
 
-namespace yas {
-BitPackingCompression::BitPackingCompression(int max_bit)
-    : max_bits_(max_bit) {}
+#include "common.h"
 
-BitPackingCompression::BitPackingCompression() : max_bits_(-1) {}
+namespace yas {
+BitPackingCompression::BitPackingCompression(int max_bit, uint64_t min_value)
+    : max_bits_(max_bit), min_value_(min_value) {}
+
+BitPackingCompression::BitPackingCompression() : max_bits_(-1), min_value_(0) {}
 
 BitPackingCompression::~BitPackingCompression() {}
 
@@ -26,16 +27,18 @@ void BitPackingCompression::compress(const uint64_t* in, size_t in_size,
     block_index = total_bits / 64;
     int bit_index = total_bits % 64;
 
+    uint64_t value = in[i] - min_value_;
+
     if (bit_index <= most_sig_bits) {  // one block
       // out64[block_index] &= ~(mask << bit_index);  // clear bits
-      out64[block_index] |= (in[i] & mask) << bit_index;
+      out64[block_index] |= (value & mask) << bit_index;
     } else {  // two blocks
       int end_bits = 64 - bit_index;
       uint64_t part_mask = ~(-1UL << bit_index);
       // out64[block_index] &= part_mask;
-      out64[block_index] |= in[i] << bit_index;
-      //out64[++block_index]&=~(-1ul>>max_bits_-endbits);
-      out64[++block_index] |= in[i] >> end_bits;
+      out64[block_index] |= value << bit_index;
+      // out64[++block_index]&=~(-1ul>>max_bits_-endbits);
+      out64[++block_index] |= value >> end_bits;
     }
   }
   out_size = (block_index + 1) * sizeof(uint64_t);
@@ -61,7 +64,7 @@ uint8_t* BitPackingCompression::decompress(const uint8_t* in, size_t in_size,
       value = (in64[block_index] >> bit_index) |
               (in64[block_index + 1] << end_bits);
     }
-    *out++ = value;
+    *out++ = (value+min_value_);
   }
   out_size = out - out_start;
   return const_cast<uint8_t*>(in + in_size);
@@ -70,5 +73,11 @@ uint8_t* BitPackingCompression::decompress(const uint8_t* in, size_t in_size,
 void BitPackingCompression::set_max_bits(int max_bits) { max_bits_ = max_bits; }
 
 int BitPackingCompression::get_max_bits() { return max_bits_; }
+
+void BitPackingCompression::set_min_value(uint64_t min_value) {
+  min_value_ = min_value;
+}
+
+uint64_t BitPackingCompression::get_min_value() { return min_value_; }
 
 }  // namespace yas
