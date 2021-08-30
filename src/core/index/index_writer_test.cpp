@@ -15,6 +15,7 @@ TEST(IndexWriter, add) {
   option.dir = "data/index";
   option.segment_prefix = "segment.";
   IndexWriter writer(option);
+  writer.open();
 
   std::string file = "data/test_docs.txt.uniq";
   std::ifstream ifs;

@@ -10,8 +10,9 @@
 #include "variable_byte_compression.h"
 
 namespace yas {
-InvertFieldsIndexWriter::InvertFieldsIndexWriter()
-    : tokenizer_(std::unique_ptr<Tokenizer>(new SimpleTokenizer(2))) {}
+InvertFieldsIndexWriter::InvertFieldsIndexWriter(IndexStat* index_stat)
+    : tokenizer_(std::unique_ptr<Tokenizer>(new SimpleTokenizer(2))),
+      index_stat_(index_stat) {}
 
 InvertFieldsIndexWriter::InvertFieldsIndexWriter(
     std::unique_ptr<Tokenizer> tokenizer)
@@ -165,11 +166,14 @@ void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   db->close();
 }
 
-void InvertFieldsIndexWriter::add(uint32_t docid,
+int InvertFieldsIndexWriter::add(uint32_t docid,
                                   std::shared_ptr<Field> field) {
   TextField* tf = dynamic_cast<TextField*>(field.get());
   auto ti = tokenizer_->get_term_iterator(tf->get_value());
+  int doc_len = 0;
   while (ti->next()) {
+    index_stat_->total_term_freq++;
+    doc_len++;
     Term term = ti->term();
     term.set_field(tf->get_name());
     int position = ti->position();
@@ -197,6 +201,7 @@ void InvertFieldsIndexWriter::add(uint32_t docid,
       }
     }
   }
+  return doc_len;
 }
 
 TermReader* InvertFieldsIndexWriter::get_reader(Term* term) {

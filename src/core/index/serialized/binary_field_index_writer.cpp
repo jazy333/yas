@@ -92,7 +92,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   fvm->close();
 }
 
-void BinaryFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
+int BinaryFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
   TextField* bf = dynamic_cast<TextField*>(field.get());
   std::string svalue = bf->get_value();
   std::vector<uint8_t> value(svalue.begin(), svalue.end());
@@ -105,6 +105,7 @@ void BinaryFieldIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
   }
   values_.push_back(value);
   docids_.push_back(docid);
+  return 0;
 }
 
 void BinaryFieldIndexWriter::get(uint32_t docid, std::vector<uint8_t>& value) {

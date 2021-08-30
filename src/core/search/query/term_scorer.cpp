@@ -1,19 +1,23 @@
 #include "term_scorer.h"
+
 #include <iostream>
 
 namespace yas {
-TermScorer::TermScorer(TermReader* reader, Relevance* rel,
-                       IndexStat index_stat)
-    : term_reader_(reader) {
+TermScorer::TermScorer(
+    TermReader* reader, Relevance* rel, IndexStat index_stat,
+    std::shared_ptr<FieldValueIndexReader> field_value_reader)
+    : term_reader_(reader), field_value_reader_(field_value_reader) {
   TermStat ts(Term(), term_reader_->doc_freq(), 20);
   rel_scorer_ = rel->scorer(1.0, index_stat, ts);
 }
 
-TermScorer::~TermScorer() {
-  delete rel_scorer_;
-}
+TermScorer::~TermScorer() { delete rel_scorer_; }
 
 float TermScorer::score() {
-  return rel_scorer_->score(term_reader_->freq(), 3);
+  uint64_t norm = 1;
+  if (field_value_reader_)
+    field_value_reader_->get(term_reader_->docid(), norm);
+  std::cout << "docid:"<<term_reader_->docid()<<",norm:" << norm << std::endl;
+  return rel_scorer_->score(term_reader_->freq(), norm);
 }
 }  // namespace yas

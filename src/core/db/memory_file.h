@@ -8,7 +8,7 @@ class MemoryFile : public File {
  public:
   MemoryFile();
   ~MemoryFile();
-  int open(const std::string& path, bool writable) override;
+  int open(const std::string& path, bool writable,bool trunc) override;
   int close() override;
   int read(int64_t off, void* buf, size_t size) override;
   int read(void* buf, size_t size) override;

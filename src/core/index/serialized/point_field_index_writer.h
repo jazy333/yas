@@ -52,7 +52,7 @@ class PointFieldIndexWriter : public FieldIndexWriter,
     delete kdd;
   }
 
-  void add(uint32_t docid, std::shared_ptr<Field> field) override {
+  int add(uint32_t docid, std::shared_ptr<Field> field) override {
     PointField<T, D>* pf = dynamic_cast<PointField<T, D>*>(field.get());
     auto point = pf->get_value();
     for (int i = 0; i < D; ++i) {
@@ -60,6 +60,7 @@ class PointFieldIndexWriter : public FieldIndexWriter,
     }
     point.set_docid(docid);
     points_.write(point);
+    return 0;
   }
 
   PostingList* get(u_char* min, u_char* max) override {

@@ -9,6 +9,7 @@
 #include "simple_tokenizer.h"
 #include "term.h"
 #include "tokenizer.h"
+#include "index_stat.h"
 
 namespace yas {
 class InvertFieldsIndexWriter : public FieldIndexWriter,
@@ -20,12 +21,12 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
   }__attribute__((packed));
 
  public:
-  InvertFieldsIndexWriter();
+  InvertFieldsIndexWriter(IndexStat* index_stat);
   InvertFieldsIndexWriter(std::unique_ptr<Tokenizer> tokenizer);
   virtual ~InvertFieldsIndexWriter();
   void flush(FieldInfo fi, uint32_t max_doc,
              const IndexOption& option) override;
-  void add(uint32_t docid, std::shared_ptr<Field> field) override;
+  int add(uint32_t docid, std::shared_ptr<Field> field) override;
   int open() override;
   int close() override;
   TermReader* get_reader(Term* term) override;
@@ -35,6 +36,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
   std::unordered_map<std::string, std::vector<uint32_t>> posting_lists_;
   std::unordered_map<std::string, std::vector<std::vector<uint32_t>>>
       position_lists_;
+  IndexStat* index_stat_;
 };
 
 }  // namespace yas

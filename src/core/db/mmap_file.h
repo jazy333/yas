@@ -8,7 +8,7 @@ class MMapFile : public File {
  public:
   MMapFile();
   ~MMapFile();
-  int open(const std::string& path, bool writable) override;
+  int open(const std::string& path, bool writable,bool trunc=false) override;
   int close() override;
   int read(int64_t off, void* buf, size_t size) override;
   int read(void* buf, size_t size) override;

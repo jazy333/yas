@@ -3,14 +3,23 @@
 #include "binary_field_index_writer.h"
 #include "log.h"
 #include "memory_index_reader.h"
+#include "numeric_field.h"
 #include "numeric_field_index_writer.h"
 
 namespace yas {
-IndexWriter::IndexWriter() : max_doc_(1), option_(IndexOption()) {
+IndexWriter::IndexWriter()
+    : max_doc_(1), max_field_num_(1), option_(IndexOption()) {
+  index_stat_.doc_count = 0;
+  index_stat_.max_doc = 0;
+  index_stat_.total_term_freq = 0;
 }
 
 IndexWriter::IndexWriter(const IndexOption& index_writer_option)
-    : max_doc_(1), option_(index_writer_option) {}
+    : max_doc_(1), max_field_num_(1), option_(index_writer_option) {
+  index_stat_.doc_count = 0;
+  index_stat_.max_doc = 0;
+  index_stat_.total_term_freq = 0;
+}
 
 IndexWriter::~IndexWriter() {
   for (auto&& kv : point_fields_index_writers_) {
@@ -21,12 +30,47 @@ IndexWriter::~IndexWriter() {
   point_fields_index_readers_.clear();
 }
 
+int IndexWriter::open() {
+  option_.read_stat(index_stat_);
+  max_field_num_ = option_.read_field_info(field_infos_);
+  return 0;
+}
+
+void IndexWriter::process_numeric_field(const std::string& field_name,
+                                        std::shared_ptr<Field> field) {
+  std::shared_ptr<FieldIndexWriter> field_index_writer = nullptr;
+  if (field_values_index_writers_.count(field_name) == 1) {
+    field_index_writer = field_values_index_writers_[field_name];
+
+  } else {
+    std::shared_ptr<NumericFieldIndexWriter> numeric_index_writer =
+        std::shared_ptr<NumericFieldIndexWriter>(new NumericFieldIndexWriter());
+    field_values_index_writers_[field_name] = numeric_index_writer;
+    field_values_index_readers_[field_name] = numeric_index_writer;
+  }
+  field_index_writer = field_values_index_writers_[field_name];
+  field_index_writer->add(max_doc_, field);
+}
+
 void IndexWriter::add_document(std::unique_ptr<Document> doc) {
   std::lock_guard<SharedMutex> lock(shared_mutex_);
   std::vector<std::shared_ptr<Field>> fields = doc->get_fields();
   for (auto field : fields) {
     int index_type = field->get_index_type();
     std::string field_name = field->get_name();
+    if (field_name.find("__") == 0) {
+      LOG_WARN("field name should not begin with __(reserved),field_name=%s",
+               field_name.c_str());
+      continue;
+    }
+
+    if (field_infos_.count(field_name) == 0) {
+      FieldInfo fi;
+      fi.set_field_id(max_field_num_++);
+      fi.set_field_name(field_name);
+      field_infos_[field_name] = fi;
+    }
+
     switch (index_type) {
       case 0: {
         // no index
@@ -35,33 +79,32 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
       case 1: {  // invert
         if (!invert_fields_writer_) {
           invert_fields_writer_ = std::shared_ptr<InvertFieldsIndexWriter>(
-              new InvertFieldsIndexWriter());
+              new InvertFieldsIndexWriter(&index_stat_));
           invert_fields_reader_ = invert_fields_writer_;
         }
-        invert_fields_writer_->add(max_doc_, field);
+        int doc_len = invert_fields_writer_->add(max_doc_, field);
+
+        // add norm doc len field
+        std::string norm_field_name = "__" + field->get_name() + "_dl";
+        if (field_infos_.count(norm_field_name) == 0) {
+          FieldInfo fi;
+          fi.set_field_id(max_field_num_++);
+          fi.set_field_name(norm_field_name);
+          field_infos_[norm_field_name] = fi;
+        }
+        long norm_doc_len = uint2uchar(doc_len);
+        auto dl_field =
+            std::make_shared<NumericField>(norm_field_name, norm_doc_len);
+        process_numeric_field(norm_field_name, dl_field);
         break;
       }
       case 2: {  // numeric
-        std::shared_ptr<FieldIndexWriter> field_index_writer = nullptr;
-        if (field_values_index_writers_.count(field_name) == 1) {
-          field_index_writer = field_values_index_writers_[field_name];
-
-        } else {
-          std::shared_ptr<NumericFieldIndexWriter> numeric_index_writer =
-              std::shared_ptr<NumericFieldIndexWriter>(
-                  new NumericFieldIndexWriter());
-          field_values_index_writers_[field_name] = numeric_index_writer;
-          field_values_index_readers_[field_name] = numeric_index_writer;
-        }
-        field_index_writer = field_values_index_writers_[field_name];
-        field_index_writer->add(max_doc_, field);
-
+        process_numeric_field(field_name, field);
         break;
       }
       case 3: {  // binary
         std::shared_ptr<FieldIndexWriter> field_index_writer = nullptr;
-        if (field_values_index_writers_.count(field_name) == 1) {
-        } else {
+        if (field_values_index_writers_.count(field_name) == 0) {
           std::shared_ptr<BinaryFieldIndexWriter> binary_index_writer =
               std::shared_ptr<BinaryFieldIndexWriter>(
                   new BinaryFieldIndexWriter());
@@ -92,6 +135,8 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
       }
     }
   }
+  index_stat_.doc_count++;
+  index_stat_.max_doc = max_doc_.load();
   ++max_doc_;
 }
 
@@ -119,6 +164,8 @@ void IndexWriter::flush() {
   }
   field_values_index_writers_.clear();
 
+  option_.write_stat(index_stat_);
+  option_.write_field_info(field_infos_);
   option_.current_segment_no++;
   max_doc_ = 1;
 }

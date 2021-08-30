@@ -7,7 +7,7 @@ namespace yas {
 class File {
  public:
   virtual ~File() = default;
-  virtual int open(const std::string& path, bool writable) = 0;
+  virtual int open(const std::string& path, bool writable,bool trunc=false) = 0;
   virtual int close() = 0;
   virtual int read(int64_t off, void* buf, size_t size) = 0;
   int read(void* buf, size_t size, loff_t* off) {

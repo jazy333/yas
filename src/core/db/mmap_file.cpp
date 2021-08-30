@@ -34,7 +34,7 @@ MMapFile::~MMapFile() {
   }
 }
 
-int MMapFile::open(const std::string& path, bool writable) {
+int MMapFile::open(const std::string& path, bool writable, bool trunc) {
   if (fd_ > 0) {
     return -1;
   }
@@ -43,11 +43,14 @@ int MMapFile::open(const std::string& path, bool writable) {
 
   if (writable) {
     oflags = O_RDWR | O_CREAT;
+    if (trunc) {
+      oflags = O_RDWR | O_CREAT | O_TRUNC;
+    }
   }
 
   int32_t fd = ::open(path.c_str(), oflags, 0644);
   if (fd < 0) {
-    std::cout << "open error:" << std::strerror(errno) << std::endl;
+    LOG_ERROR("open error:path=%s,error=%s", path.c_str(),std::strerror(errno));
     return -1;
   }
 

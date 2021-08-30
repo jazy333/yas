@@ -7,10 +7,14 @@
 #include "text_field.h"
 
 namespace yas {
-TEST(InvertFieldsIndexWriter, constructor) { InvertFieldsIndexWriter ifiw; }
+TEST(InvertFieldsIndexWriter, constructor) {
+  IndexStat index_stat;
+  InvertFieldsIndexWriter ifiw(&index_stat);
+}
 
 TEST(InvertFieldsIndexWriter, add) {
-  InvertFieldsIndexWriter ifiw;
+  IndexStat index_stat;
+  InvertFieldsIndexWriter ifiw(&index_stat);
 
   std::vector<std::string> contents = {"中华人民共和国万岁万岁万万岁",
                                        "阿富汗塔利班", "vscode 唤起命令行",
@@ -24,7 +28,8 @@ TEST(InvertFieldsIndexWriter, add) {
 }
 
 TEST(InvertFieldsIndexWriter, flush) {
-  InvertFieldsIndexWriter ifiw;
+  IndexStat index_stat;
+  InvertFieldsIndexWriter ifiw(&index_stat);
 
   std::string file = "data/test_docs.txt";
   std::ifstream ifs;
@@ -32,7 +37,7 @@ TEST(InvertFieldsIndexWriter, flush) {
   std::string line;
 
   uint32_t docid = 1;
-  while (std::getline(ifs,line)) {
+  while (std::getline(ifs, line)) {
     if (*(line.rbegin()) == '\n') line = line.substr(0, line.size() - 1);
     auto text = std::shared_ptr<TextField>(new TextField("content", line));
     ifiw.add(docid++, text);

@@ -8,6 +8,7 @@
 #include "index_option.h"
 #include "sub_index_reader.h"
 #include "segment_files.h"
+#include "index_stat.h"
 
 namespace yas {
 class IndexReader {
@@ -19,6 +20,7 @@ class IndexReader {
   void add(std::shared_ptr<SubIndexReader> reader);
   int open();
   int close();
+  IndexStat get_index_stat();
 
  private:
   int get_segement_files(std::vector<SegmentFiles>& files);
@@ -27,5 +29,6 @@ class IndexReader {
   std::vector<std::shared_ptr<SubIndexReader>> sub_index_readers_;
   IndexOption option_;
   std::unordered_map<std::string, FieldInfo> field_infos_;
+  IndexStat index_stat_;
 };
 }  // namespace yas

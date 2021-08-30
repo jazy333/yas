@@ -6,7 +6,7 @@
 namespace yas {
 MemoryFile::MemoryFile() : writable_(true), open_(true), offset_(0) {}
 MemoryFile::~MemoryFile() {}
-int MemoryFile::open(const std::string& path, bool writable) {
+int MemoryFile::open(const std::string& path, bool writable,bool trunc) {
   writable_ = writable;
   open_ = true;
   offset_ = 0;

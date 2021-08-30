@@ -3,6 +3,7 @@
 #include "binary_field_index_reader.h"
 #include "mmap_file.h"
 #include "numeric_field_index_reader.h"
+#include "log.h"
 
 namespace yas {
 SerializedFieldValuesIndexReader::SerializedFieldValuesIndexReader(
@@ -135,6 +136,7 @@ void SerializedFieldValuesIndexReader::read_binary(
 std::shared_ptr<FieldValueIndexReader>
 SerializedFieldValuesIndexReader::get_reader(const std::string& field_name) {
   FieldIndexMeta* meta = nullptr;
+ 
   if (field_index_metas_.count(field_name) == 0) {
     return nullptr;
   } else {

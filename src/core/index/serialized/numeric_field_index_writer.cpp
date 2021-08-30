@@ -100,7 +100,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
   delete fvd;
 }
 
-void NumericFieldIndexWriter::add(uint32_t docid,
+int NumericFieldIndexWriter::add(uint32_t docid,
                                   std::shared_ptr<Field> field) {
   NumericField* nf = dynamic_cast<NumericField*>(field.get());
   uint64_t value = nf->get_value();
@@ -120,6 +120,7 @@ void NumericFieldIndexWriter::add(uint32_t docid,
       min_value_ = value;
     }
   }
+  return 0;
 }
 
 void NumericFieldIndexWriter::get(uint32_t docid, uint64_t& value) {

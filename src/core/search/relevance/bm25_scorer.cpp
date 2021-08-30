@@ -14,7 +14,7 @@ BM25Scorer::BM25Scorer(float term_weight, float* norm_table)
 
 float BM25Scorer::score(long freq, long norm) {
   float invert_norm = norm_table_[norm & 0xff];
-  return term_weight_ - term_weight_ / (1.0f + freq / invert_norm);
+  return term_weight_ - term_weight_ / (1.0f + freq*invert_norm);
 }
 
 }  // namespace yas

@@ -7,11 +7,16 @@
 #include <set>
 
 #include "log.h"
+#include "mmap_file.h"
 #include "segment_files.h"
 #include "segment_index_reader.h"
 
 namespace yas {
-IndexReader::IndexReader(IndexOption option) : option_(option) {}
+IndexReader::IndexReader(IndexOption option) : option_(option) {
+  index_stat_.doc_count = 0;
+  index_stat_.max_doc = 0;
+  index_stat_.total_term_freq = 0;
+}
 
 IndexReader::IndexReader() : option_(IndexOption()) {}
 
@@ -86,7 +91,10 @@ int IndexReader::get_segement_files(std::vector<SegmentFiles>& files) {
 }
 
 int IndexReader::open() {
+  option_.read_stat(index_stat_);
+  option_.read_field_info(field_infos_);
   std::vector<SegmentFiles> files;
+
   int ret = get_segement_files(files);
   for (size_t i = 0; i < files.size(); ++i) {
     std::shared_ptr<SegmentIndexReader> segment_reader =
@@ -109,4 +117,7 @@ int IndexReader::close() {
   sub_index_readers_.clear();
   return 0;
 }
+
+IndexStat IndexReader::get_index_stat() { return index_stat_; }
+
 }  // namespace yas
