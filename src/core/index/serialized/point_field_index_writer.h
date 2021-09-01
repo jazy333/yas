@@ -28,18 +28,15 @@ class PointFieldIndexWriter : public FieldIndexWriter,
   void flush(FieldInfo fi, uint32_t max_doc,
              const IndexOption& option) override {
     BkdTree<T, D> bkd;
-    std::string file_kdm = option.dir + "/" + option.segment_prefix +
-                           std::to_string(option.current_segment_no) + ".kdm";
+    std::string file_kdm = option.get_point_fields_meta_file();
     File* kdm = new MMapFile;
     kdm->open(file_kdm, true);
 
-    std::string file_kdi = option.dir + "/" + option.segment_prefix +
-                           std::to_string(option.current_segment_no) + ".kdi";
+    std::string file_kdi = option.get_point_fields_index_file();
     File* kdi = new MMapFile;
     kdi->open(file_kdi, true);
 
-    std::string file_kdd = option.dir + "/" + option.segment_prefix +
-                           std::to_string(option.current_segment_no) + ".kdd";
+    std::string file_kdd = option.get_point_fields_data_file();
     File* kdd = new MMapFile;
     kdd->open(file_kdd, true);
 

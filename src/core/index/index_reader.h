@@ -6,9 +6,9 @@
 
 #include "field_info.h"
 #include "index_option.h"
-#include "sub_index_reader.h"
-#include "segment_files.h"
 #include "index_stat.h"
+#include "segment_files.h"
+#include "sub_index_reader.h"
 
 namespace yas {
 class IndexReader {
@@ -21,6 +21,7 @@ class IndexReader {
   int open();
   int close();
   IndexStat get_index_stat();
+  std::unordered_map<std::string, FieldInfo> get_field_infos();
 
  private:
   int get_segement_files(std::vector<SegmentFiles>& files);

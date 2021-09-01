@@ -24,6 +24,7 @@ class IndexWriter {
  private:
   void process_numeric_field(const std::string& field_name,
                              std::shared_ptr<Field> field);
+  int write_segment_info();
 
  private:
   std::shared_ptr<InvertFieldsIndexWriter> invert_fields_writer_;
@@ -41,7 +42,7 @@ class IndexWriter {
 
   std::unordered_map<std::string, FieldInfo> field_infos_;
   std::atomic<uint32_t> max_doc_;
-    std::atomic<uint32_t> max_field_num_;
+  std::atomic<uint32_t> max_field_num_;
   IndexOption option_;
   SharedMutex shared_mutex_;
   IndexStat index_stat_;

@@ -23,7 +23,7 @@ class BkdTree {
   BkdTree(File* kdm, File* kdi, File* kdd)
       : kdm_(kdm), kdi_(kdi), kdd_(kdd), readable_(true) {
     /*
-     *meta format:filed id|num dims|max count per leaf|bytes per dim|num
+     *meta format:field id|num dims|max count per leaf|bytes per dim|num
      *leaves|min | max|count | kdd fp|kdi fp
      */
     loff_t off = 0;
@@ -43,6 +43,7 @@ class BkdTree {
       ret = kdm_->read_vint(mfi.count_, &off);
       ret = kdm_->read_vint(mfi.data_fp_, &off);
       ret = kdm_->read_vint(mfi.index_fp_, &off);
+      ret = kdm_->read_vint(mfi.data_size, &off);
       kdm_infos_[mfi.field_id_] = mfi;
     }
   }
@@ -50,7 +51,7 @@ class BkdTree {
   BkdTree(PointFieldMeta meta, File* kdi, File* kdd)
       : kdi_(kdi), kdd_(kdd), readable_(true) {
     MetaFieldInfo mfi;
-    mfi.field_id_=meta.field_id_;
+    mfi.field_id_ = meta.field_id_;
     mfi.num_dims_ = meta.num_dims_;
     mfi.max_count_per_leaf_ = meta.max_count_per_leaf_;
     mfi.num_leaves_ = meta.num_leaves_;
@@ -59,6 +60,7 @@ class BkdTree {
     mfi.count_ = meta.count_;
     mfi.data_fp_ = meta.data_fp_;
     mfi.index_fp_ = meta.index_fp_;
+    mfi.data_size = meta.data_size;
 
     kdm_infos_[meta.field_id_] = mfi;
   }
@@ -194,6 +196,7 @@ class BkdTree {
     int count_;
     long data_fp_;
     long index_fp_;
+    long data_size;
   };
 
   int build(values_type* storage, File* kdd,
@@ -316,7 +319,7 @@ class BkdTree {
     }
   }
 
-  void pack(int filed_id, values_type* storage, File* kdm, File* kdi,
+  void pack(int field_id, values_type* storage, File* kdm, File* kdi,
             File* kdd) {
     int from = 0, to = storage->size();
     int num_leaves = (to - from + 1) / max_count_per_leaf;
@@ -335,7 +338,7 @@ class BkdTree {
      *meta format:filed id|num dims|max count per leaf|bytes per dim|num
      *leaves|min | max|count | kdd fp|kdi fp
      */
-    int ret = kdm->write_vint(filed_id);
+    int ret = kdm->write_vint(field_id);
     ret = kdm->write_vint(value_type::dim);
     ret = kdm->write_vint(max_count_per_leaf);
     ret = kdm->write_vint(value_type::bytes_per_dim);
@@ -345,6 +348,8 @@ class BkdTree {
     ret = kdm->write_vint(to);
     ret = kdm->write_vint(data_fp);
     ret = kdm->write_vint(index_fp);
+    long data_size = kdd->size() - data_fp;
+    ret = kdm->write_vint(data_size);
     for (auto& node : nodes) {
       std::string content;
       node->read(content, node->size());
@@ -370,6 +375,35 @@ class BkdTree {
     is._high = high;
     do_intersect(mfi.min_, mfi.max_, is);
     docids = std::move(is.docids_);
+  }
+
+  bool read_block(int field_id, std::vector<value_type>& points, long& offset) {
+    MetaFieldInfo mfi;
+    if (kdm_infos_.count(field_id) == 1) {
+      mfi = kdm_infos_[field_id];
+    } else {
+      return false;
+    }
+
+    if (offset - mfi.data_fp_ >= mfi.data_size) {
+      return false;
+    }
+
+    IntersectState is(mfi.num_leaves_, mfi.index_fp_, kdi_, kdd_);
+    is.level_ = 0;
+    is._left_fps[is.level_] = offset;
+
+    std::vector<uint32_t> docids;
+    std::vector<value_type> values;
+    read_docids(is, docids);
+    values.resize(docids.size());
+    read_doc_values(is, values);
+
+    for (int i = 0; i < docids.size(); ++i) {
+      values[i].set_docid(docids[i]);
+    }
+    offset = is._left_fps[is.level_];
+    return true;
   }
 
  private:
@@ -542,7 +576,7 @@ class BkdTree {
         int num_run_lens = 0;
         for (int i = 0; i < count;) {
           /*do run-length compression
-           *we don't need to check the pos,because  we found the sorted_dim wiht
+           *we don't need to check the pos,because  we found the sorted_dim with
            *least unique, if prefix_length==bytes_per_dim,we should handle it in
            *previous condition
            */
@@ -607,19 +641,19 @@ class BkdTree {
   }
 
   void read_uniq_doc_values(IntersectState& is, int count, value_type& uniq,
-                            std::vector<uint32_t>& docids) {
-    if (!(uniq >= is._low && uniq <= is._high)) {
+                            std::vector<value_type>& values) {
+    /*if (!(uniq >= is._low && uniq <= is._high)) {
       return;
-    }
+    }*/
     for (int i = 0; i < count; ++i) {
-      is.docids_.push_back(docids[i]);
+      values.push_back(uniq);
     }
   }
 
   void read_low_cardinality_doc_values(IntersectState& is,
                                        std::vector<int>& common_prefixes,
                                        int count, value_type& incomplete_value,
-                                       std::vector<uint32_t>& docids) {
+                                       std::vector<value_type>& values) {
     long fp = is._left_fps[is.level_];
     int i;
     for (i = 0; i < count;) {
@@ -636,9 +670,10 @@ class BkdTree {
       }
 
       for (int j = 0; j < length; ++j) {
-        if (value >= is._low && value <= is._high) {
+        /*if (value >= is._low && value <= is._high) {
           is.docids_.push_back(docids[i]);
-        }
+        }*/
+        values.push_back(value);
       }
       i += length;
     }
@@ -649,7 +684,7 @@ class BkdTree {
                                        std::vector<int>& common_prefixes,
                                        int sorted_dim, int count,
                                        value_type& incomplete_value,
-                                       std::vector<uint32_t>& docids) {
+                                       std::vector<value_type>& values) {
     // the byte at `offset` is compressed using run-length compression,
     // other suffix bytes are stored verbatim
     long fp = is._left_fps[is.level_];
@@ -674,21 +709,22 @@ class BkdTree {
                               value_type::bytes_per_dim - prefix);
           fp += ret;
         }
-        if (v >= is._low && v <= is._high) {
+        /*if (v >= is._low && v <= is._high) {
           is.docids_.push_back(docids[i]);
-        }
+        }*/
+        values.push_back(v);
       }
       i += run_len;
     }
     is._left_fps[is.level_] = fp;
   }
 
-  void read_doc_values(IntersectState& is, std::vector<uint32_t>& docids) {
+  void read_doc_values(IntersectState& is, std::vector<value_type>& values) {
     std::vector<int> common_prefixes;
     value_type incomplete_value;
     read_common_prefixes(is, common_prefixes, incomplete_value);
     long fp = is._left_fps[is.level_];
-    int count = docids.size();
+    int count = values.size();
     char sorted_dim = 0;
     int ret = is.kdd_->read(fp, &sorted_dim, 1);
     fp += ret;
@@ -696,19 +732,19 @@ class BkdTree {
     value_type min = incomplete_value, max = incomplete_value;
     switch (sorted_dim) {
       case -1: {
-        read_uniq_doc_values(is, count, incomplete_value, docids);
+        read_uniq_doc_values(is, count, incomplete_value, values);
         break;
       }
       case -2: {
         if (value_type::dim != 1) read_minmax(is, common_prefixes, min, max);
         read_low_cardinality_doc_values(is, common_prefixes, count,
-                                        incomplete_value, docids);
+                                        incomplete_value, values);
         break;
       }
       default: {
         if (value_type::dim != 1) read_minmax(is, common_prefixes, min, max);
         read_high_cardinaliy_doc_values(is, common_prefixes, sorted_dim, count,
-                                        incomplete_value, docids);
+                                        incomplete_value, values);
         break;
       }
     }
@@ -770,8 +806,14 @@ class BkdTree {
 
   void intersect_one_block(IntersectState& is) {
     std::vector<uint32_t> docids;
+    std::vector<value_type> values;
     read_docids(is, docids);
-    read_doc_values(is, docids);
+    values.resize(docids.size());
+    read_doc_values(is, values);
+    for (int i = 0; i < values.size(); ++i) {
+      if (values[i] >= is._low && values[i] <= is._high)
+        is.docids_.push_back(docids[i]);
+    }
   }
 
   void do_intersect(value_type& min, value_type& max, IntersectState& is) {

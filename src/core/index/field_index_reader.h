@@ -7,6 +7,7 @@
 #include "file.h"
 #include "term.h"
 #include "term_reader.h"
+#include "db.h"
 
 namespace yas {
 class FieldValueIndexReader {
@@ -25,7 +26,7 @@ class FieldValuesIndexReader {
 
 class PointFieldIndexReader {
  public:
-  virtual ~PointFieldIndexReader()=default;
+  virtual ~PointFieldIndexReader() = default;
   virtual PostingList* get(u_char* min, u_char* max) = 0;
   virtual void init(int field_id, PointFieldMeta meta,
                     std::shared_ptr<File> kdi, std::shared_ptr<File> kdd) = 0;
@@ -37,11 +38,13 @@ class PointFieldsIndexReader {
   virtual int close() = 0;
   virtual PointFieldIndexReader* get_reader(
       const std::string& field_name, PointFieldIndexReader* init_reader) = 0;
+  virtual PointFieldMeta* get_meta(int field_id) = 0;
 };
 
 class InvertFieldsIndexReader {
  public:
   virtual TermReader* get_reader(Term* term) = 0;
+  virtual DB* get_db()=0;
   virtual int open() = 0;
   virtual int close() = 0;
 };

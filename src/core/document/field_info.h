@@ -12,9 +12,12 @@ class FieldInfo {
   void set_field_name(const std::string& field_name) {
     field_name_ = field_name;
   }
+  int get_index_type() const { return index_type_; }
+  void set_index_type(int index_type) { index_type_ = index_type; }
 
  private:
   int filed_id_;
+  int index_type_;
   std::string field_name_;
 };
 }  // namespace yas

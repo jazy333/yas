@@ -1,7 +1,5 @@
 #include "term_scorer.h"
 
-#include <iostream>
-
 namespace yas {
 TermScorer::TermScorer(
     TermReader* reader, Relevance* rel, IndexStat index_stat,
@@ -17,7 +15,7 @@ float TermScorer::score() {
   uint64_t norm = 1;
   if (field_value_reader_)
     field_value_reader_->get(term_reader_->docid(), norm);
-  std::cout << "docid:"<<term_reader_->docid()<<",norm:" << norm << std::endl;
+  if (norm == -1) norm = 1;
   return rel_scorer_->score(term_reader_->freq(), norm);
 }
 }  // namespace yas

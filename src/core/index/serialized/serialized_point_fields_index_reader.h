@@ -21,6 +21,7 @@ class SerializedPointFieldsIndexReader : public PointFieldsIndexReader {
   PointFieldIndexReader* get_reader(
       const std::string& field_name,
       PointFieldIndexReader* init_reader) override;
+  PointFieldMeta* get_meta(int field_id) override;
 
  private:
   std::unordered_map<std::string, FieldInfo> field_infos_;

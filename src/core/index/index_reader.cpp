@@ -82,6 +82,11 @@ int IndexReader::get_segement_files(std::vector<SegmentFiles>& files) {
           sf.kdd = index_file;
         }
 
+        index_file = full_path_prefix + ".si";
+        if (access(index_file.c_str(), R_OK) == 0) {
+          sf.si = index_file;
+        }
+
         files.push_back(sf);
       }
     }
@@ -119,5 +124,9 @@ int IndexReader::close() {
 }
 
 IndexStat IndexReader::get_index_stat() { return index_stat_; }
+
+std::unordered_map<std::string, FieldInfo> IndexReader::get_field_infos() {
+  return field_infos_;
+}
 
 }  // namespace yas

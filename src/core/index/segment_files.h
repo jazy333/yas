@@ -11,6 +11,8 @@ struct SegmentFiles {
   // filed values index
   std::string fvm;
   std::string fvd;
+  //segment info
+  std::string si;
 };
 
 }  // namespace yas

@@ -65,11 +65,12 @@ float OrPostingList::score() {
   PostingList* top = nullptr;
   do {
     top = pq_.top();
-    sum += top->score();
     doc = top->docid();
+    if (doc != docid_) break;
+    sum += top->score();
     pq_.pop();
     pls.push_back(top);
-  } while (docid_ == doc);
+  } while (pq_.size() > 0);
 
   for (auto p : pls) {
     pq_.push(p);

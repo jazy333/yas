@@ -45,7 +45,8 @@ struct PointFieldMeta {
         max_(nullptr),
         count_(0),
         data_fp_(0),
-        index_fp_(0) {}
+        index_fp_(0),
+        data_size(0) {}
 
   ~PointFieldMeta() {
     if (min_) delete[] min_;
@@ -68,6 +69,7 @@ struct PointFieldMeta {
     count_ = other.count_;
     data_fp_ = other.data_fp_;
     index_fp_ = other.index_fp_;
+    data_size = other.data_size;
   }
 
   PointFieldMeta(PointFieldMeta&& other) {
@@ -93,6 +95,8 @@ struct PointFieldMeta {
     other.data_fp_ = 0;
     index_fp_ = other.index_fp_;
     other.index_fp_ = 0;
+    data_size = other.data_size;
+    other.data_size = 0;
   }
 
   PointFieldMeta& operator=(const PointFieldMeta& other) {
@@ -115,6 +119,7 @@ struct PointFieldMeta {
       count_ = other.count_;
       data_fp_ = other.data_fp_;
       index_fp_ = other.index_fp_;
+      data_size = other.data_size;
     }
     return *this;
   }
@@ -141,6 +146,8 @@ struct PointFieldMeta {
       other.data_fp_ = 0;
       index_fp_ = other.index_fp_;
       other.index_fp_ = 0;
+      data_size = other.data_size;
+      other.data_size = 0;
     }
 
     return *this;
@@ -156,5 +163,6 @@ struct PointFieldMeta {
   int count_;
   long data_fp_;
   long index_fp_;
+  long data_size;
 };
 }  // namespace yas

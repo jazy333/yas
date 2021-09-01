@@ -23,6 +23,13 @@ BlockTermReader::BlockTermReader(DB* db, Term* term)
   current_unit_docids_.resize(128, 0);
 }
 
+BlockTermReader::BlockTermReader(const std::string& invert_index)
+    : invert_index_(invert_index) {
+  meta_ = (InvertIndexMeta*)(invert_index_.data());
+  num_docs_ = meta_->doc_num;
+  entries_ = (JumpTableEntry*)(invert_index_.data() + sizeof(InvertIndexMeta));
+}
+
 BlockTermReader::~BlockTermReader() {
   if (scorer_) delete scorer_;
 }
@@ -188,6 +195,10 @@ int BlockTermReader::freq() {
 int BlockTermReader::next_postion() {
   return current_unit_positions_[current_unit_index_]
                                 [current_unit_position_index_++];
+}
+
+std::vector<uint32_t> BlockTermReader::positions() {
+  return current_unit_positions_[current_unit_index_];
 }
 
 int BlockTermReader::doc_freq() { return num_docs_; }

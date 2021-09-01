@@ -10,14 +10,16 @@ int MemoryPointValuesIndexReaderWrapper::open() { return 0; }
 
 int MemoryPointValuesIndexReaderWrapper::close() { return 0; }
 
-PointFieldIndexReader*
-MemoryPointValuesIndexReaderWrapper::get_reader(
-    const std::string& field_name,
-    PointFieldIndexReader* init_reader) {
+PointFieldIndexReader* MemoryPointValuesIndexReaderWrapper::get_reader(
+    const std::string& field_name, PointFieldIndexReader* init_reader) {
   if (field_index_readers_->count(field_name) == 1)
     return (*field_index_readers_)[field_name];
   else
     return nullptr;
+}
+
+PointFieldMeta* MemoryPointValuesIndexReaderWrapper::get_meta(int field_id) {
+  return nullptr;
 }
 
 }  // namespace yas

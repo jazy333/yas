@@ -6,6 +6,7 @@
 #include "posting_list.h"
 #include "term.h"
 #include "term_reader.h"
+#include "segment_info.h"
 
 namespace yas {
 class SubIndexReader {
@@ -15,5 +16,6 @@ class SubIndexReader {
   virtual std::shared_ptr<PointFieldsIndexReader> point_fields_reader() = 0;
   virtual int open() = 0;
   virtual int close() = 0;
+  virtual SegmentInfo get_segment_info()=0;
 };
 }  // namespace yas

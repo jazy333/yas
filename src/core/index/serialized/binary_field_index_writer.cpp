@@ -20,13 +20,11 @@ BinaryFieldIndexWriter::~BinaryFieldIndexWriter() {}
 
 void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
                                    const IndexOption& option) {
-  std::string file_fvm = option.dir + "/" + option.segment_prefix +
-                         std::to_string(option.current_segment_no) + ".fvm";
+  std::string file_fvm = option.get_field_values_meta_file();
   auto fvm = std::unique_ptr<File>(new MMapFile);
   fvm->open(file_fvm, true);
 
-  std::string file_fvd = option.dir + "/" + option.segment_prefix +
-                         std::to_string(option.current_segment_no) + ".fvd";
+  std::string file_fvd = option.get_field_values_data_file();
   auto fvd = std::unique_ptr<File>(new MMapFile);
   fvd->open(file_fvd, true);
 

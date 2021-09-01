@@ -1,6 +1,7 @@
 #pragma once
-#include "field_index_reader.h"
 #include <unordered_map>
+
+#include "field_index_reader.h"
 
 namespace yas {
 class MemoryPointValuesIndexReaderWrapper : public PointFieldsIndexReader {
@@ -14,9 +15,9 @@ class MemoryPointValuesIndexReaderWrapper : public PointFieldsIndexReader {
   PointFieldIndexReader* get_reader(
       const std::string& field_name,
       PointFieldIndexReader* init_reader) override;
+  PointFieldMeta* get_meta(int field_id) override;
 
  private:
-  std::unordered_map<std::string, PointFieldIndexReader*>*
-      field_index_readers_;
+  std::unordered_map<std::string, PointFieldIndexReader*>* field_index_readers_;
 };
 }  // namespace yas

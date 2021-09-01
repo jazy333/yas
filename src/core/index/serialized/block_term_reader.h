@@ -32,6 +32,7 @@ class BlockTermReader : public TermReader {
   };
 
   BlockTermReader(DB* db, Term* term);
+  BlockTermReader(const std::string& invert_index);
   virtual ~BlockTermReader();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
@@ -43,6 +44,7 @@ class BlockTermReader : public TermReader {
   int next_postion() override;
   int doc_freq() override;
   void set_scorer(Scorer* scorer) override;
+  std::vector<uint32_t> positions();
 
  private:
   void next_unit(uint32_t target);

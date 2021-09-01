@@ -64,6 +64,8 @@ int SerializedPointFieldsIndexReader::open() {
     if (ret < 0) break;
     ret = kdm_->read_vint(pfm.index_fp_, &off);
     if (ret < 0) break;
+    ret = kdm_->read_vint(pfm.data_size, &off);
+    if (ret < 0) break;
     kdm_infos_[pfm.field_id_] = pfm;
   }
   return 0;
@@ -75,4 +77,12 @@ int SerializedPointFieldsIndexReader::close() {
   if (kdd_) kdd_->close();
   return 0;
 }
+
+PointFieldMeta* SerializedPointFieldsIndexReader::get_meta(int field_id) {
+  if (kdm_infos_.count(field_id) == 1)
+    return &kdm_infos_[field_id];
+  else
+    return nullptr;
+}
+
 }  // namespace yas

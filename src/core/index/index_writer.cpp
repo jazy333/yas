@@ -1,5 +1,7 @@
 #include "index_writer.h"
 
+#include <ctime>
+
 #include "binary_field_index_writer.h"
 #include "log.h"
 #include "memory_index_reader.h"
@@ -68,6 +70,7 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
       FieldInfo fi;
       fi.set_field_id(max_field_num_++);
       fi.set_field_name(field_name);
+      fi.set_index_type(index_type);
       field_infos_[field_name] = fi;
     }
 
@@ -90,10 +93,11 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
           FieldInfo fi;
           fi.set_field_id(max_field_num_++);
           fi.set_field_name(norm_field_name);
+          fi.set_index_type(2);
           field_infos_[norm_field_name] = fi;
         }
         long norm_doc_len = uint2uchar(doc_len);
-        //LOG_INFO("docid=%u,doc_len=%d,norm_doc_len=%ld",max_doc_.load(),doc_len,norm_doc_len);
+        // LOG_INFO("docid=%u,doc_len=%d,norm_doc_len=%ld",max_doc_.load(),doc_len,norm_doc_len);
         auto dl_field =
             std::make_shared<NumericField>(norm_field_name, norm_doc_len);
         process_numeric_field(norm_field_name, dl_field);
@@ -141,6 +145,18 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
   ++max_doc_;
 }
 
+int IndexWriter::write_segment_info() {
+  auto segment_file_handle = std::unique_ptr<File>(new MMapFile);
+  std::string file_si = option_.get_segment_info_file();
+  segment_file_handle->open(file_si, true, true);
+  uint32_t max_doc = max_doc_.load();
+  segment_file_handle->append(&max_doc, sizeof(max_doc));
+  time_t now = time(nullptr);
+  segment_file_handle->append(&now, sizeof(now));
+  segment_file_handle->close();
+  return 0;
+}
+
 void IndexWriter::flush() {
   std::lock_guard<SharedMutex> lock(shared_mutex_);
   FieldInfo dummy;
@@ -167,6 +183,9 @@ void IndexWriter::flush() {
 
   option_.write_stat(index_stat_);
   option_.write_field_info(field_infos_);
+
+  write_segment_info();
+
   option_.current_segment_no++;
   max_doc_ = 1;
 }

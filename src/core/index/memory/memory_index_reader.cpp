@@ -35,4 +35,6 @@ int MemoryIndexReader::open() { return 0; }
 
 int MemoryIndexReader::close() { return 0; }
 
+SegmentInfo MemoryIndexReader::get_segment_info() { return info_; }
+
 }  // namespace yas

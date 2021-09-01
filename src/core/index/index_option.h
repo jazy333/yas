@@ -32,7 +32,7 @@ struct IndexOption {
     stat_file_handle->read(&index_stat.doc_count, sizeof(index_stat.doc_count));
     stat_file_handle->read(&index_stat.max_doc, sizeof(index_stat.max_doc));
     stat_file_handle->read(&index_stat.total_term_freq,
-                    sizeof(index_stat.total_term_freq));
+                           sizeof(index_stat.total_term_freq));
     stat_file_handle->close();
     return 0;
   }
@@ -40,10 +40,11 @@ struct IndexOption {
   int write_stat(IndexStat& index_stat) {
     auto stat_file_handle = std::unique_ptr<File>(new MMapFile());
     stat_file_handle->open(dir + "/" + stat_file, true, true);
-    stat_file_handle->append(&index_stat.doc_count, sizeof(index_stat.doc_count));
+    stat_file_handle->append(&index_stat.doc_count,
+                             sizeof(index_stat.doc_count));
     stat_file_handle->append(&index_stat.max_doc, sizeof(index_stat.max_doc));
     stat_file_handle->append(&index_stat.total_term_freq,
-                      sizeof(index_stat.total_term_freq));
+                             sizeof(index_stat.total_term_freq));
     stat_file_handle->close();
     return 0;
   }
@@ -60,11 +61,15 @@ struct IndexOption {
       if (field_name_len == 0 || ret < 0) break;
       std::string field_name;
       field_name.resize(field_name_len, 0);
-      field_infos_handle->read(const_cast<char*>(field_name.data()), field_name_len);
+      field_infos_handle->read(const_cast<char*>(field_name.data()),
+                               field_name_len);
       int field_id = -1;
       field_infos_handle->read(&field_id, sizeof(field_id));
+      int index_type = -1;
+      field_infos_handle->read(&index_type, sizeof(index_type));
       fi.set_field_id(field_id);
       fi.set_field_name(field_name);
+      fi.set_index_type(index_type);
       field_infos[field_name] = fi;
       if (field_id > max_field_id) max_field_id = field_id;
     }
@@ -83,13 +88,50 @@ struct IndexOption {
       field_infos_handle->append(&field_name_len, sizeof(field_name_len));
       field_infos_handle->append(field_name.data(), field_name_len);
       int field_id = fi.get_field_id();
-      field_infos_handle->append(&field_id, sizeof(int));
+      field_infos_handle->append(&field_id, sizeof(field_id));
+      int field_type = fi.get_index_type();
+      field_infos_handle->append(&field_id, sizeof(field_id));
     }
 
     // write an end
     field_infos_handle->append(0, sizeof(int));
     field_infos_handle->close();
     return 0;
+  }
+
+  std::string get_segment_info_file() const {
+    return dir + "/" + segment_prefix + std::to_string(current_segment_no) +
+           ".si";
+  }
+
+  std::string get_invert_file() const {
+    return dir + "/" + segment_prefix + std::to_string(current_segment_no) +
+           ".hdb";
+  }
+
+  std::string get_field_values_meta_file() const {
+    return dir + "/" + segment_prefix + std::to_string(current_segment_no) +
+           ".fvm";
+  }
+
+  std::string get_field_values_data_file() const {
+    return dir + "/" + segment_prefix + std::to_string(current_segment_no) +
+           ".fvd";
+  }
+
+  std::string get_point_fields_meta_file() const {
+    return dir + "/" + segment_prefix + std::to_string(current_segment_no) +
+           ".kdm";
+  }
+
+  std::string get_point_fields_index_file() const {
+    return dir + "/" + segment_prefix + std::to_string(current_segment_no) +
+           ".kdi";
+  }
+
+  std::string get_point_fields_data_file() const {
+    return dir + "/" + segment_prefix + std::to_string(current_segment_no) +
+           ".kdd";
   }
 
   std::string dir;

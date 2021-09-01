@@ -34,4 +34,6 @@ int SerializedInvertFieldsIndexReader::close() {
   return ret;
 }
 
+DB* SerializedInvertFieldsIndexReader::get_db() { return db_; }
+
 }  // namespace yas
