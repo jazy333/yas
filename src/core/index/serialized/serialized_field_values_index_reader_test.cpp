@@ -8,8 +8,8 @@ TEST(SerializedFieldValuesIndexReader, open) {
   id2name[111] = "source";
   id2name[113] = "binary";
   id2name[114] = "binary_var";
-  SerializedFieldValuesIndexReader sfvir("data/index/segment.1.fvm",
-                                         "data/index/segment.1.fvd", id2name);
+  SerializedFieldValuesIndexReader sfvir("data/index1/segment.1.fvm",
+                                         "data/index1/segment.1.fvd", id2name);
 
   sfvir.open();
   auto numeric_field = sfvir.get_reader("source");

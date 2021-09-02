@@ -9,9 +9,9 @@ TEST(SerializedPointFieldsIndexReader, open_and_close) {
   FieldInfo fi(155);
   std::unordered_map<std::string, FieldInfo> field_infos;
   field_infos["point"] = fi;
-  std::string kdm = "data/index/segment.1.kdm";
-  std::string kdi = "data/index/segment.1.kdi";
-  std::string kdd = "data/index/segment.1.kdd";
+  std::string kdm = "data/index1/segment.1.kdm";
+  std::string kdi = "data/index1/segment.1.kdi";
+  std::string kdd = "data/index1/segment.1.kdd";
   SerializedPointFieldsIndexReader spfir(field_infos, kdm, kdi, kdd);
   spfir.open();
   spfir.close();
@@ -21,9 +21,9 @@ TEST(SerializedPointFieldsIndexReader, get_reader) {
   FieldInfo fi(155);
   std::unordered_map<std::string, FieldInfo> field_infos;
   field_infos["point"] = fi;
-  std::string kdm = "data/index/segment.1.kdm";
-  std::string kdi = "data/index/segment.1.kdi";
-  std::string kdd = "data/index/segment.1.kdd";
+  std::string kdm = "data/index1/segment.1.kdm";
+  std::string kdi = "data/index1/segment.1.kdi";
+  std::string kdd = "data/index1/segment.1.kdd";
   SerializedPointFieldsIndexReader spfir(field_infos, kdm, kdi, kdd);
   spfir.open();
   PointField<int, 2> field;

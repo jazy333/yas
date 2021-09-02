@@ -33,7 +33,7 @@ TEST(BinaryFieldIndexWriter, flush) {
   uint32_t max_doc = 1000;
   IndexOption option;
   option.current_segment_no = 1;
-  option.dir = "data/index";
+  option.dir = "data/index1";
   option.segment_prefix = "segment.";
   bfiw.flush(fi, max_doc, option);
 }
@@ -51,7 +51,7 @@ TEST(BinaryFieldIndexWriter, flush_var) {
   uint32_t max_doc = 1000;
   IndexOption option;
   option.current_segment_no = 1;
-  option.dir = "data/index";
+  option.dir = "data/index1";
   option.segment_prefix = "segment.";
   bfiw.flush(fi, max_doc, option);
 }

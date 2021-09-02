@@ -67,16 +67,18 @@ class BkdTree {
   virtual ~BkdTree() {}
 
   struct IntersectState {
-    IntersectState(int num_leaves, loff_t off, File* kdi, File* kdd)
+    IntersectState(int num_leaves, loff_t index_off, loff_t data_off, File* kdi,
+                   File* kdd)
         : level_(1),
           node_id_(1),
           _split_dim(0),
           _num_leaves(num_leaves),
-          index_init_fp_(off),
-          index_cur_fp_(off),
+          index_init_fp_(index_off),
+          index_cur_fp_(index_off),
           kdi_(kdi),
           kdd_(kdd) {
       _left_fps.resize(tree_depth(num_leaves) + 1, 0);
+      _left_fps[0] = data_off;
       _right_children.resize(tree_depth(num_leaves) + 1, 0);
       _split_dims.resize(tree_depth(num_leaves) + 1, 0);
       _split_values.resize(tree_depth(num_leaves) + 1, value_type());
@@ -94,7 +96,7 @@ class BkdTree {
     File* kdd_;
     std::vector<value_type> _split_values;
     std::vector<long> _left_fps;
-    std::vector<int> _right_children;
+    std::vector<long> _right_children;
     std::vector<std::vector<bool>> neg_;
     std::vector<int> _split_dims;
     std::vector<uint32_t> docids_;
@@ -327,11 +329,12 @@ class BkdTree {
     value_type min, max;
     std::vector<int> parent_splits(value_type::dim, 0);
     std::vector<off_t> leaf_block_fps(num_leaves + 1, 0);
+    leaf_block_fps[0] = data_fp;
     value_type last_split_value;
     std::vector<bool> neg(value_type::dim, false);
     std::vector<std::shared_ptr<File>> nodes;
-    build(storage, kdd, nodes, false, 0, num_leaves, 0, from, to, min, max,
-          parent_splits, leaf_block_fps, last_split_value, neg);
+    build(storage, kdd, nodes, false, 0, num_leaves, data_fp, from, to, min,
+          max, parent_splits, leaf_block_fps, last_split_value, neg);
     storage->minmax(min, max);
 
     /*
@@ -370,7 +373,7 @@ class BkdTree {
       return;
     }
 
-    IntersectState is(mfi.num_leaves_, mfi.index_fp_, kdi, kdd);
+    IntersectState is(mfi.num_leaves_, mfi.index_fp_, mfi.data_fp_, kdi, kdd);
     is._low = low;
     is._high = high;
     do_intersect(mfi.min_, mfi.max_, is);
@@ -389,15 +392,14 @@ class BkdTree {
       return false;
     }
 
-    IntersectState is(mfi.num_leaves_, mfi.index_fp_, kdi_, kdd_);
+    IntersectState is(mfi.num_leaves_, mfi.index_fp_, mfi.data_fp_, kdi_, kdd_);
     is.level_ = 0;
     is._left_fps[is.level_] = offset;
 
     std::vector<uint32_t> docids;
     std::vector<value_type> values;
     read_docids(is, docids);
-    values.resize(docids.size());
-    read_doc_values(is, values);
+    read_doc_values(is, values,docids.size());
 
     for (int i = 0; i < docids.size(); ++i) {
       values[i].set_docid(docids[i]);
@@ -719,12 +721,11 @@ class BkdTree {
     is._left_fps[is.level_] = fp;
   }
 
-  void read_doc_values(IntersectState& is, std::vector<value_type>& values) {
+  void read_doc_values(IntersectState& is, std::vector<value_type>& values,int count) {
     std::vector<int> common_prefixes;
     value_type incomplete_value;
     read_common_prefixes(is, common_prefixes, incomplete_value);
     long fp = is._left_fps[is.level_];
-    int count = values.size();
     char sorted_dim = 0;
     int ret = is.kdd_->read(fp, &sorted_dim, 1);
     fp += ret;
@@ -808,8 +809,7 @@ class BkdTree {
     std::vector<uint32_t> docids;
     std::vector<value_type> values;
     read_docids(is, docids);
-    values.resize(docids.size());
-    read_doc_values(is, values);
+    read_doc_values(is, values,docids.size());
     for (int i = 0; i < values.size(); ++i) {
       if (values[i] >= is._low && values[i] <= is._high)
         is.docids_.push_back(docids[i]);

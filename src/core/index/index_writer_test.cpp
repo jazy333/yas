@@ -11,7 +11,7 @@
 namespace yas {
 TEST(IndexWriter, add) {
   IndexOption option;
-  option.current_segment_no = 2;
+  option.current_segment_no = 1;
   option.dir = "data/index";
   option.segment_prefix = "segment.";
   IndexWriter writer(option);
@@ -46,7 +46,12 @@ TEST(IndexWriter, add) {
         new TextField("binary", std::to_string(count)));
     bfield->set_index_type(3);
     doc->add_field(bfield);
-    
+
+    auto bfield1 =
+        std::shared_ptr<TextField>(new TextField("id", line));
+    bfield1->set_index_type(3);
+    doc->add_field(bfield1);
+
     ++count;
     writer.add_document(std::move(doc));
   }

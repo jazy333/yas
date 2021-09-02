@@ -33,7 +33,7 @@ TEST(NumericFieldIndexWriter, flush) {
   uint32_t max_doc = 1000;
   IndexOption option;
   option.current_segment_no = 1;
-  option.dir = "data/index";
+  option.dir = "data/index1";
   option.segment_prefix = "segment.";
   nfi.flush(fi, max_doc, option);
 }

@@ -24,7 +24,8 @@ void InvertFieldsIndexWriter::flush(
     std::shared_ptr<DB> db, std::string key, std::vector<uint32_t>& docids,
     std::vector<std::vector<uint32_t>>& positions) {
   size_t unit_reserve_size = 2000;
-  uint8_t* unit = new uint8_t[unit_reserve_size];
+  auto unit_ptr = std::unique_ptr<uint8_t[]>(new uint8_t[unit_reserve_size]());
+  uint8_t* unit = unit_ptr.get();
   uint32_t max_doc = *(docids.rbegin());
   size_t doc_num = docids.size();
   SIMDBinaryCompression<true> bc_posting_list;
@@ -70,7 +71,9 @@ void InvertFieldsIndexWriter::flush(
     std::vector<uint32_t> position_lens;
     for (int j = i; j < i + unit_docid_num; ++j) {
       size_t one_doc_positions_len = positions[j].size() * 2 * sizeof(uint32_t);
-      uint8_t* one_doc_positions = new uint8_t[one_doc_positions_len];
+      auto one_doc_positions_ptr =
+          std::unique_ptr<uint8_t[]>(new uint8_t[one_doc_positions_len]());
+      uint8_t* one_doc_positions = one_doc_positions_ptr.get();
       vbc_delta.compress(positions[j].data(), positions[j].size(),
                          one_doc_positions, one_doc_positions_len);
       position_lens.push_back(one_doc_positions_len);
@@ -85,7 +88,7 @@ void InvertFieldsIndexWriter::flush(
           compressed_positionlist_buffer.end(), one_doc_positions,
           one_doc_positions + one_doc_positions_len);
 
-      delete[] one_doc_positions;
+      // delete[] one_doc_positions;
     }
 
     // compress position lens
@@ -153,7 +156,7 @@ void InvertFieldsIndexWriter::flush(
       key.c_str(), buffer.size(), max_doc, doc_num,
       last_unit_docids_compress_size, last_unit_positions_compress_size,
       jump_table_entry_count);
-  delete[] unit;
+  // delete[] unit;
 }
 
 void InvertFieldsIndexWriter::flush(FieldInfo fi, uint32_t max_doc,

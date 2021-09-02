@@ -68,21 +68,22 @@ int IndexMerger::merge_invert(
     auto iter = db->make_iterator();
     iter->first();
     do {
-      std::vector<std::unique_ptr<BlockTermReader>> term_readers;
+      std::vector<std::shared_ptr<BlockTermReader>> term_readers(readers.size(),
+                                                                 nullptr);
       std::string key, value;
       iter->get(key, value);
       if (out_db->test(key) == 1) {
         continue;
       }
-      term_readers.push_back(
-          std::unique_ptr<BlockTermReader>(new BlockTermReader(value)));
+      term_readers[i] =
+          std::shared_ptr<BlockTermReader>(new BlockTermReader(value));
       for (int j = i + 1; j < readers.size(); ++j) {
         DB* db = readers[j]->get_db();
         if (db->test(key) == 1) {
           std::string value;
           db->get(key, value);
-          term_readers.push_back(
-              std::unique_ptr<BlockTermReader>(new BlockTermReader(value)));
+          term_readers[j] =
+              std::shared_ptr<BlockTermReader>(new BlockTermReader(value));
         }
       }
 
@@ -90,12 +91,14 @@ int IndexMerger::merge_invert(
                           DocidWithPositionsCompare>
           pq;
 
-      for (auto&& reader : term_readers) {
+      for (int k = 0; k < term_readers.size(); ++k) {
+        auto reader = term_readers[k];
+        if (!reader) continue;
         while (reader->next() != NDOCID) {
           uint32_t docid = reader->docid();
           if (doc_maps[i].count(docid) == 0) continue;
           std::vector<uint32_t> positions = reader->positions();
-          uint32_t new_docid = doc_maps[i][docid];
+          uint32_t new_docid = doc_maps[k][docid];
           DocidWithPositions doc;
           doc.docid = new_docid;
           doc.positions = positions;
@@ -253,6 +256,7 @@ int IndexMerger::merge() {
     }
   }
   write_segment_info(max_docid);
+  reader.close();
   return 0;
 }
 
