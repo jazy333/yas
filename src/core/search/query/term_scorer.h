@@ -15,7 +15,7 @@ class TermScorer : public Scorer {
   float score() override;
 
  private:
-  std::shared_ptr<TermReader> term_reader_;
+  std::weak_ptr<TermReader> term_reader_;
   RelevanceScorer* rel_scorer_;
   std::shared_ptr<FieldValueIndexReader> field_value_reader_;
 };
