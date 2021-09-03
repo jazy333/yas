@@ -19,7 +19,7 @@ uint64_t NumericFieldIndexReader::get_value(uint32_t index) {
 
   uint64_t total_bits = index * meta_->num_bits;
   int block_index = total_bits / 64;
-  field_values_slice_->seek(block_index*sizeof(uint64_t));
+  field_values_slice_->seek(block_index * sizeof(uint64_t));
   int bit_index = total_bits % 64;
 
   uint64_t value;
@@ -31,7 +31,7 @@ uint64_t NumericFieldIndexReader::get_value(uint32_t index) {
     uint64_t in[2];
     field_values_slice_->read(&in, sizeof(in));
     int end_bits = 64 - bit_index;
-    value = ((in[0] >> bit_index) | (in[1] << end_bits)) * meta_->gcd +
+    value = (((in[0] >> bit_index) | (in[1] << end_bits)) & mask) * meta_->gcd +
             meta_->min_value;
   }
   return value;
@@ -42,7 +42,7 @@ NumericFieldIndexReader::~NumericFieldIndexReader() {}
 void NumericFieldIndexReader::get(uint32_t docid, uint64_t& value) {
   uint32_t index = 0;
   if (!posting_lists_) {
-    index = docid;
+    index = docid-1;
   } else {
     bool exist = posting_lists_->advance_exact(docid);
     if (exist) {

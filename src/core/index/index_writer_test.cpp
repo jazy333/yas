@@ -11,13 +11,13 @@
 namespace yas {
 TEST(IndexWriter, add) {
   IndexOption option;
-  option.current_segment_no = 1;
+  option.current_segment_no = 2;
   option.dir = "data/index";
   option.segment_prefix = "segment.";
   IndexWriter writer(option);
   writer.open();
 
-  std::string file = "data/test_docs.txt.uniq";
+  std::string file = "data/test_docs.txt.2";
   std::ifstream ifs;
   ifs.open(file, std::ios_base::in);
   std::string line;
@@ -56,7 +56,7 @@ TEST(IndexWriter, add) {
     writer.add_document(std::move(doc));
   }
 
-  writer.flush();
+  //writer.flush();
 
   ifs.close();
 }

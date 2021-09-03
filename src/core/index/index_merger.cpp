@@ -72,14 +72,18 @@ int IndexMerger::merge_invert(
                                                                  nullptr);
       std::string key, value;
       iter->get(key, value);
-      if (out_db->test(key) == 1) {
+      if (key == "载免content") {
+        std::cout << "get a problem" << std::endl;
+      }
+      std::cout << "key:" << key << ",value size:" << value.size() << std::endl;
+      if (out_db->test(key) == 0) {
         continue;
       }
       term_readers[i] =
           std::shared_ptr<BlockTermReader>(new BlockTermReader(value));
       for (int j = i + 1; j < readers.size(); ++j) {
         DB* db = readers[j]->get_db();
-        if (db->test(key) == 1) {
+        if (db->test(key) == 0) {
           std::string value;
           db->get(key, value);
           term_readers[j] =
@@ -96,9 +100,12 @@ int IndexMerger::merge_invert(
         if (!reader) continue;
         while (reader->next() != NDOCID) {
           uint32_t docid = reader->docid();
-          if (doc_maps[i].count(docid) == 0) continue;
+          if (doc_maps[k].count(docid) == 0) continue;
           std::vector<uint32_t> positions = reader->positions();
           uint32_t new_docid = doc_maps[k][docid];
+          std::cout << "k:" << k << ",old id:" << docid
+                    << ",new id:" << new_docid
+                    << ",position size:" << positions.size() << std::endl;
           DocidWithPositions doc;
           doc.docid = new_docid;
           doc.positions = positions;
@@ -113,6 +120,7 @@ int IndexMerger::merge_invert(
         auto top = pq.top();
         docids.push_back(top.docid);
         positions.push_back(top.positions);
+        pq.pop();
       }
 
       InvertFieldsIndexWriter::flush(out_db, key, docids, positions);
@@ -164,7 +172,7 @@ uint32_t IndexMerger::build_doc_maps(
     auto reader = id_readers[i];
     if (!reader) continue;
     std::unordered_map<uint32_t, uint32_t> old_to_new;
-    for (uint32_t j = 1; j < max_docids[i]; ++i) {
+    for (uint32_t j = 1; j <= max_docids[i]; ++j) {
       std::vector<uint8_t> value;
       reader->get(j, value);
       std::string svalue(value.begin(), value.end());
@@ -181,7 +189,7 @@ uint32_t IndexMerger::build_doc_maps(
     }
     old_to_news.push_back(old_to_new);
   }
-  return new_docid;
+  return new_docid - 1;
 }
 
 int IndexMerger::write_segment_info(uint32_t max_docid) {

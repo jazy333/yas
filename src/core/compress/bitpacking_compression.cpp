@@ -61,10 +61,11 @@ uint8_t* BitPackingCompression::decompress(const uint8_t* in, size_t in_size,
       value = ((in64[block_index] >> bit_index) & mask);
     } else {  // two blocks
       int end_bits = 64 - bit_index;
-      value = (in64[block_index] >> bit_index) |
-              (in64[block_index + 1] << end_bits);
+      value = ((in64[block_index] >> bit_index) |
+               (in64[block_index + 1] << end_bits)) &
+              mask;
     }
-    *out++ = (value+min_value_);
+    *out++ = (value + min_value_);
   }
   out_size = out - out_start;
   return const_cast<uint8_t*>(in + in_size);

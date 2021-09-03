@@ -24,7 +24,15 @@ BlockTermReader::BlockTermReader(DB* db, Term* term)
 }
 
 BlockTermReader::BlockTermReader(const std::string& invert_index)
-    : invert_index_(invert_index) {
+    : docid_(0),
+      current_jump_table_entry_index_(0),
+      entries_(nullptr),
+      invert_index_(invert_index),
+      current_entry_(nullptr),
+      current_unit_index_(128),
+      current_unit_max_docid_(0),
+      unit_size_(0),
+      scorer_(nullptr) {
   meta_ = (InvertIndexMeta*)(invert_index_.data());
   num_docs_ = meta_->doc_num;
   entries_ = (JumpTableEntry*)(invert_index_.data() + sizeof(InvertIndexMeta));

@@ -461,6 +461,11 @@ int HashDB::get(const std::string& key, std::string& value) {
   return do_read(2, key, value);
 }
 
+/*
+*0:exsists
+*1:not exsists
+*2:delete
+*/
 int HashDB::test(const std::string& key) {
   string value;
   return do_read(3, key, value);

@@ -19,7 +19,7 @@ TEST(IndexSearcher, search) {
   if (test_map.count(test_field_name) == 1)
     std::cout << "get a key" << std::endl;
   IndexOption option;
-  option.current_segment_no = 1;
+  option.current_segment_no = 3;
   option.dir = "data/index";
   option.segment_prefix = "segment.";
   IndexReader reader(option);

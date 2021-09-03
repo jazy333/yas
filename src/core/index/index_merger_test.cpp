@@ -1,15 +1,14 @@
-#include "index_reader.h"
+#include "index_merger.h"
 
 #include <gtest/gtest.h>
 
 namespace yas {
-TEST(IndexReader, open) {
+TEST(IndexMerger,merge) {
   IndexOption option;
   option.current_segment_no = 3;
   option.dir = "data/index";
   option.segment_prefix = "segment.";
-  IndexReader reader(option);
-  reader.open();
-  reader.close();
+  IndexMerger merger(option);
+  merger.merge();
 }
 }  // namespace yas

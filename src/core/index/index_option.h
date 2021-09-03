@@ -90,7 +90,7 @@ struct IndexOption {
       int field_id = fi.get_field_id();
       field_infos_handle->append(&field_id, sizeof(field_id));
       int field_type = fi.get_index_type();
-      field_infos_handle->append(&field_id, sizeof(field_id));
+      field_infos_handle->append(&field_type, sizeof(field_type));
     }
 
     // write an end

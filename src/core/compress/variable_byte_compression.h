@@ -162,7 +162,7 @@ class VariableByteCompression : public Compression {
       for (uint32_t v = 0; in < in_end; shift += 7) {
         uint8_t c = *in++;
         v |= ((c & 0x7F) << shift);
-        if (c < 0x7F) {
+        if (c <= 0x7F) {
           *out++ = delta ? (pre = v + pre) : v;
           break;
         }

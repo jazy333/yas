@@ -25,23 +25,24 @@ uint64_t BinaryFieldIndexReader::get_value(int index) {
   uint64_t mask = ~0L << most_sig_bits;
   mask = mask >> most_sig_bits;
   if (bit_index <= most_sig_bits) {
-    field_values_len_slice_->seek(block_index*sizeof(uint64_t));
+    field_values_len_slice_->seek(block_index * sizeof(uint64_t));
     uint64_t block_value;
     field_values_len_slice_->read(&block_value, sizeof(block_value));
     return (block_value >> bit_index) & mask;
   } else {
-    field_values_len_slice_->seek(block_index);
+    field_values_len_slice_->seek(block_index*sizeof(uint64_t));
     uint64_t block_values[2];
-    field_values_len_slice_->read(block_values, 2 * sizeof(block_values));
+    field_values_len_slice_->read(block_values, sizeof(block_values));
     int end_bits = 64 - bit_index;
-    return (block_values[0] >> bit_index) | (block_values[1] << end_bits);
+    return ((block_values[0] >> bit_index) | (block_values[1] << end_bits)) &
+           mask;
   }
 }
 
 void BinaryFieldIndexReader::get(uint32_t docid, std::vector<uint8_t>& value) {
   uint32_t index = 0;
   if (!posting_lists_) {
-    index = docid;
+    index = docid-1;
   } else {
     bool exist = posting_lists_->advance_exact(docid);
     if (exist) {

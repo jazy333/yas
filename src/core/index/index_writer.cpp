@@ -149,7 +149,7 @@ int IndexWriter::write_segment_info() {
   auto segment_file_handle = std::unique_ptr<File>(new MMapFile);
   std::string file_si = option_.get_segment_info_file();
   segment_file_handle->open(file_si, true, true);
-  uint32_t max_doc = max_doc_.load();
+  uint32_t max_doc = max_doc_.load()-1;
   segment_file_handle->append(&max_doc, sizeof(max_doc));
   time_t now = time(nullptr);
   segment_file_handle->append(&now, sizeof(now));
