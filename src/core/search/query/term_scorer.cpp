@@ -2,7 +2,7 @@
 
 namespace yas {
 TermScorer::TermScorer(
-    TermReader* reader, Relevance* rel, IndexStat index_stat,
+    std::shared_ptr<TermReader> reader, Relevance* rel, IndexStat index_stat,
     std::shared_ptr<FieldValueIndexReader> field_value_reader)
     : term_reader_(reader), field_value_reader_(field_value_reader) {
   TermStat ts(Term(), term_reader_->doc_freq(), 20);

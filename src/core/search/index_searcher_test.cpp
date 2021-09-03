@@ -27,16 +27,17 @@ TEST(IndexSearcher, search) {
   IndexSearcher searcher(&reader);
   auto tokenizer = std::unique_ptr<Tokenizer>(new SimpleTokenizer(2));
   std::string text = "搜狗翻译";
-  std::string field = "content";   
+  std::string field = "content";
   auto ti = tokenizer->get_term_iterator(text);
-  std::vector<BooleanExpression*> expressions;
+  std::vector<std::shared_ptr<BooleanExpression>> expressions;
   IndexStat index_stat = reader.get_index_stat();
   while (ti->next()) {
     Term term = ti->term();
     term.set_field(field);
-    TermQuery* term_query = new TermQuery(term, index_stat);
-    BooleanExpression* expression =
-        new BooleanExpression(term_query, Operator::OR);
+    auto term_query =
+        std::shared_ptr<TermQuery>(new TermQuery(term, index_stat));
+    auto expression = std::shared_ptr<BooleanExpression>(
+        new BooleanExpression(term_query, Operator::OR));
     expressions.push_back(expression);
   }
 

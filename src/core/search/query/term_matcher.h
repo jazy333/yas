@@ -8,14 +8,15 @@
 namespace yas {
 class TermMatcher : public Matcher {
  public:
-  TermMatcher(TermReader* term_reader, Relevance* rel, IndexStat index_stat,
+  TermMatcher(std::shared_ptr<TermReader> term_reader, Relevance* rel,
+              IndexStat index_stat,
               std::shared_ptr<FieldValueIndexReader> field_value_reader);
   virtual ~TermMatcher();
-  PostingList* posting_list() override;
-  Scorer* scorer() override;
+  std::shared_ptr<PostingList> posting_list() override;
+  std::shared_ptr<Scorer> scorer() override;
 
  private:
-  TermReader* term_reader_;
+  std::shared_ptr<TermReader> term_reader_;
   Relevance* rel_;
 };
 }  // namespace yas

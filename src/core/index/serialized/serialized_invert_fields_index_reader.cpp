@@ -12,10 +12,13 @@ SerializedInvertFieldsIndexReader::~SerializedInvertFieldsIndexReader() {
   close();
 }
 
-TermReader* SerializedInvertFieldsIndexReader::get_reader(Term* term) {
-  if (db_)
-    return new BlockTermReader(db_, term);
-  else
+std::shared_ptr<TermReader> SerializedInvertFieldsIndexReader::get_reader(
+    Term term) {
+  if (db_) {
+    auto term_reader =
+        std::shared_ptr<BlockTermReader>(new BlockTermReader(db_, term));
+    return term_reader;
+  } else
     return nullptr;
 }
 

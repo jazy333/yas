@@ -10,7 +10,7 @@ TEST(SerializedInvertFieldsIndexReader, constructor) {
   SerializedInvertFieldsIndexReader invert_index_reader(invert_index_file);
   invert_index_reader.open();
   Term term("百度", "content");
-  TermReader* reader = invert_index_reader.get_reader(&term);
+  auto reader = invert_index_reader.get_reader(term);
   while (reader->next() != NDOCID) {
     std::cout << "docid:" << reader->docid() << std::endl;
   }

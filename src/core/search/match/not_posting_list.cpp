@@ -1,7 +1,8 @@
 #include "not_posting_list.h"
 
 namespace yas {
-NotPostingList::NotPostingList(PostingList* pl, PostingList* excl)
+NotPostingList::NotPostingList(std::shared_ptr<PostingList> pl,
+                               std::shared_ptr<PostingList> excl)
     : pl_(pl), excl_(excl) {}
 
 NotPostingList::~NotPostingList() {}

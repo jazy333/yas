@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace yas {
-WeakAndPostingList::WeakAndPostingList(std::vector<PostingList*>& pl,
+WeakAndPostingList::WeakAndPostingList(std::vector<std::shared_ptr<PostingList>>& pl,
                                        int minimum_match)
     : minimum_match_(minimum_match), docid_(0) {
   for (auto p : pl) {
@@ -12,7 +12,7 @@ WeakAndPostingList::WeakAndPostingList(std::vector<PostingList*>& pl,
   }
 
   // compute cost
-  std::priority_queue<PostingList*, std::vector<PostingList*>,
+  std::priority_queue<std::shared_ptr<PostingList>, std::vector<std::shared_ptr<PostingList>>,
                       posting_list_compare_with_cost>
       tail;
   for (auto p : pl) {
@@ -37,7 +37,7 @@ WeakAndPostingList::WeakAndPostingList(std::vector<PostingList*>& pl,
 
 WeakAndPostingList::~WeakAndPostingList() {}
 
-void WeakAndPostingList::add_lead(PostingList* pl) {
+void WeakAndPostingList::add_lead(std::shared_ptr<PostingList> pl) {
   lead_.push_front(pl);
   matched_++;
 }
@@ -83,7 +83,7 @@ uint32_t WeakAndPostingList::do_next() {
   return docid_;
 }
 
-PostingList* WeakAndPostingList::add_tail(PostingList* p) {
+std::shared_ptr<PostingList> WeakAndPostingList::add_tail(std::shared_ptr<PostingList> p) {
   if (tail_.size() < minimum_match_ - 1) {
     tail_.push(p);
     return nullptr;
@@ -100,7 +100,7 @@ PostingList* WeakAndPostingList::add_tail(PostingList* p) {
 
 uint32_t WeakAndPostingList::next() {
   for (auto p : lead_) {
-    PostingList* cur = add_tail(p);
+    auto cur = add_tail(p);
     if (cur) {
       if (cur->docid() == docid_) {
         cur->next();

@@ -3,11 +3,11 @@
 #include <memory>
 #include <vector>
 
+#include "db.h"
 #include "field_index_meta.h"
 #include "file.h"
 #include "term.h"
 #include "term_reader.h"
-#include "db.h"
 
 namespace yas {
 class FieldValueIndexReader {
@@ -27,7 +27,7 @@ class FieldValuesIndexReader {
 class PointFieldIndexReader {
  public:
   virtual ~PointFieldIndexReader() = default;
-  virtual PostingList* get(u_char* min, u_char* max) = 0;
+  virtual std::shared_ptr<PostingList> get(u_char* min, u_char* max) = 0;
   virtual void init(int field_id, PointFieldMeta meta,
                     std::shared_ptr<File> kdi, std::shared_ptr<File> kdd) = 0;
 };
@@ -43,8 +43,8 @@ class PointFieldsIndexReader {
 
 class InvertFieldsIndexReader {
  public:
-  virtual TermReader* get_reader(Term* term) = 0;
-  virtual DB* get_db()=0;
+  virtual std::shared_ptr<TermReader> get_reader(Term term) = 0;
+  virtual DB* get_db() = 0;
   virtual int open() = 0;
   virtual int close() = 0;
 };

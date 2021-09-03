@@ -1,16 +1,19 @@
 #pragma once
+#include <memory>
+
 #include "matcher.h"
 
 namespace yas {
 class DefaultMatcher : public Matcher {
  public:
-  DefaultMatcher(PostingList* pl, Scorer* scorer);
+  DefaultMatcher(std::shared_ptr<PostingList> pl,
+                 std::shared_ptr<Scorer> scorer);
   virtual ~DefaultMatcher();
-  PostingList* posting_list() override;
-  Scorer* scorer() override;
+  std::shared_ptr<PostingList> posting_list() override;
+  std::shared_ptr<Scorer> scorer() override;
 
  private:
-  PostingList* pl_;
-  Scorer* scorer_;
+  std::shared_ptr<PostingList> pl_;
+  std::shared_ptr<Scorer> scorer_;
 };
 }  // namespace yas

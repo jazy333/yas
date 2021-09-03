@@ -21,14 +21,16 @@ class SerializedPointFieldIndexReader : public PointFieldIndexReader {
 
   virtual ~SerializedPointFieldIndexReader() = default;
 
-  PostingList* get(u_char* min, u_char* max) override {
+  std::shared_ptr<PostingList> get(u_char* min, u_char* max) override {
     std::vector<uint32_t> docids;
     BkdTree<T, D> bkd(meta_, kdi_.get(), kdd_.get());
     Point<T, D> min_point = Point<T, D>(min);
     Point<T, D> max_point = Point<T, D>(max);
-    bkd.intersect(field_id_, min_point, max_point, kdi_.get(), kdd_.get(), docids);
+    bkd.intersect(field_id_, min_point, max_point, kdi_.get(), kdd_.get(),
+                  docids);
     std::sort(docids.begin(), docids.end());
-    return new SequencePostingList(std::move(docids));
+    return std::shared_ptr<PostingList>(
+        new SequencePostingList(std::move(docids)));
   }
 
   void init(int field_id, PointFieldMeta meta, std::shared_ptr<File> kdi,

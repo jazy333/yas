@@ -32,7 +32,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
   int add(uint32_t docid, std::shared_ptr<Field> field) override;
   int open() override;
   int close() override;
-  TermReader* get_reader(Term* term) override;
+  std::shared_ptr<TermReader> get_reader(Term term) override;
    DB* get_db() override;
 
  private:

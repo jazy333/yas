@@ -9,7 +9,7 @@
 namespace yas {
 TEST(AndPostingList, constructor) {
   // empty posting list
-  std::vector<PostingList*> pls;
+  std::vector<std::shared_ptr<PostingList>> pls;
   AndPostingList ap(pls);
   EXPECT_EQ(0.0, ap.score());
   EXPECT_EQ(NDOCID, ap.next());
@@ -19,8 +19,8 @@ TEST(AndPostingList, constructor) {
 
   // one posting list
   std::vector<uint32_t> docids = {3, 4, 5, 6, 7};
-  SequencePostingList pl1(docids);
-  std::vector<PostingList*> pls1{&pl1};
+  std::shared_ptr<SequencePostingList> pl1(new SequencePostingList(docids));
+  std::vector<std::shared_ptr<PostingList>> pls1{pl1};
 
   AndPostingList ap1(pls1);
   EXPECT_EQ(docids.size(), ap1.cost());
@@ -33,9 +33,9 @@ TEST(AndPostingList, constructor) {
   // two posting lists
   std::vector<uint32_t> docids1 = {3, 4, 5, 6, 7, 8, 11, 12, 14, 3333, 111111};
   std::vector<uint32_t> docids2 = {1, 3, 5, 6, 7, 9, 10, 13, 14, 2000};
-  SequencePostingList pl3(docids1);
-  SequencePostingList pl4(docids2);
-  std::vector<PostingList*> pls2 = {&pl3, &pl4};
+  std::shared_ptr<SequencePostingList> pl3(new SequencePostingList(docids1));
+  std::shared_ptr<SequencePostingList> pl4(new SequencePostingList(docids2));
+  std::vector<std::shared_ptr<PostingList>> pls2 = {pl3, pl4};
   AndPostingList ap2(pls2);
   EXPECT_EQ(docids2.size(), ap2.cost());
   EXPECT_EQ(0.0, ap2.score());
@@ -49,10 +49,10 @@ TEST(AndPostingList, constructor) {
   std::vector<uint32_t> docids4 = {1, 3, 5, 6, 7, 9, 10, 13, 14, 2000};
   std::vector<uint32_t> docids5 = {2, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 2000};
   std::vector<uint32_t> result = {5, 6, 7, 14};
-  SequencePostingList pl5(docids3);
-  SequencePostingList pl6(docids4);
-  SequencePostingList pl7(docids5);
-  std::vector<PostingList*> pls3 = {&pl5, &pl6, &pl7};
+  std::shared_ptr<SequencePostingList> pl5(new SequencePostingList(docids3));
+  std::shared_ptr<SequencePostingList> pl6(new SequencePostingList(docids4));
+  std::shared_ptr<SequencePostingList> pl7(new SequencePostingList(docids5));
+  std::vector<std::shared_ptr<PostingList>> pls3 = {pl5, pl6, pl7};
   AndPostingList ap3(pls3);
   int count = 0;
   while (ap3.next() != NDOCID) {

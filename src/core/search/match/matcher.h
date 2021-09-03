@@ -6,7 +6,7 @@ namespace yas {
 class Matcher {
  public:
   virtual ~Matcher() = default;
-  virtual PostingList* posting_list() = 0;
-  virtual Scorer* scorer() = 0;
+  virtual std::shared_ptr<PostingList> posting_list() = 0;
+  virtual std::shared_ptr<Scorer> scorer() = 0;
 };
 }  // namespace yas

@@ -31,7 +31,7 @@ class BlockTermReader : public TermReader {
     }
   };
 
-  BlockTermReader(DB* db, Term* term);
+  BlockTermReader(DB* db, Term term);
   BlockTermReader(const std::string& invert_index);
   virtual ~BlockTermReader();
   uint32_t next() override;
@@ -53,7 +53,7 @@ class BlockTermReader : public TermReader {
 
  private:
   DB* db_;
-  Term* term_;
+  Term term_;
   int num_docs_;
   uint32_t docid_;
   int current_jump_table_entry_index_;

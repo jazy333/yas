@@ -60,8 +60,8 @@ class PointFieldIndexWriter : public FieldIndexWriter,
     return 0;
   }
 
-  PostingList* get(u_char* min, u_char* max) override {
-    std::vector<PostingList*> pls;
+  std::shared_ptr<PostingList> get(u_char* min, u_char* max) override {
+    std::vector<std::shared_ptr<PostingList>> pls;
     Point<T, D> min_point = Point<T, D>(min);
     Point<T, D> max_point = Point<T, D>(max);
 
@@ -74,14 +74,14 @@ class PointFieldIndexWriter : public FieldIndexWriter,
         low = low->next();
       }
       sort(docids.begin(), docids.end());
-      pls.push_back(new SequencePostingList(std::move(docids)));
+      pls.push_back(std::shared_ptr<PostingList>(new SequencePostingList(std::move(docids))));
     }
     if (pls.size() == 0) {
-      return new NonePostingList();
+      return std::shared_ptr<PostingList>(new NonePostingList());
     } else if (pls.size() == 1) {
       return pls[0];
     } else
-      return new AndPostingList(pls);
+      return std::shared_ptr<PostingList>(new AndPostingList(pls));
   }
 
   void init(int field_id, PointFieldMeta meta, std::shared_ptr<File> kdi,

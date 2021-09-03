@@ -9,9 +9,10 @@
 #include "variable_byte_compression.h"
 
 namespace yas {
-BlockTermReader::BlockTermReader(DB* db, Term* term)
+BlockTermReader::BlockTermReader(DB* db, Term term)
     : db_(db),
       term_(term),
+      num_docs_(0),
       docid_(0),
       current_jump_table_entry_index_(0),
       entries_(nullptr),
@@ -24,7 +25,8 @@ BlockTermReader::BlockTermReader(DB* db, Term* term)
 }
 
 BlockTermReader::BlockTermReader(const std::string& invert_index)
-    : docid_(0),
+    : num_docs_(0),
+      docid_(0),
       current_jump_table_entry_index_(0),
       entries_(nullptr),
       invert_index_(invert_index),
@@ -53,10 +55,9 @@ uint32_t BlockTermReader::next() {
 }
 
 int BlockTermReader::read_data() {
-  std::string key = term_->get_term() + term_->get_field();
+  std::string key = term_.get_term() + term_.get_field();
   int ret = db_->get(key, invert_index_);
   if (ret < 0 || invert_index_.size() == 0) return ret;
-  LOG_INFO("sizeof InvertIndexMeta:%d", sizeof(InvertIndexMeta));
   meta_ = (InvertIndexMeta*)(invert_index_.data());
   num_docs_ = meta_->doc_num;
   // LOG_INFO("meta->max_doc=%u,meta->doc_num=%d,last_unit_posting_list_compress_size=%u");

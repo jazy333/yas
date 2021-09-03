@@ -72,10 +72,6 @@ int IndexMerger::merge_invert(
                                                                  nullptr);
       std::string key, value;
       iter->get(key, value);
-      if (key == "载免content") {
-        std::cout << "get a problem" << std::endl;
-      }
-      std::cout << "key:" << key << ",value size:" << value.size() << std::endl;
       if (out_db->test(key) == 0) {
         continue;
       }
@@ -103,9 +99,6 @@ int IndexMerger::merge_invert(
           if (doc_maps[k].count(docid) == 0) continue;
           std::vector<uint32_t> positions = reader->positions();
           uint32_t new_docid = doc_maps[k][docid];
-          std::cout << "k:" << k << ",old id:" << docid
-                    << ",new id:" << new_docid
-                    << ",position size:" << positions.size() << std::endl;
           DocidWithPositions doc;
           doc.docid = new_docid;
           doc.positions = positions;

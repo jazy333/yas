@@ -3,12 +3,13 @@
 #include <vector>
 
 #include "posting_list.h"
+#include <memory>
 
 namespace yas {
 
 class OrPostingList : public PostingList {
  public:
-  OrPostingList(std::vector<PostingList*>& pls);
+  OrPostingList(std::vector<std::shared_ptr<PostingList>>& pls);
   virtual ~OrPostingList();
   uint32_t next() override;
   uint32_t advance(uint32_t target) override;
@@ -18,7 +19,7 @@ class OrPostingList : public PostingList {
   float score() override;
 
  private:
-  std::priority_queue<PostingList*, std::vector<PostingList*>,
+  std::priority_queue<std::shared_ptr<PostingList>, std::vector<std::shared_ptr<PostingList>>,
                       posting_list_compare_with_docid>
       pq_;
   long cost_;

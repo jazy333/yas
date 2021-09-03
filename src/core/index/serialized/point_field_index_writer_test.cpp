@@ -16,14 +16,12 @@ TEST(PointFieldIndexWriter, constructor) {
   Point<int, 2> max({150, 3000}, -1);
   auto pl = pfiw.get(min.bytes(), max.bytes());
   EXPECT_EQ(NDOCID, pl->next());
-  delete pl;
 
   Point<int, 2> min1({1, 200}, -1);
   Point<int, 2> max1({150, 300}, -1);
   pl = pfiw.get(min1.bytes(), max1.bytes());
   EXPECT_EQ(100, pl->next());
   EXPECT_EQ(NDOCID, pl->next());
-  delete pl;
 }
 
 TEST(PointFieldIndexWriter, flush) {

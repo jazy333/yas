@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <string>
 
 #include "scorer.h"
@@ -17,12 +18,14 @@ class PostingList : public Scorer {
 
  protected:
   struct posting_list_compare_with_docid {
-    bool operator()(PostingList* l, PostingList* r) {
+    bool operator()(std::shared_ptr<PostingList> l,
+                    std::shared_ptr<PostingList> r) {
       return l->docid() > r->docid();
     }
   };
   struct posting_list_compare_with_cost {
-    bool operator()(PostingList* l, PostingList* r) {
+    bool operator()(std::shared_ptr<PostingList> l,
+                    std::shared_ptr<PostingList> r) {
       return l->cost() > r->cost();
     }
   };

@@ -8,7 +8,7 @@
 namespace yas {
 SimpleTokenizer::SimpleTokenizer() : interval_(1) {}
 SimpleTokenizer::SimpleTokenizer(int interval) : interval_(interval) {}
-std::unique_ptr<TermIterator> SimpleTokenizer::get_term_iterator(
+std::shared_ptr<TermIterator> SimpleTokenizer::get_term_iterator(
     const std::string& text) {
   std::vector<Term> terms;
   std::vector<int> positions;
@@ -47,7 +47,7 @@ std::unique_ptr<TermIterator> SimpleTokenizer::get_term_iterator(
     offsets.push_back(offset + 1);
   }
 
-  return std::unique_ptr<TermIterator>(
+  return std::shared_ptr<SimpleTermIterator>(
       new SimpleTermIterator(terms, positions, offsets));
 }
 
@@ -63,7 +63,7 @@ bool SimpleTokenizer::string2wstring(const std::string& s,
     delete[] dest;
     return false;
   }
-  result = dest;
+  result.assign(dest, ret);
   delete[] dest;
 
   return true;
@@ -82,7 +82,7 @@ bool SimpleTokenizer::wstring2string(const std::wstring& s,
     delete[] dest;
     return false;
   }
-  result = dest;
+  result.assign(dest, ret);
   delete[] dest;
   return true;
 }

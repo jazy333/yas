@@ -211,12 +211,13 @@ int InvertFieldsIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
   return doc_len;
 }
 
-TermReader* InvertFieldsIndexWriter::get_reader(Term* term) {
-  std::string key = term->get_term() + term->get_field();
+std::shared_ptr<TermReader> InvertFieldsIndexWriter::get_reader(Term term) {
+  std::string key = term.get_term() + term.get_field();
   if (posting_lists_.count(key) == 0) {
     return nullptr;
   } else
-    return new MemoryTermReader(posting_lists_[key], position_lists_[key]);
+    return std::shared_ptr<TermReader>(
+        new MemoryTermReader(posting_lists_[key], position_lists_[key]));
 }
 
 int InvertFieldsIndexWriter::open() { return 0; }

@@ -11,7 +11,7 @@ class SerializedInvertFieldsIndexReader : public InvertFieldsIndexReader {
  public:
   SerializedInvertFieldsIndexReader(const std::string& invert_index_file);
   virtual ~SerializedInvertFieldsIndexReader();
-  TermReader* get_reader(Term* term) override;
+  std::shared_ptr<TermReader> get_reader(Term term) override;
   DB* get_db() override;
   int open() override;
   int close() override;

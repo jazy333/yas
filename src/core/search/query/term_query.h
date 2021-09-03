@@ -12,8 +12,8 @@ class TermQuery : public Query {
  public:
   TermQuery(Term term, IndexStat index_stat);
   virtual ~TermQuery();
-  Query* rewrite() override;
-  std::unique_ptr<Matcher> matcher(SubIndexReader* sub_reader) override;
+  std::shared_ptr<Query> rewrite() override;
+  std::shared_ptr<Matcher> matcher(SubIndexReader* sub_reader) override;
 
  private:
   Term term_;

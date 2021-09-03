@@ -6,8 +6,8 @@ class NoneMatchQuery : public Query {
  public:
   NoneMatchQuery();
   virtual ~NoneMatchQuery();
-  Query* rewrite() override;
-  std::unique_ptr<Matcher> matcher(SubIndexReader* sub_reader) override;
+  std::shared_ptr<Query> rewrite() override;
+  std::shared_ptr<Matcher> matcher(SubIndexReader* sub_reader) override;
 };
 
 }  // namespace yas

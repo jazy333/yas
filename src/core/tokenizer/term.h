@@ -6,7 +6,7 @@ class Term {
  public:
   Term(const std::string& term, const std::string& field);
   Term()=default;
-  virtual ~Term();
+  virtual ~Term()=default;
   virtual std::string get_term();
   virtual std::string get_field();
   virtual void set_term(const std::string& name);

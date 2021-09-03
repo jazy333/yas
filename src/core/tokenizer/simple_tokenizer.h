@@ -33,7 +33,7 @@ class SimpleTokenizer : public Tokenizer {
   SimpleTokenizer();
   SimpleTokenizer(int interval);
   virtual ~SimpleTokenizer() = default;
-  std::unique_ptr<TermIterator> get_term_iterator(
+  std::shared_ptr<TermIterator> get_term_iterator(
       const std::string& text) override;
   int get_interval();
   void set_interval(int interval);

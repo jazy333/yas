@@ -5,10 +5,11 @@
 #include "default_matcher.h"
 
 namespace yas {
-Query* AnyMatchQuery::rewrite() { return this; }
+std::shared_ptr<Query> AnyMatchQuery::rewrite() { return nullptr; }
 
-std::unique_ptr<Matcher> AnyMatchQuery::matcher(SubIndexReader* sub_reader) {
-  return std::unique_ptr<Matcher>(
-      new DefaultMatcher(new AnyPostingList(NDOCID - 1), new ConstScorer(0.0)));
+std::shared_ptr<Matcher> AnyMatchQuery::matcher(SubIndexReader* sub_reader) {
+  return std::unique_ptr<Matcher>(new DefaultMatcher(
+      std::shared_ptr<PostingList>(new AnyPostingList(NDOCID - 1)),
+      std::shared_ptr<Scorer>(new ConstScorer(0.0))));
 }
 }  // namespace yas

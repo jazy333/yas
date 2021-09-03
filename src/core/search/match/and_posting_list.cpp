@@ -1,7 +1,7 @@
 #include "and_posting_list.h"
 
 namespace yas {
-AndPostingList::AndPostingList(std::vector<PostingList*>& pls)
+AndPostingList::AndPostingList( std::vector<std::shared_ptr<PostingList>>& pls)
     : lead1_(nullptr), lead2_(nullptr), docid_(0) {
   if (pls.size() == 0) {
     // do nothing

@@ -3,13 +3,15 @@
 #include "scorer.h"
 
 namespace yas {
-class AugAndScorer: public Scorer {
+class AugAndScorer : public Scorer {
  public:
-  AugAndScorer(PostingList* pls,PostingList* aux);
+  AugAndScorer(std::shared_ptr<PostingList> pls,
+               std::shared_ptr<PostingList> aux);
   virtual ~AugAndScorer() = default;
   float score() override;
-  private:
-  PostingList* pl_;
-  PostingList* aux_;
+
+ private:
+  std::shared_ptr<PostingList> pl_;
+  std::shared_ptr<PostingList> aux_;
 };
 }  // namespace yas
