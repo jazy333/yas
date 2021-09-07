@@ -4,11 +4,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "field_info.h"
-#include "index_option.h"
-#include "index_stat.h"
-#include "segment_files.h"
-#include "sub_index_reader.h"
+#include "core/document/field_info.h"
+#include "core/index/index_option.h"
+#include "core/index/index_stat.h"
+#include "core/index/segment_files.h"
+#include "core/index/sub_index_reader.h"
 
 namespace yas {
 class IndexReader {

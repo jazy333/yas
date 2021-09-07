@@ -2,10 +2,10 @@
 #include <cstdint>
 #include <memory>
 
-#include "field.h"
-#include "field_index_reader.h"
-#include "field_info.h"
-#include "file.h"
+#include "core/document/field.h"
+#include "core/index/field_index_reader.h"
+#include "core/document/field_info.h"
+#include "core/db/file.h"
 #include "index_option.h"
 
 namespace yas {

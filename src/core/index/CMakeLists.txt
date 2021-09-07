@@ -22,3 +22,6 @@ set (TEST_INDEX_SRC index_reader_test.cpp index_writer_test.cpp index_merger_tes
 
 add_executable(index_test ${TEST_INDEX_SRC}) 
 target_link_libraries(index_test gtest gtest_main serialized_index document db index)
+
+
+install(TARGETS index DESTINATION lib)

@@ -3,3 +3,5 @@ add_library(log SHARED ${LIB_LOG_SRC})
 LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/common)
 include_directories(${CMAKE_SOURCE_DIR}/src/common)
 #target_link_libraries(pthread)
+
+install(TARGETS log DESTINATION lib)

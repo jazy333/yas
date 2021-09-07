@@ -3,11 +3,11 @@
 #include <memory>
 #include <vector>
 
-#include "db.h"
-#include "field_index_meta.h"
-#include "file.h"
-#include "term.h"
-#include "term_reader.h"
+#include "core/db/db.h"
+#include "core/index/field_index_meta.h"
+#include "core/db/file.h"
+#include "core/tokenizer/term.h"
+#include "core/index/term_reader.h"
 
 namespace yas {
 class FieldValueIndexReader {

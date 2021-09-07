@@ -6,3 +6,5 @@ add_library(document SHARED ${LIB_DOCUMENT_SRC})
 SET (TEST_DOCUMENT_SRC document.cpp document_test.cpp)
 add_executable(document_test ${TEST_DOCUMENT_SRC}) 
 target_link_libraries(document_test gtest gtest_main)
+
+install(TARGETS document DESTINATION lib)

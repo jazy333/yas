@@ -22,6 +22,9 @@ target_link_libraries(serialized_index common pthread algorithm
                         hash_db compression tokenizer document
                         memory_index match)
 
+
+install(TARGETS serialized_index DESTINATION lib)
+
 #unit test
 set (TEST_SERIALIZED_SRC invert_fields_index_writer_test.cpp 
                         serialized_invert_fields_index_reader_test.cpp

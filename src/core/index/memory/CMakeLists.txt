@@ -13,3 +13,5 @@ set(LIB_MEMORY_INDEX_SRC memory_field_values_index_reader_wrapper.cpp
 add_library(memory_index SHARED ${LIB_MEMORY_INDEX_SRC})
 
 target_link_libraries(memory_index common pthread algorithm)
+
+install(TARGETS memory_index DESTINATION lib)

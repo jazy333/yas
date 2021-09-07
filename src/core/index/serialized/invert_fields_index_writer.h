@@ -3,13 +3,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "field_index_reader.h"
-#include "field_index_writer.h"
-#include "hash_db.h"
-#include "index_stat.h"
-#include "simple_tokenizer.h"
-#include "term.h"
-#include "tokenizer.h"
+#include "core/index/field_index_reader.h"
+#include "core/index/field_index_writer.h"
+#include "core/db/db.h"
+#include "core/index/index_stat.h"
+#include "core/tokenizer/tokenizer.h"
+#include "core/tokenizer/term.h"
+#include "core/tokenizer/simple_tokenizer.h"
 
 namespace yas {
 class InvertFieldsIndexWriter : public FieldIndexWriter,

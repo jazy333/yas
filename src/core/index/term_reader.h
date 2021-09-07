@@ -1,5 +1,5 @@
 #pragma once
-#include "posting_list.h"
+#include "core/search/match/posting_list.h"
 
 namespace yas {
 class TermReader : public PostingList {

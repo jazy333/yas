@@ -10,3 +10,5 @@ target_link_libraries(relevance pthread search common )
 SET (TEST_RELEVANCE_SRC boolean_scorer_test.cpp boolean_relevance_test.cpp)
 add_executable(relevance_test ${TEST_RELEVANCE_SRC}) 
 target_link_libraries(relevance_test gtest gtest_main search relevance )
+
+install(TARGETS relevance DESTINATION lib)

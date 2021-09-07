@@ -2,9 +2,9 @@
 #include <string>
 #include <unordered_map>
 
-#include "field_info.h"
-#include "index_stat.h"
-#include "mmap_file.h"
+#include "core/document/field_info.h"
+#include "core/index/index_stat.h"
+#include "core/db/mmap_file.h"
 
 namespace yas {
 struct IndexOption {

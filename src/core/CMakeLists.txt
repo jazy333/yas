@@ -6,3 +6,4 @@ add_subdirectory(tokenizer)
 add_subdirectory(document)
 add_subdirectory(search)
 add_subdirectory(index)
+

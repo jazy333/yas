@@ -4,11 +4,11 @@
 #include <string>
 #include <unordered_map>
 
-#include "document.h"
-#include "index_stat.h"
-#include "invert_fields_index_writer.h"
-#include "shared_mutex.h"
-#include "sub_index_reader.h"
+#include "common/shared_mutex.h"
+#include "core/document/document.h"
+#include "core/index/index_stat.h"
+#include "core/index/serialized/invert_fields_index_writer.h"
+#include "core/index/sub_index_reader.h"
 
 namespace yas {
 class IndexWriter {

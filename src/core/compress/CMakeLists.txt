@@ -6,3 +6,5 @@ include_directories(${CMAKE_SOURCE_DIR}/src/common)
 SET (TEST_COMPRESS_SRC  bitpacking_compression_test.cpp)
 add_executable(compress_test ${TEST_COMPRESS_SRC}) 
 target_link_libraries(compress_test gtest gtest_main compression)
+
+install(TARGETS compression DESTINATION lib)

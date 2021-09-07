@@ -7,6 +7,7 @@
 #include "memory_index_reader.h"
 #include "numeric_field.h"
 #include "numeric_field_index_writer.h"
+#include "common/common.h"
 
 namespace yas {
 IndexWriter::IndexWriter()

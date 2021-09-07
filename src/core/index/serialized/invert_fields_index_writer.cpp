@@ -8,6 +8,8 @@
 #include "simd_binary_compression.h"
 #include "text_field.h"
 #include "variable_byte_compression.h"
+#include "core/log/log.h"
+#include "core/db/hash_db.h"
 
 namespace yas {
 InvertFieldsIndexWriter::InvertFieldsIndexWriter(IndexStat* index_stat)

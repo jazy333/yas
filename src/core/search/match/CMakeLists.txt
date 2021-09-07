@@ -14,3 +14,5 @@ SET (TEST_MATCH_SRC and_posting_list_test.cpp sequence_posting_list_test.cpp
                         or_posting_list_test.cpp  bit_set_posting_list_test.cpp)
 add_executable(match_test ${TEST_MATCH_SRC}) 
 target_link_libraries(match_test gtest gtest_main match)
+
+install(TARGETS match DESTINATION lib)

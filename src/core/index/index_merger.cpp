@@ -16,6 +16,7 @@
 #include "point_field.h"
 #include "point_field_index_writer.h"
 #include "text_field.h"
+#include "core/db/hash_db.h"
 
 namespace yas {
 IndexMerger::IndexMerger(IndexOption& index_option)

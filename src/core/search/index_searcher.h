@@ -2,10 +2,10 @@
 
 #include <memory>
 
-#include "index_reader.h"
-#include "match_set.h"
-#include "query.h"
-#include "relevance.h"
+#include "core/index/index_reader.h"
+#include "core/search/match/match_set.h"
+#include "core/search/query/query.h"
+#include "core/search/relevance/relevance.h"
 
 namespace yas {
 class IndexSearcher {
