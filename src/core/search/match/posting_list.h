@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "scorer.h"
+#include "core/search/scorer.h"
 
 namespace yas {
 class PostingList : public Scorer {

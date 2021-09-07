@@ -2,11 +2,11 @@
 #include <memory>
 #include <string>
 
-#include "field_index_reader.h"
-#include "posting_list.h"
-#include "term.h"
-#include "term_reader.h"
-#include "segment_info.h"
+#include "core/index/field_index_reader.h"
+#include "core/search/match/posting_list.h"
+#include "core/tokenizer/term.h"
+#include "core/index/term_reader.h"
+#include "core/index/segment_info.h"
 
 namespace yas {
 class SubIndexReader {
