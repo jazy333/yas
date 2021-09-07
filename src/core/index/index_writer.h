@@ -15,6 +15,8 @@ class IndexWriter {
  public:
   IndexWriter(/* args */);
   IndexWriter(const IndexOption& index_writer_option);
+  IndexWriter(const IndexOption& index_writer_option,
+              std::shared_ptr<Tokenizer> tokenizer);
   virtual ~IndexWriter();
   void add_document(std::unique_ptr<Document> doc);
   int open();
@@ -46,6 +48,7 @@ class IndexWriter {
   IndexOption option_;
   SharedMutex shared_mutex_;
   IndexStat index_stat_;
+  std::shared_ptr<Tokenizer> tokenizer_;
 };
 
 }  // namespace yas

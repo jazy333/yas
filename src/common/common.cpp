@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <cstdint>
 #include <utility>
+#include <memory>
 
 namespace yas {
 ssize_t pread_with_check(int fd, void *buf, size_t count, off_t offset) {
@@ -99,6 +100,37 @@ uint32_t uchar2uint(uint8_t value) {
   int fraction = value & 0x07;
   uint32_t decode = (fraction | 0x80) << (shift);
   return decode;
+}
+
+bool string2wstring(const std::string& s,
+                                     std::wstring& result) {
+  setlocale(LC_ALL, "zh_CN.UTF-8");
+  const char* source = s.c_str();
+  size_t dst_size = s.size() + 1;
+  auto dest_ptr = std::unique_ptr<wchar_t[]>(new wchar_t[dst_size]());
+  auto dest = dest_ptr.get();
+  size_t ret = mbstowcs(dest, source, dst_size);
+  if (ret == -1) {
+    return false;
+  }
+  result.assign(dest, ret);
+  return true;
+}
+
+bool wstring2string(const std::wstring& s,
+                                     std::string& result) {
+  std::string cur_locale = setlocale(LC_ALL, NULL);
+
+  const wchar_t* source = s.c_str();
+  size_t dst_size = sizeof(wchar_t) * s.size() + 1;
+  auto dest_ptr = std::unique_ptr<char[]>(new char[dst_size]());
+  auto dest = dest_ptr.get();
+  size_t ret = wcstombs(dest, source, dst_size);
+  if (ret == -1) {
+    return false;
+  }
+  result.assign(dest, ret);
+  return true;
 }
 
 }  // namespace yas

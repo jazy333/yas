@@ -13,12 +13,12 @@
 
 namespace yas {
 InvertFieldsIndexWriter::InvertFieldsIndexWriter(IndexStat* index_stat)
-    : tokenizer_(std::unique_ptr<Tokenizer>(new SimpleTokenizer(2))),
+    : tokenizer_(std::shared_ptr<Tokenizer>(new SimpleTokenizer(2))),
       index_stat_(index_stat) {}
 
-InvertFieldsIndexWriter::InvertFieldsIndexWriter(
-    std::unique_ptr<Tokenizer> tokenizer)
-    : tokenizer_(std::move(tokenizer)) {}
+InvertFieldsIndexWriter::InvertFieldsIndexWriter(IndexStat* index_stat,
+    std::shared_ptr<Tokenizer> tokenizer)
+    : tokenizer_(tokenizer),index_stat_(index_stat) {}
 
 InvertFieldsIndexWriter::~InvertFieldsIndexWriter() {}
 

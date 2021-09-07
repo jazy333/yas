@@ -1,8 +1,8 @@
 #pragma once
-#include "field_index_reader.h"
-#include "field_index_writer.h"
-#include "field_info.h"
-#include "file.h"
+#include "core/index/field_index_reader.h"
+#include "core/index/field_index_writer.h"
+#include "core/document/field_info.h"
+#include "core/db/file.h"
 
 namespace yas {
 class NumericFieldIndexWriter : public FieldIndexWriter,

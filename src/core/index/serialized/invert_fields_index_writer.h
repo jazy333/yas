@@ -22,7 +22,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
 
  public:
   InvertFieldsIndexWriter(IndexStat* index_stat);
-  InvertFieldsIndexWriter(std::unique_ptr<Tokenizer> tokenizer);
+  InvertFieldsIndexWriter(IndexStat* index_stat,std::shared_ptr<Tokenizer> tokenizer);
   virtual ~InvertFieldsIndexWriter();
   void flush(FieldInfo fi, uint32_t max_doc,
              const IndexOption& option) override;
@@ -36,7 +36,7 @@ class InvertFieldsIndexWriter : public FieldIndexWriter,
    DB* get_db() override;
 
  private:
-  std::unique_ptr<Tokenizer> tokenizer_;
+  std::shared_ptr<Tokenizer> tokenizer_;
   std::unordered_map<std::string, std::vector<uint32_t>> posting_lists_;
   std::unordered_map<std::string, std::vector<std::vector<uint32_t>>>
       position_lists_;

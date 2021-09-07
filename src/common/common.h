@@ -1,6 +1,8 @@
 #pragma once
 #include <immintrin.h>
 #include <sys/types.h>
+#include <string>
+
 #include <cstdint>
 
 #define MM_LOAD_SI_128 _mm_loadu_si128
@@ -12,7 +14,8 @@ ssize_t pwrite_with_check(int fd, const void *buf, size_t count, off_t offset);
 ssize_t read_with_check(int fd, void *buf, size_t count);
 ssize_t write_with_check(int fd, const void *buf, size_t count);
 inline int round(int len, int align) { return ((len - 1) / align + 1) * align; }
-template<class T> T gcd(T a, T b){
+template <class T>
+T gcd(T a, T b) {
   if (b == 0)
     return a;
   else {
@@ -45,5 +48,7 @@ __attribute__((const)) inline bool need_padding_to_128Bits(const T *inbyte) {
 
 uint8_t uint2uchar(uint32_t value);
 uint32_t uchar2uint(uint8_t value);
+bool string2wstring(const std::string &s, std::wstring &result);
+bool wstring2string(const std::wstring &s, std::string &result);
 
 }  // namespace yas

@@ -3,22 +3,39 @@
 #include <ctime>
 
 #include "binary_field_index_writer.h"
+#include "common/common.h"
 #include "log.h"
 #include "memory_index_reader.h"
 #include "numeric_field.h"
 #include "numeric_field_index_writer.h"
-#include "common/common.h"
 
 namespace yas {
 IndexWriter::IndexWriter()
-    : max_doc_(1), max_field_num_(1), option_(IndexOption()) {
+    : max_doc_(1),
+      max_field_num_(1),
+      option_(IndexOption()),
+      tokenizer_(std::shared_ptr<Tokenizer>(new SimpleTokenizer())) {
   index_stat_.doc_count = 0;
   index_stat_.max_doc = 0;
   index_stat_.total_term_freq = 0;
 }
 
 IndexWriter::IndexWriter(const IndexOption& index_writer_option)
-    : max_doc_(1), max_field_num_(1), option_(index_writer_option) {
+    : max_doc_(1),
+      max_field_num_(1),
+      option_(index_writer_option),
+      tokenizer_(std::shared_ptr<Tokenizer>(new SimpleTokenizer())) {
+  index_stat_.doc_count = 0;
+  index_stat_.max_doc = 0;
+  index_stat_.total_term_freq = 0;
+}
+
+IndexWriter::IndexWriter(const IndexOption& index_writer_option,
+                         std::shared_ptr<Tokenizer> tokenizer)
+    : max_doc_(1),
+      max_field_num_(1),
+      option_(index_writer_option),
+      tokenizer_(tokenizer) {
   index_stat_.doc_count = 0;
   index_stat_.max_doc = 0;
   index_stat_.total_term_freq = 0;
@@ -83,7 +100,7 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
       case 1: {  // invert
         if (!invert_fields_writer_) {
           invert_fields_writer_ = std::shared_ptr<InvertFieldsIndexWriter>(
-              new InvertFieldsIndexWriter(&index_stat_));
+              new InvertFieldsIndexWriter(&index_stat_, tokenizer_));
           invert_fields_reader_ = invert_fields_writer_;
         }
         int doc_len = invert_fields_writer_->add(max_doc_, field);
@@ -150,7 +167,7 @@ int IndexWriter::write_segment_info() {
   auto segment_file_handle = std::unique_ptr<File>(new MMapFile);
   std::string file_si = option_.get_segment_info_file();
   segment_file_handle->open(file_si, true, true);
-  uint32_t max_doc = max_doc_.load()-1;
+  uint32_t max_doc = max_doc_.load() - 1;
   segment_file_handle->append(&max_doc, sizeof(max_doc));
   time_t now = time(nullptr);
   segment_file_handle->append(&now, sizeof(now));
@@ -160,10 +177,12 @@ int IndexWriter::write_segment_info() {
 
 void IndexWriter::flush() {
   std::lock_guard<SharedMutex> lock(shared_mutex_);
-  FieldInfo dummy;
-  invert_fields_writer_->flush(dummy, max_doc_, option_);
-  invert_fields_writer_->close();
-  invert_fields_writer_->open();
+  if (invert_fields_writer_) {
+    FieldInfo dummy;
+    invert_fields_writer_->flush(dummy, max_doc_, option_);
+    invert_fields_writer_->close();
+    invert_fields_writer_->open();
+  }
 
   for (auto kv : point_fields_index_writers_) {
     auto field_name = kv.first;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "field.h"
-#include "numeric_field_index_writer.h"
+#include "core/index/serialized/numeric_field_index_writer.h"
 
 namespace yas {
 class NumericFieldIndexWriter;
