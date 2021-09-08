@@ -1,5 +1,6 @@
 #pragma once
 #include <pthread.h>
+#include <string>
 
 #include "file.h"
 
@@ -32,5 +33,6 @@ class MMapFile : public File {
   int32_t open_options_;
   pthread_rwlock_t rwlock_;
   off_t offset_;
+  std::string path_;
 };
 }  // namespace yas

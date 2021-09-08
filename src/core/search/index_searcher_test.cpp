@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "boolean_query.h"
+#include "delimeter_tokenizer.h"
 #include "simple_tokenizer.h"
 #include "term_query.h"
 
@@ -19,15 +20,15 @@ TEST(IndexSearcher, search) {
   if (test_map.count(test_field_name) == 1)
     std::cout << "get a key" << std::endl;
   IndexOption option;
-  option.current_segment_no = 3;
-  option.dir = "data/index";
+  option.current_segment_no = 1;
+  option.dir = "/search/workspace/ios_instant_index/index/data/service";
   option.segment_prefix = "segment.";
   IndexReader reader(option);
   reader.open();
   IndexSearcher searcher(&reader);
-  auto tokenizer = std::unique_ptr<Tokenizer>(new SimpleTokenizer(2));
-  std::string text = "搜狗翻译";
-  std::string field = "content";
+  auto tokenizer = std::unique_ptr<Tokenizer>(new DelimeterTokenizer());
+  std::string text = "制作";
+  std::string field = "name";
   auto ti = tokenizer->get_term_iterator(text);
   std::vector<std::shared_ptr<BooleanExpression>> expressions;
   IndexStat index_stat = reader.get_index_stat();
@@ -48,6 +49,49 @@ TEST(IndexSearcher, search) {
   MatchedDoc doc;
   while (result.next(doc)) {
     std::cout << "docid:" << doc.docid_ << ",score:" << doc.score_ << std::endl;
+    auto fv_reader = doc.field_value_reader;
+    for (int i = 1; i <= 32; ++i) {
+      std::cout<<"dump info begin==="<<std::endl;
+      std::cout<<"inner id:"<<i<<std::endl;
+      auto id_reader = fv_reader->get_reader("id") ;
+      if (id_reader) {
+        std::string id;
+        std::vector<uint8_t> value;
+        id_reader->get(i, value);
+        id.assign(value.begin(), value.end());
+        std::cout << "id:" << id << std::endl;
+      }
+
+      auto dociid_reader = fv_reader->get_reader("docid") ;
+      if (dociid_reader) {
+        std::string id;
+        uint64_t value;
+        dociid_reader->get(i, value);
+        std::cout << "docid:" << (long)value << std::endl;
+      }
+
+      auto importance_reader = fv_reader->get_reader("importance_rank");
+      if (importance_reader) {
+        uint64_t value = -1;
+        importance_reader->get(i, value);
+        std::cout << "importance rank:" << value << std::endl;
+      }
+
+      auto name_int_reader = fv_reader->get_reader("name_int");
+      if (name_int_reader) {
+        uint64_t value = -1;
+        name_int_reader->get(i, value);
+        std::cout << "name_int:" << (long)value << std::endl;
+      }
+
+      auto name_dl_reader = fv_reader->get_reader("__name_dl");
+      if (name_dl_reader) {
+        uint64_t value = -1;
+        name_dl_reader->get(i, value);
+        std::cout << "name doc len:" << (long)value << std::endl;
+      }
+      std::cout<<"dump info end==="<<std::endl;
+    }
   }
 }
 }  // namespace yas

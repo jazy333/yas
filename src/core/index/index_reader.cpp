@@ -105,7 +105,8 @@ int IndexReader::open() {
     std::shared_ptr<SegmentIndexReader> segment_reader =
         std::shared_ptr<SegmentIndexReader>(
             new SegmentIndexReader(files[i], field_infos_));
-    segment_reader->open();
+    int ret = segment_reader->open();
+    if (ret < 0) continue;
     sub_index_readers_.push_back(segment_reader);
   }
   return 0;

@@ -53,6 +53,7 @@ IndexWriter::~IndexWriter() {
 int IndexWriter::open() {
   option_.read_stat(index_stat_);
   max_field_num_ = option_.read_field_info(field_infos_);
+  option_.current_segment_no=index_stat_.max_seg_no;
   return 0;
 }
 
@@ -160,6 +161,7 @@ void IndexWriter::add_document(std::unique_ptr<Document> doc) {
   }
   index_stat_.doc_count++;
   index_stat_.max_doc = max_doc_.load();
+
   ++max_doc_;
 }
 
@@ -179,7 +181,7 @@ void IndexWriter::flush() {
   std::lock_guard<SharedMutex> lock(shared_mutex_);
   if (invert_fields_writer_) {
     FieldInfo dummy;
-    invert_fields_writer_->flush(dummy, max_doc_, option_);
+    invert_fields_writer_->flush(dummy, max_doc_-1, option_);
     invert_fields_writer_->close();
     invert_fields_writer_->open();
   }
@@ -188,7 +190,7 @@ void IndexWriter::flush() {
     auto field_name = kv.first;
     auto field_index_writer = kv.second;
     FieldInfo field_info = field_infos_[field_name];
-    field_index_writer->flush(field_info, max_doc_, option_);
+    field_index_writer->flush(field_info, max_doc_-1, option_);
     delete field_index_writer;
   }
   point_fields_index_writers_.clear();
@@ -197,16 +199,17 @@ void IndexWriter::flush() {
     auto field_name = kv.first;
     auto field_index_writer = kv.second;
     FieldInfo field_info = field_infos_[field_name];
-    field_index_writer->flush(field_info, max_doc_, option_);
+    field_index_writer->flush(field_info, max_doc_-1, option_);
   }
   field_values_index_writers_.clear();
-
+  index_stat_.max_seg_no = option_.current_segment_no + 1;
   option_.write_stat(index_stat_);
   option_.write_field_info(field_infos_);
 
   write_segment_info();
 
   option_.current_segment_no++;
+
   max_doc_ = 1;
 }
 

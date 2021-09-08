@@ -23,7 +23,7 @@ class IndexMerger {
     }
   };
 
-  IndexMerger(IndexOption& index_option);
+  IndexMerger(IndexOption& index_option,IndexOption& merge_option);
   virtual ~IndexMerger();
   int merge();
 
@@ -37,7 +37,7 @@ class IndexMerger {
   int merge_invert(
       std::vector<std::shared_ptr<InvertFieldsIndexReader>>& readers,
       std::vector<std::unordered_map<uint32_t, uint32_t>>& doc_maps,
-      FieldInfo& field_info, uint32_t max_doc);
+      FieldInfo& field_info, uint32_t max_doc,uint32_t& term_freq);
   template <class T, int D>
   int merge_point(
       FieldInfo info, std::vector<PointFieldMeta*> metas,
@@ -52,5 +52,6 @@ class IndexMerger {
 
  private:
   IndexOption index_option_;
+  IndexOption merge_option_;
 };
 }  // namespace yas

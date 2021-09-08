@@ -3,28 +3,31 @@
 #include <iterator>
 #include <memory>
 
+#include "core/db/hash_db.h"
+#include "core/log/log.h"
 #include "memory_file.h"
 #include "memory_term_reader.h"
 #include "simd_binary_compression.h"
 #include "text_field.h"
 #include "variable_byte_compression.h"
-#include "core/log/log.h"
-#include "core/db/hash_db.h"
 
 namespace yas {
 InvertFieldsIndexWriter::InvertFieldsIndexWriter(IndexStat* index_stat)
     : tokenizer_(std::shared_ptr<Tokenizer>(new SimpleTokenizer(2))),
       index_stat_(index_stat) {}
 
-InvertFieldsIndexWriter::InvertFieldsIndexWriter(IndexStat* index_stat,
-    std::shared_ptr<Tokenizer> tokenizer)
-    : tokenizer_(tokenizer),index_stat_(index_stat) {}
+InvertFieldsIndexWriter::InvertFieldsIndexWriter(
+    IndexStat* index_stat, std::shared_ptr<Tokenizer> tokenizer)
+    : tokenizer_(tokenizer), index_stat_(index_stat) {}
 
 InvertFieldsIndexWriter::~InvertFieldsIndexWriter() {}
 
 void InvertFieldsIndexWriter::flush(
     std::shared_ptr<DB> db, std::string key, std::vector<uint32_t>& docids,
     std::vector<std::vector<uint32_t>>& positions) {
+  if (docids.size() == 0 || positions.size() == 0 || !db) {
+    return;
+  }
   size_t unit_reserve_size = 2000;
   auto unit_ptr = std::unique_ptr<uint8_t[]>(new uint8_t[unit_reserve_size]());
   uint8_t* unit = unit_ptr.get();

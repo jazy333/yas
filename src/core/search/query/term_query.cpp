@@ -13,6 +13,7 @@ std::shared_ptr<Query> TermQuery::rewrite() { return nullptr; }
 
 std::shared_ptr<Matcher> TermQuery::matcher(SubIndexReader* sub_reader) {
   auto invert_reader = sub_reader->invert_index_reader();
+  if (!invert_reader) return nullptr;
   auto field_values_reader = sub_reader->field_values_reader();
   std::string doc_len_name = "__" + term_.get_field() + "_dl";
   std::shared_ptr<FieldValueIndexReader> field_index_reader = nullptr;

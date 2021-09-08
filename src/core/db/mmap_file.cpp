@@ -39,6 +39,8 @@ int MMapFile::open(const std::string& path, bool writable, bool trunc) {
     return -1;
   }
 
+  path_ = path;
+
   int32_t oflags = O_RDONLY;
 
   if (writable) {
@@ -50,7 +52,8 @@ int MMapFile::open(const std::string& path, bool writable, bool trunc) {
 
   int32_t fd = ::open(path.c_str(), oflags, 0644);
   if (fd < 0) {
-    LOG_ERROR("open error:path=%s,error=%s", path.c_str(),std::strerror(errno));
+    LOG_ERROR("open error:path=%s,error=%s", path.c_str(),
+              std::strerror(errno));
     return -1;
   }
 
@@ -145,8 +148,8 @@ int MMapFile::read(int64_t off, void* buf, size_t size) {
   pthread_rwlock_rdlock(&rwlock_);
   int64_t read_end = off + size;
   if (read_end > file_size_) {
-    LOG_ERROR("read excced end,read_end=%ld,size=%lu,file_size=%ld", read_end,
-              size, file_size_);
+    LOG_ERROR("read excced end,read_end=%ld,size=%lu,file=%s,file_size=%ld",
+              read_end, size, path_.c_str(), file_size_);
     pthread_rwlock_unlock(&rwlock_);
     return -1;
   }

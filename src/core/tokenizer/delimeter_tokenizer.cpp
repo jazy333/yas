@@ -25,7 +25,6 @@ std::shared_ptr<TermIterator> DelimeterTokenizer::get_term_iterator(
     int offset = 0;
     while (i < wtext.size()) {
       if (wtext[i] == wdelimeter[0]) {
-        offset = i-1;
         ++i;
         break;
       } else {
@@ -34,6 +33,8 @@ std::shared_ptr<TermIterator> DelimeterTokenizer::get_term_iterator(
       ++i;
     }
 
+    offset = i-1;
+    
     if (wterm_text.size() == 0) {
       continue;
     }

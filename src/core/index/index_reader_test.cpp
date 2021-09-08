@@ -5,9 +5,9 @@
 namespace yas {
 TEST(IndexReader, open) {
   IndexOption option;
-  option.current_segment_no = 3;
-  option.dir = "data/index";
-  option.segment_prefix = "segment.";
+  option.current_segment_no = 0;
+  option.dir = "/search/workspace/ios_instant_index/index/data/service/merge/";
+  option.segment_prefix = "merge.";
   IndexReader reader(option);
   reader.open();
   reader.close();

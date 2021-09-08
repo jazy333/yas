@@ -34,7 +34,8 @@ SegmentIndexReader::point_fields_reader() {
 
 int SegmentIndexReader::read_segment_info() {
   auto segment_file_handle = std::unique_ptr<File>(new MMapFile);
-  segment_file_handle->open(files_.si, false);
+  int ret = segment_file_handle->open(files_.si, false);
+  if (ret < 0) return ret;
   segment_file_handle->read(&info_.max_docid, sizeof(info_.max_docid));
   segment_file_handle->read(&info_.last_update_time,
                             sizeof(info_.last_update_time));
@@ -46,19 +47,27 @@ int SegmentIndexReader::open() {
   point_fields_index_reader_ = std::shared_ptr<PointFieldsIndexReader>(
       new SerializedPointFieldsIndexReader(field_infos_, files_.kdm, files_.kdi,
                                            files_.kdd));
-  point_fields_index_reader_->open();
+  int ret = point_fields_index_reader_->open();
+  if (ret < 0) {
+    point_fields_index_reader_ = nullptr;
+  }
 
   invert_fields_index_reader_ = std::shared_ptr<InvertFieldsIndexReader>(
       new SerializedInvertFieldsIndexReader(files_.invert_index_file));
-  invert_fields_index_reader_->open();
+  ret = invert_fields_index_reader_->open();
+  if (ret < 0) {
+    invert_fields_index_reader_ = nullptr;
+  }
 
   field_values_index_reader_ = std::shared_ptr<FieldValuesIndexReader>(
       new SerializedFieldValuesIndexReader(files_.fvm, files_.fvd, id2name_));
-  field_values_index_reader_->open();
+  ret = field_values_index_reader_->open();
+  if (ret < 0) {
+    field_values_index_reader_ = nullptr;
+  }
+  ret = read_segment_info();
 
-  read_segment_info();
-
-  return 0;
+  return ret;
 }
 
 int SegmentIndexReader::close() {

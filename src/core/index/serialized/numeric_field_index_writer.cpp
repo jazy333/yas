@@ -10,7 +10,10 @@
 
 namespace yas {
 
-NumericFieldIndexWriter::NumericFieldIndexWriter() : first_(true) {}
+NumericFieldIndexWriter::NumericFieldIndexWriter() : first_(true) {
+  max_value_=std::numeric_limits<uint64_t>::min();
+  min_value_=std::numeric_limits<uint64_t>::max();
+}
 
 void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
                                     const IndexOption& option) {

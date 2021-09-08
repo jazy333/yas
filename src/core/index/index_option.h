@@ -2,9 +2,9 @@
 #include <string>
 #include <unordered_map>
 
+#include "core/db/mmap_file.h"
 #include "core/document/field_info.h"
 #include "core/index/index_stat.h"
-#include "core/db/mmap_file.h"
 
 namespace yas {
 struct IndexOption {
@@ -28,11 +28,14 @@ struct IndexOption {
 
   int read_stat(IndexStat& index_stat) {
     auto stat_file_handle = std::unique_ptr<File>(new MMapFile());
-    stat_file_handle->open(dir + "/" + stat_file, false);
+    int ret = stat_file_handle->open(dir + "/" + stat_file, false);
+    if (ret < 0) return -1;
     stat_file_handle->read(&index_stat.doc_count, sizeof(index_stat.doc_count));
     stat_file_handle->read(&index_stat.max_doc, sizeof(index_stat.max_doc));
     stat_file_handle->read(&index_stat.total_term_freq,
                            sizeof(index_stat.total_term_freq));
+    stat_file_handle->read(&index_stat.max_seg_no,
+                           sizeof(index_stat.max_seg_no));
     stat_file_handle->close();
     return 0;
   }
@@ -45,6 +48,8 @@ struct IndexOption {
     stat_file_handle->append(&index_stat.max_doc, sizeof(index_stat.max_doc));
     stat_file_handle->append(&index_stat.total_term_freq,
                              sizeof(index_stat.total_term_freq));
+    stat_file_handle->append(&index_stat.max_seg_no,
+                             sizeof(index_stat.max_seg_no));
     stat_file_handle->close();
     return 0;
   }

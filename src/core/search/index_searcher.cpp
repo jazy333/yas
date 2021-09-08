@@ -20,6 +20,7 @@ void IndexSearcher::search(Query* q, MatchSet& set) {
       MatchedDoc md;
       md.docid_ = pl->docid();
       md.score_ = scorer->score();
+      md.field_value_reader=field_values_reader;
       set.add(md);
       std::string id;
       if(id_reader){

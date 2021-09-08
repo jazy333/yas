@@ -327,7 +327,11 @@ HashDB::HashDB()
 
 int HashDB::open(const std::string& path) {
   std::cout << "db path:" << path << std::endl;
-  file_->open(path, true);
+  int ret = file_->open(path, true);
+  if (ret < 0) {
+    LOG_ERROR("open db fail,%s", path.c_str());
+    return ret;
+  }
   path_ = path;
   if (file_->size() == 0) {
     init();
@@ -366,9 +370,9 @@ int HashDB::do_process(int type, const std::string& key,
   int64_t parent_offset = 0;
 
   int status = append_record(type, key, value, &offset);
-  //std::cout << "status:" << status << ",offset:" << offset
-    //      << ",old offset:" << old_offset << ",bucket_index:" << bucket_index
-      //  << std::endl;
+  // std::cout << "status:" << status << ",offset:" << offset
+  //      << ",old offset:" << old_offset << ",bucket_index:" << bucket_index
+  //  << std::endl;
   int64_t current_offset = -1;
   size_t old_value_size = 0;
 
@@ -396,7 +400,7 @@ int HashDB::do_process(int type, const std::string& key,
         if (current_offset == 0) {
           eff_data_size_ += key.size() + value.size();
           num_records_.fetch_add(1);
-        } else {//exists
+        } else {  // exists
           eff_data_size_ += value.size() - old_value_size;
         }
         break;
@@ -462,10 +466,10 @@ int HashDB::get(const std::string& key, std::string& value) {
 }
 
 /*
-*0:exsists
-*1:not exsists
-*2:delete
-*/
+ *0:exsists
+ *1:not exsists
+ *2:delete
+ */
 int HashDB::test(const std::string& key) {
   string value;
   return do_read(3, key, value);

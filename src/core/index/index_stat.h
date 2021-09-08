@@ -1,6 +1,6 @@
 #pragma once
-#include <string>
 #include <cstdint>
+#include <string>
 
 namespace yas {
 struct IndexStat {
@@ -8,6 +8,7 @@ struct IndexStat {
   long doc_count;
   uint32_t max_doc;
   long total_term_freq;
+  int max_seg_no;
 };
 
 }  // namespace yas

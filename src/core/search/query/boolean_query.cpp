@@ -181,7 +181,8 @@ std::shared_ptr<Matcher> BooleanQuery::matcher(SubIndexReader* sub_reader) {
     } else {
       std::vector<std::shared_ptr<PostingList>> pls;
       for (auto&& query : map_expressions_[Operator::OR]) {
-        auto matcher=query->matcher(sub_reader);
+        auto matcher = query->matcher(sub_reader);
+        if (!matcher) continue;
         auto pl = matcher->posting_list();
         pls.push_back(pl);
       }
