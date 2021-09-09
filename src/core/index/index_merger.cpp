@@ -83,6 +83,7 @@ int IndexMerger::merge_invert(
       term_readers[i] =
           std::shared_ptr<BlockTermReader>(new BlockTermReader(value));
       for (int j = i + 1; j < readers.size(); ++j) {
+        if(!readers[j]) continue;
         DB* db = readers[j]->get_db();
         if (db->test(key) == 0) {
           std::string value;

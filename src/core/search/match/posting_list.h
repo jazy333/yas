@@ -3,6 +3,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "core/search/scorer.h"
 
@@ -15,6 +16,9 @@ class PostingList : public Scorer {
   virtual uint32_t docid() = 0;
   virtual long cost() = 0;
   virtual std::string name() { return "PostingList"; }
+  virtual std::unordered_map<std::string, int> hit() {
+    return std::unordered_map<std::string, int>();
+  }
 
  protected:
   struct posting_list_compare_with_docid {

@@ -214,4 +214,10 @@ int BlockTermReader::doc_freq() { return num_docs_; }
 
 void BlockTermReader::set_scorer(Scorer* scorer) { scorer_ = scorer; }
 
+std::unordered_map<std::string, int> BlockTermReader::hit() {
+  std::unordered_map<std::string, int> hits;
+  hits[term_.get_field()] = 1;
+  return hits;
+}
+
 }  // namespace yas

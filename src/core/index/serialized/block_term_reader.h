@@ -45,6 +45,7 @@ class BlockTermReader : public TermReader {
   int doc_freq() override;
   void set_scorer(Scorer* scorer) override;
   std::vector<uint32_t> positions();
+  std::unordered_map<std::string, int> hit() override;
 
  private:
   void next_unit(uint32_t target);

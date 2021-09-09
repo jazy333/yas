@@ -1,9 +1,9 @@
 #pragma once
+#include <memory>
 #include <queue>
 #include <vector>
 
 #include "posting_list.h"
-#include <memory>
 
 namespace yas {
 
@@ -17,9 +17,11 @@ class OrPostingList : public PostingList {
   long cost() override;
   std::string name() override;
   float score() override;
+  std::unordered_map<std::string, int> hit() override;
 
  private:
-  std::priority_queue<std::shared_ptr<PostingList>, std::vector<std::shared_ptr<PostingList>>,
+  std::priority_queue<std::shared_ptr<PostingList>,
+                      std::vector<std::shared_ptr<PostingList>>,
                       posting_list_compare_with_docid>
       pq_;
   long cost_;

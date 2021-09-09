@@ -20,9 +20,9 @@ TEST(IndexSearcher, search) {
   if (test_map.count(test_field_name) == 1)
     std::cout << "get a key" << std::endl;
   IndexOption option;
-  option.current_segment_no = 1;
-  option.dir = "/search/workspace/ios_instant_index/index/data/service";
-  option.segment_prefix = "segment.";
+  option.current_segment_no = 3;
+  option.dir = "/search/workspace/ios_instant_index/index/data/service/merge";
+  option.segment_prefix = "merge.";
   IndexReader reader(option);
   reader.open();
   IndexSearcher searcher(&reader);
@@ -49,11 +49,17 @@ TEST(IndexSearcher, search) {
   MatchedDoc doc;
   while (result.next(doc)) {
     std::cout << "docid:" << doc.docid_ << ",score:" << doc.score_ << std::endl;
+    if (doc.doc_lens.count(field) == 1)
+      std::cout << "doc len:" << doc.doc_lens[field] << std::endl;
+    if (doc.match_term_counts.count(field) == 1)
+      std::cout << "term matched len:" << doc.match_term_counts[field]
+                 << std::endl;
+
     auto fv_reader = doc.field_value_reader;
     for (int i = 1; i <= 32; ++i) {
-      std::cout<<"dump info begin==="<<std::endl;
-      std::cout<<"inner id:"<<i<<std::endl;
-      auto id_reader = fv_reader->get_reader("id") ;
+      std::cout << "dump info begin===" << std::endl;
+      std::cout << "inner id:" << i << std::endl;
+      auto id_reader = fv_reader->get_reader("id");
       if (id_reader) {
         std::string id;
         std::vector<uint8_t> value;
@@ -62,7 +68,7 @@ TEST(IndexSearcher, search) {
         std::cout << "id:" << id << std::endl;
       }
 
-      auto dociid_reader = fv_reader->get_reader("docid") ;
+      auto dociid_reader = fv_reader->get_reader("docid");
       if (dociid_reader) {
         std::string id;
         uint64_t value;
@@ -90,7 +96,7 @@ TEST(IndexSearcher, search) {
         name_dl_reader->get(i, value);
         std::cout << "name doc len:" << (long)value << std::endl;
       }
-      std::cout<<"dump info end==="<<std::endl;
+      std::cout << "dump info end===" << std::endl;
     }
   }
 }

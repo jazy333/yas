@@ -77,4 +77,32 @@ float OrPostingList::score() {
   }
   return sum;
 }
+
+std::unordered_map<std::string, int> OrPostingList::hit() {
+  if (pq_.size() == 0) return std::unordered_map<std::string, int>();
+  std::unordered_map<std::string, int> counts;
+  std::vector<std::shared_ptr<PostingList>> pls;
+  std::shared_ptr<PostingList> top = nullptr;
+  uint32_t doc = 0;
+  do {
+    top = pq_.top();
+    doc = top->docid();
+    if (doc != docid_) break;
+    auto hits = top->hit();
+    for (auto kv : hits) {
+      if (counts.count(kv.first) == 1) {
+        counts[kv.first] += kv.second;
+      } else {
+        counts[kv.first] = kv.second;
+      }
+    }
+    pq_.pop();
+    pls.push_back(top);
+  } while (pq_.size() > 0);
+
+  for (auto p : pls) {
+    pq_.push(p);
+  }
+  return counts;
+}
 }  // namespace yas
