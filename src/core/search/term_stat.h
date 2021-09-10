@@ -1,5 +1,5 @@
 #pragma once
-#include "term.h"
+#include "core/tokenizer/term.h"
 
 namespace yas {
 class TermStat {

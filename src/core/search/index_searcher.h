@@ -10,13 +10,16 @@
 namespace yas {
 class IndexSearcher {
  public:
-  IndexSearcher(IndexReader* reader);
+  IndexSearcher(std::shared_ptr<IndexReader> reader);
+  IndexSearcher();
   virtual ~IndexSearcher();
   void search(Query* q, MatchSet& set);
   std::shared_ptr<Query> rewrite(std::shared_ptr<Query> query);
+  void set_reader(std::shared_ptr<IndexReader> reader);
+  std::shared_ptr<IndexReader> get_reader();
 
  private:
-  IndexReader* reader_;
+  std::shared_ptr<IndexReader> reader_;
 };
 
 }  // namespace yas

@@ -1,6 +1,6 @@
 #pragma once
-#include "posting_list.h"
-#include "scorer.h"
+#include "core/search/match/posting_list.h"
+#include "core/search/scorer.h"
 
 namespace yas {
 class Matcher {

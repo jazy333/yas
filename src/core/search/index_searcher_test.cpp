@@ -23,15 +23,15 @@ TEST(IndexSearcher, search) {
   option.current_segment_no = 3;
   option.dir = "/search/workspace/ios_instant_index/index/data/service/merge";
   option.segment_prefix = "merge.";
-  IndexReader reader(option);
-  reader.open();
-  IndexSearcher searcher(&reader);
+  auto reader=std::make_shared<IndexReader>(option);
+  reader->open();
+  IndexSearcher searcher(reader);
   auto tokenizer = std::unique_ptr<Tokenizer>(new DelimeterTokenizer());
   std::string text = "制作";
   std::string field = "name";
   auto ti = tokenizer->get_term_iterator(text);
   std::vector<std::shared_ptr<BooleanExpression>> expressions;
-  IndexStat index_stat = reader.get_index_stat();
+  IndexStat index_stat = reader->get_index_stat();
   while (ti->next()) {
     Term term = ti->term();
     term.set_field(field);

@@ -20,7 +20,9 @@ IndexReader::IndexReader(IndexOption option) : option_(option) {
 
 IndexReader::IndexReader() : option_(IndexOption()) {}
 
-IndexReader::~IndexReader() {}
+IndexReader::~IndexReader() {
+  close();
+}
 
 std::vector<std::shared_ptr<SubIndexReader>>
 IndexReader::get_sub_index_readers() {
@@ -129,5 +131,9 @@ IndexStat IndexReader::get_index_stat() { return index_stat_; }
 std::unordered_map<std::string, FieldInfo> IndexReader::get_field_infos() {
   return field_infos_;
 }
+
+void IndexReader::set_option(const IndexOption& option) { option_ = option; }
+
+IndexOption& IndexReader::get_option() { return option_; }
 
 }  // namespace yas

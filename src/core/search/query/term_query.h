@@ -1,11 +1,11 @@
 #pragma once
 
-#include "posting_list.h"
-#include "query.h"
-#include "sub_index_reader.h"
-#include "term.h"
-#include "index_stat.h"
-#include "term_stat.h"
+#include "core/index/index_stat.h"
+#include "core/index/sub_index_reader.h"
+#include "core/search/match/posting_list.h"
+#include "core/search/query/query.h"
+#include "core/search/term_stat.h"
+#include "core/tokenizer/term.h"
 
 namespace yas {
 class TermQuery : public Query {

@@ -1,7 +1,7 @@
 #pragma once
-#include "index_stat.h"
+#include "core/index/index_stat.h"
 #include "relevance_scorer.h"
-#include "term_stat.h"
+#include "core/search/term_stat.h"
 
 namespace yas {
 class Relevance {

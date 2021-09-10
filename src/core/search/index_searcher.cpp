@@ -5,11 +5,15 @@
 #include "matcher.h"
 
 namespace yas {
-IndexSearcher::IndexSearcher(IndexReader* reader) : reader_(reader) {}
+IndexSearcher::IndexSearcher(std::shared_ptr<IndexReader> reader)
+    : reader_(reader) {}
+
+IndexSearcher::IndexSearcher() : reader_(nullptr) {}
 
 IndexSearcher::~IndexSearcher() {}
 
 void IndexSearcher::search(Query* q, MatchSet& set) {
+  if (!reader_) return;
   std::vector<std::shared_ptr<SubIndexReader>> sub_index_readers =
       reader_->get_sub_index_readers();
   for (auto&& sub_index_reader : sub_index_readers) {
@@ -57,5 +61,11 @@ std::shared_ptr<Query> IndexSearcher::rewrite(std::shared_ptr<Query> query) {
   } while (query.get() != original.get());
   return query;
 }
+
+void IndexSearcher::set_reader(std::shared_ptr<IndexReader> reader) {
+  reader_ = reader;
+}
+
+std::shared_ptr<IndexReader> IndexSearcher::get_reader() { return reader_; }
 
 }  // namespace yas

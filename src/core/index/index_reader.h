@@ -20,6 +20,8 @@ class IndexReader {
   void add(std::shared_ptr<SubIndexReader> reader);
   int open();
   int close();
+  void set_option(const IndexOption& option);
+  IndexOption& get_option();
   IndexStat get_index_stat();
   std::unordered_map<std::string, FieldInfo> get_field_infos();
 

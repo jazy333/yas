@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
 
-#include "matcher.h"
-#include "sub_index_reader.h"
+#include "core/search/match/matcher.h"
+#include "core/index/sub_index_reader.h"
 
 namespace yas {
 class Query {

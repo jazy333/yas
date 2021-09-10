@@ -14,6 +14,6 @@ set(LIB_QUERY_SRC any_match_query.cpp aug_and_scorer.cpp
                     term_scorer.cpp)
 
 add_library(query SHARED ${LIB_QUERY_SRC})
-target_link_libraries(query pthread algorithm match)
+target_link_libraries(query pthread algorithm match relevance)
 
 install(TARGETS query DESTINATION lib)
