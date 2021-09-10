@@ -76,7 +76,7 @@ class HashDB : public DB {
   };
 
   HashDB();
-  int open(const std::string& path) override;
+  int open(const std::string& path,bool writable=true) override;
   int close() override;
   int get(const std::string& key, std::string& value) override;
   int set(const std::string& key, const std::string& value,

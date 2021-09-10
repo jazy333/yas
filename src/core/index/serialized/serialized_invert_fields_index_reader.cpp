@@ -24,7 +24,7 @@ std::shared_ptr<TermReader> SerializedInvertFieldsIndexReader::get_reader(
 
 int SerializedInvertFieldsIndexReader::open() {
   db_ = new HashDB();
-  return db_->open(invert_index_file_);
+  return db_->open(invert_index_file_,false);
 }
 
 int SerializedInvertFieldsIndexReader::close() {

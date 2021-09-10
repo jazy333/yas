@@ -6,5 +6,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/src/core/algori
 set(LIB_HASH_DB_SRC hash_db.cpp mmap_file.cpp memory_file.cpp file_slice.cpp)
 add_library(hash_db SHARED ${LIB_HASH_DB_SRC})
 target_link_libraries(hash_db common pthread algorithm log)
+set_target_properties(hash_db PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
 
 install(TARGETS hash_db DESTINATION lib)

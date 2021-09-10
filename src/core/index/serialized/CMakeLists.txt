@@ -21,7 +21,8 @@ add_library(serialized_index SHARED ${LIB_SERIALIZED_INDEX_SRC})
 target_link_libraries(serialized_index common pthread algorithm 
                         hash_db compression tokenizer document
                         memory_index match)
-
+                        
+set_target_properties(serialized_index PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
 
 install(TARGETS serialized_index DESTINATION lib)
 

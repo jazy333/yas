@@ -13,6 +13,7 @@ set(LIB_INDEX_SRC index_reader.cpp index_writer.cpp index_merger.cpp)
 add_library(index SHARED ${LIB_INDEX_SRC})
 target_link_libraries(index common pthread algorithm  document hash_db 
                         log serialized_index memory_index compression)
+set_target_properties(index PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
 
 add_subdirectory(memory)
 add_subdirectory(serialized)

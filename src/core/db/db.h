@@ -6,7 +6,7 @@
 namespace yas {
 class DB {
  public:
-  virtual int open(const std::string& path) = 0;
+  virtual int open(const std::string& path,bool writable=true) = 0;
   virtual int close() = 0;
   virtual int get(const std::string& key, std::string& value) = 0;
   virtual int set(const std::string& key, const std::string& value,
