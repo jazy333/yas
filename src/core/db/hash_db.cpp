@@ -72,9 +72,11 @@ int HashDB::load_meta() {
   char meta[METADATA_SIZE];
   int ret = file_->read(0, meta, METADATA_SIZE);
   if (ret != METADATA_SIZE) {
-    return ret;
+    LOG_ERROR("reader meta data error");
+    return -1;
   }
   if (std::memcmp(meta, META_MAGIC_DATA, sizeof(META_MAGIC_DATA)) != 0) {
+    LOG_ERROR("check magic error");
     return -1;
   }
   memcpy(&major_version_, meta + META_OFFSET_PKG_MAJOR_VERSION, 1);
@@ -98,28 +100,38 @@ int HashDB::load_meta() {
   opaque_ = std::string(meta + META_OFFSET_OPAQUE,
                         METADATA_SIZE - META_OFFSET_OPAQUE);
   if (major_version_ < 1 && minor_version_ < 1) {
+    LOG_ERROR("check version error,major version=%d,minor version=%d",
+              major_version_, minor_version_);
     return -1;
   }
-  if (!(static_flags_ & UPDATE_REPLACE) &&
-      !(static_flags_ & UPDATE_APPENDING)) {
+  if ((static_flags_ != UPDATE_REPLACE) &&
+      (static_flags_ != UPDATE_APPENDING)) {
+    LOG_ERROR("check flag error,static_flags_=%d", static_flags_);
     return -1;
   }
   if (offset_width_ < MIN_OFFSET_WIDTH || offset_width_ > MAX_OFFSET_WIDTH) {
+    LOG_ERROR("check offset_width_ error,offset_width_=%d", offset_width_);
     return -1;
   }
   if (align_pow_ > MAX_ALIGN_POW) {
+    LOG_ERROR("check align_pow_ error,align_pow_=%d", align_pow_);
     return -1;
   }
   if (num_records_.load() < 0) {
+    LOG_ERROR("check num_records_ error,num_records_=%l", num_records_.load());
     return -1;
   }
   if (eff_data_size_.load() < 0) {
+    LOG_ERROR("check eff_data_size_ error,eff_data_size_=%l",
+              eff_data_size_.load());
     return -1;
   }
   if (file_size_ < METADATA_SIZE) {
+    LOG_ERROR("check file_size_ error,file_size_=%l", file_size_);
     return -1;
   }
   if (num_buckets_ < 1 || num_buckets_ > MAX_NUM_BUCKETS) {
+    LOG_ERROR("check num_buckets_ error,num_buckets_=%l", num_buckets_);
     return -1;
   }
 
@@ -183,8 +195,8 @@ int HashDB::read_bucket_keys(int index, std::set<string>& keys) {
       status = file_->read(current_offset, buf, sizeof(record_header));
       if (status <= 0) return status;
       const record_header* rh = (record_header*)(const_cast<char*>(buf.data()));
-      //cout << "rh keysize:" << rh->key_size_
-        //   << ",child offset:" << rh->child_offset_ << endl;
+      // cout << "rh keysize:" << rh->key_size_
+      //   << ",child offset:" << rh->child_offset_ << endl;
       string current_key;
       status = file_->read(current_offset + sizeof(record_header), current_key,
                            rh->key_size_);
@@ -228,11 +240,11 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
     status = file_->read(current_offset, buf, sizeof(record_header));
     if (status <= 0) return status;
     const record_header* rh = (record_header*)(const_cast<char*>(buf.data()));
-    //cout << "rh keysize:" << rh->key_size_
-      //   << ",child offset:" << rh->child_offset_ << endl;
+    // cout << "rh keysize:" << rh->key_size_
+    //   << ",child offset:" << rh->child_offset_ << endl;
     int type = rh->type_;
     if (key.size() == rh->key_size_) {
-      //cout << "key size equals" << endl;
+      // cout << "key size equals" << endl;
       string current_key;
       status = file_->read(current_offset + sizeof(record_header), current_key,
                            rh->key_size_);
@@ -240,7 +252,7 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
         LOG_ERROR("read key error");
         return status;
       }
-      //cout << "current_key:" << current_key << endl;
+      // cout << "current_key:" << current_key << endl;
       if (key == current_key) {
         child_offset = rh->child_offset_;
         if (type == 1) {
@@ -250,7 +262,7 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
         }
         old_value_size = rh->value_size_;
         if (value) {
-          //cout << "rh valuesize:" << rh->value_size_ << endl;
+          // cout << "rh valuesize:" << rh->value_size_ << endl;
           status = file_->read(
               current_offset + sizeof(record_header) + rh->key_size_, *value,
               rh->value_size_);
@@ -326,7 +338,7 @@ HashDB::HashDB()
       record_mutex_(1, 128, primary_hash) {}
 
 int HashDB::open(const std::string& path, bool writable) {
-  LOG_INFO("open db path:%s", path.c_str()) ;
+  LOG_INFO("open db path:%s", path.c_str());
   int ret = file_->open(path, true);
   if (ret < 0) {
     LOG_ERROR("open db fail,%s", path.c_str());
@@ -336,7 +348,7 @@ int HashDB::open(const std::string& path, bool writable) {
   writable_ = writable;
   if (file_->size() == 0 && writable_) {
     init();
-  } else {
+  } else if (file_->size() == 0 && !writable_) {
     LOG_ERROR("file size is zero or not writable:%s", path.c_str());
   }
   ret = load_meta();

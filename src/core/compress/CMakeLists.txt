@@ -1,6 +1,7 @@
 SET (LIB_COMPRESS_SRC elias_fano_compression.cpp simd_bitpacking.cpp 
                         simd_binary_compression.cpp  bitpacking_compression.cpp)
 add_library(compression SHARED ${LIB_COMPRESS_SRC})
+set_target_properties(compression PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
 LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/common)
 include_directories(${CMAKE_SOURCE_DIR}/src/common)
 SET (TEST_COMPRESS_SRC  bitpacking_compression_test.cpp)
