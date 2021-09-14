@@ -13,6 +13,16 @@
 namespace yas {
 class IndexReader {
  public:
+  struct SubIndexReaderCompareWithUpdatetime {
+    bool operator()(std::shared_ptr<SubIndexReader> a,
+                    std::shared_ptr<SubIndexReader> b) {
+      auto segment_info_a = a->get_segment_info();
+      auto segment_info_b = b->get_segment_info();
+
+      return segment_info_a.last_update_time < segment_info_b.last_update_time;
+    }
+  };
+
   IndexReader(IndexOption option);
   IndexReader();
   virtual ~IndexReader();
@@ -20,13 +30,14 @@ class IndexReader {
   void add(std::shared_ptr<SubIndexReader> reader);
   int open();
   int close();
+  int reopen();
   void set_option(const IndexOption& option);
   IndexOption& get_option();
   IndexStat get_index_stat();
   std::unordered_map<std::string, FieldInfo> get_field_infos();
 
  private:
-  int get_segement_files(std::vector<SegmentFiles>& files);
+  int get_segment_files(std::vector<SegmentFiles>& files);
 
  private:
   std::vector<std::shared_ptr<SubIndexReader>> sub_index_readers_;

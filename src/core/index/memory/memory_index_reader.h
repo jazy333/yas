@@ -21,6 +21,7 @@ class MemoryIndexReader : public SubIndexReader {
   int open() override;
   int close() override;
   SegmentInfo get_segment_info() override;
+  SegmentFiles get_segment_files() override;
 
  private:
   std::shared_ptr<InvertFieldsIndexReader> invert_field_index_reader_;
@@ -29,6 +30,7 @@ class MemoryIndexReader : public SubIndexReader {
   std::unordered_map<std::string, std::shared_ptr<FieldValueIndexReader>>*
       field_values_index_readers_;
   SegmentInfo info_;
+  SegmentFiles files_;
 };
 
 }  // namespace yas

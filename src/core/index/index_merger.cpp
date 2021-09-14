@@ -1,5 +1,12 @@
 #include "index_merger.h"
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <cerrno>
+#include <cstring>
 #include <memory>
 #include <queue>
 #include <unordered_set>
@@ -7,6 +14,7 @@
 
 #include "binary_field_index_writer.h"
 #include "block_term_reader.h"
+#include "common.h"
 #include "core/db/hash_db.h"
 #include "db.h"
 #include "field_index_reader.h"
@@ -83,7 +91,7 @@ int IndexMerger::merge_invert(
       term_readers[i] =
           std::shared_ptr<BlockTermReader>(new BlockTermReader(value));
       for (int j = i + 1; j < readers.size(); ++j) {
-        if(!readers[j]) continue;
+        if (!readers[j]) continue;
         DB* db = readers[j]->get_db();
         if (db->test(key) == 0) {
           std::string value;
@@ -208,6 +216,36 @@ int IndexMerger::write_segment_info(uint32_t max_docid) {
   return 0;
 }
 
+int IndexMerger::commit() {
+  std::string commit_file = merge_option_.get_index_commit_file();
+  if (access(commit_file.c_str(), F_OK) == -1) {
+    int ret = mkfifo(commit_file.c_str(), 0777);
+    if (ret != 0) {
+      LOG_ERROR("can not creat fifo file:%s,mode 777\n", commit_file.c_str());
+      return -1;
+    }
+  }
+
+  const int open_mode = O_WRONLY|O_NONBLOCK ;
+  int pipe_fd = open(commit_file.c_str(), open_mode);
+  if (pipe_fd < 0) {
+    LOG_ERROR("open fifo file,may be no reader:%s,%s\n", commit_file.c_str(), strerror(errno));
+    return -1;
+  }
+
+  char sig = 1;
+  int ret = write(pipe_fd, &sig, sizeof(sig));
+  LOG_INFO("write %d data to fifo",ret);
+  if (ret <= 0) {
+    LOG_ERROR("write signal error:%s,%s\n", commit_file.c_str(),
+              strerror(errno));
+  }
+  //sleep(10);
+  close(pipe_fd);
+
+  return ret;
+}
+
 int IndexMerger::merge() {
   IndexStat stat;
   stat.doc_count = 0;
@@ -296,6 +334,7 @@ int IndexMerger::merge() {
   merge_option_.write_stat(stat);
   merge_option_.write_field_info(field_infos);
   reader.close();
+  commit();
   return 0;
 }
 

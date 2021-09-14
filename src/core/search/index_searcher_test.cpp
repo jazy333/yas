@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <unordered_map>
+#include <unistd.h>
 
 #include "boolean_query.h"
 #include "delimeter_tokenizer.h"
@@ -20,14 +21,16 @@ TEST(IndexSearcher, search) {
   if (test_map.count(test_field_name) == 1)
     std::cout << "get a key" << std::endl;
   IndexOption option;
-  option.current_segment_no = 3;
-  option.dir = "/search/workspace/ios_instant_index/index/data/service/merge";
+  option.current_segment_no = 0;
+  option.dir = "data/index/";
   option.segment_prefix = "merge.";
+  option.mode=1;
   auto reader=std::make_shared<IndexReader>(option);
   reader->open();
   IndexSearcher searcher(reader);
+  sleep(320);
   auto tokenizer = std::unique_ptr<Tokenizer>(new DelimeterTokenizer());
-  std::string text = "制作";
+  std::string text = "系统";
   std::string field = "name";
   auto ti = tokenizer->get_term_iterator(text);
   std::vector<std::shared_ptr<BooleanExpression>> expressions;
@@ -56,7 +59,7 @@ TEST(IndexSearcher, search) {
                  << std::endl;
 
     auto fv_reader = doc.field_value_reader;
-    for (int i = 1; i <= 32; ++i) {
+    for (int i = 1; i <= 40; ++i) {
       std::cout << "dump info begin===" << std::endl;
       std::cout << "inner id:" << i << std::endl;
       auto id_reader = fv_reader->get_reader("id");

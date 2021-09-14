@@ -7,6 +7,7 @@
 #include "core/tokenizer/term.h"
 #include "core/index/term_reader.h"
 #include "core/index/segment_info.h"
+#include "core/index/segment_files.h"
 
 namespace yas {
 class SubIndexReader {
@@ -16,6 +17,10 @@ class SubIndexReader {
   virtual std::shared_ptr<PointFieldsIndexReader> point_fields_reader() = 0;
   virtual int open() = 0;
   virtual int close() = 0;
+  virtual int unlink(){
+    return 0;
+  }
   virtual SegmentInfo get_segment_info()=0;
+  virtual SegmentFiles get_segment_files()=0;
 };
 }  // namespace yas

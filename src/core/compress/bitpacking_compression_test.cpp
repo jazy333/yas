@@ -6,7 +6,7 @@ TEST(BitPackingCompression, construcotr) {
   BitPackingCompression bpc;
   EXPECT_EQ(-1, bpc.get_max_bits());
 
-  BitPackingCompression bpc1(8,0);
+  BitPackingCompression bpc1(8,0,1);
   EXPECT_EQ(8, bpc1.get_max_bits());
 }
 
@@ -69,6 +69,25 @@ TEST(BitPackingCompression, decompress) {
   for (int i = 0; i < data.size(); ++i) {
     EXPECT_EQ(data[i], decopressed[i]);
   }
+  delete[] out;
+}
+
+
+TEST(BitPackingCompression, compress1) {
+  BitPackingCompression bpc(7,1250,2);
+  EXPECT_EQ(-1, bpc.get_max_bits());
+  std::vector<uint64_t> data = {1250, 1250, 1250, 1250, 1250, 1250,
+                                1250, 1250, 1250, 1250, 1250, 1250,
+                                1250, 1250, 1250, 1250, 1250, 1250,
+                                1250, 1250, 1250, 1250, 1250, 1250,
+                                1250, 1416, 1250, 1250, 1250, 1250,
+                                1250, 1250
+                                };
+  size_t in_size = data.size();
+  size_t out_size = in_size * 8;
+  uint8_t* out = new uint8_t[in_size * 8]();
+  bpc.set_max_bits(7);
+  bpc.compress(data.data(), in_size, out, out_size);
   delete[] out;
 }
 

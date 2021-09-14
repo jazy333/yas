@@ -1,5 +1,7 @@
 #include "segment_index_reader.h"
 
+#include <unistd.h>
+
 #include "mmap_file.h"
 #include "serialized_field_values_index_reader.h"
 #include "serialized_invert_fields_index_reader.h"
@@ -72,11 +74,30 @@ int SegmentIndexReader::open() {
 
 int SegmentIndexReader::close() {
   if (point_fields_index_reader_) point_fields_index_reader_->close();
+  point_fields_index_reader_ = nullptr;
   if (invert_fields_index_reader_) invert_fields_index_reader_->close();
+  invert_fields_index_reader_ = nullptr;
   if (field_values_index_reader_) field_values_index_reader_->close();
+  invert_fields_index_reader_ = nullptr;
+
+  return 0;
+}
+
+int SegmentIndexReader::unlink() {
+  close();
+  if (!files_.invert_index_file.empty())
+    ::unlink(files_.invert_index_file.c_str());
+  if (!files_.kdm.empty()) ::unlink(files_.kdm.c_str());
+  if (!files_.kdi.empty()) ::unlink(files_.kdi.c_str());
+  if (!files_.kdd.empty()) ::unlink(files_.kdd.c_str());
+  if (!files_.fvm.empty()) ::unlink(files_.fvm.c_str());
+  if (!files_.fvd.empty()) ::unlink(files_.fvd.c_str());
+  if (!files_.si.empty()) ::unlink(files_.si.c_str());
   return 0;
 }
 
 SegmentInfo SegmentIndexReader::get_segment_info() { return info_; }
+
+SegmentFiles SegmentIndexReader::get_segment_files() { return files_; }
 
 }  // namespace yas

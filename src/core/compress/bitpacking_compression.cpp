@@ -5,10 +5,12 @@
 #include "common.h"
 
 namespace yas {
-BitPackingCompression::BitPackingCompression(int max_bit, uint64_t min_value)
-    : max_bits_(max_bit), min_value_(min_value) {}
+BitPackingCompression::BitPackingCompression(int max_bit, uint64_t min_value,
+                                             uint64_t gcd)
+    : max_bits_(max_bit), min_value_(min_value), gcd_(gcd) {}
 
-BitPackingCompression::BitPackingCompression() : max_bits_(-1), min_value_(0) {}
+BitPackingCompression::BitPackingCompression()
+    : max_bits_(-1), min_value_(0), gcd_(1) {}
 
 BitPackingCompression::~BitPackingCompression() {}
 
@@ -27,7 +29,7 @@ void BitPackingCompression::compress(const uint64_t* in, size_t in_size,
     block_index = total_bits / 64;
     int bit_index = total_bits % 64;
 
-    uint64_t value = in[i] - min_value_;
+    uint64_t value = (in[i] - min_value_) / gcd_;
 
     if (bit_index <= most_sig_bits) {  // one block
       // out64[block_index] &= ~(mask << bit_index);  // clear bits
@@ -65,7 +67,7 @@ uint8_t* BitPackingCompression::decompress(const uint8_t* in, size_t in_size,
                (in64[block_index + 1] << end_bits)) &
               mask;
     }
-    *out++ = (value + min_value_);
+    *out++ = (value + min_value_) * gcd_;
   }
   out_size = out - out_start;
   return const_cast<uint8_t*>(in + in_size);
@@ -80,5 +82,9 @@ void BitPackingCompression::set_min_value(uint64_t min_value) {
 }
 
 uint64_t BitPackingCompression::get_min_value() { return min_value_; }
+
+void BitPackingCompression::set_gcd(uint64_t gcd) { gcd_ = gcd; }
+
+uint64_t BitPackingCompression::get_gcd() { return gcd_; }
 
 }  // namespace yas

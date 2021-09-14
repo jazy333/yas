@@ -6,7 +6,7 @@
 namespace yas {
 class BitPackingCompression {
  public:
-  BitPackingCompression(int max_bits, uint64_t min_value);
+  BitPackingCompression(int max_bits, uint64_t min_value,uint64_t gcd);
   BitPackingCompression();
   virtual ~BitPackingCompression();
   void compress(const uint64_t* in, size_t in_size, uint8_t* out,
@@ -19,8 +19,12 @@ class BitPackingCompression {
   void set_min_value(uint64_t min_value);
   uint64_t get_min_value();
 
+  void set_gcd(uint64_t gcd);
+  uint64_t get_gcd();
+
  private:
   int max_bits_;
   uint64_t min_value_;
+  uint64_t gcd_;
 };
 }  // namespace yas

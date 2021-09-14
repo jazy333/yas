@@ -49,6 +49,7 @@ class IndexMerger {
       std::vector<std::unordered_map<uint32_t, uint32_t>>& old_to_news,
       std::vector<DocMap>& new_to_old);
   int write_segment_info(uint32_t max_docid);
+  int commit();
 
  private:
   IndexOption index_option_;

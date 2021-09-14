@@ -14,17 +14,19 @@ struct IndexOption {
         stat_file("index.stat"),
         field_info_file("index.fi"),
         current_segment_no(0),
-        mode(0) {}
+        mode(0),
+        auto_evict(false) {}
 
   IndexOption(std::string dir, std::string segment_prefix,
               std::string stat_file, std::string field_info,
-              uint64_t current_segment_no, int mode)
+              uint64_t current_segment_no, int mode, bool auto_evict)
       : dir(dir),
         segment_prefix(segment_prefix),
         stat_file(stat_file),
         field_info_file(field_info),
         current_segment_no(current_segment_no),
-        mode(mode) {}
+        mode(mode),
+        auto_evict(auto_evict) {}
 
   int read_stat(IndexStat& index_stat) {
     auto stat_file_handle = std::unique_ptr<File>(new MMapFile());
@@ -139,11 +141,14 @@ struct IndexOption {
            ".kdd";
   }
 
+  std::string get_index_commit_file() const { return dir + "/index.commit"; }
+
   std::string dir;
   std::string segment_prefix;
   std::string stat_file;
   std::string field_info_file;
   uint64_t current_segment_no;
   int mode;
+  bool auto_evict;
 };
 }  // namespace yas

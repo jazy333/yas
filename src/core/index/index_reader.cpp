@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include <cstdlib>
+#include <queue>
 #include <set>
 
 #include "log.h"
@@ -20,16 +21,14 @@ IndexReader::IndexReader(IndexOption option) : option_(option) {
 
 IndexReader::IndexReader() : option_(IndexOption()) {}
 
-IndexReader::~IndexReader() {
-  close();
-}
+IndexReader::~IndexReader() { close(); }
 
 std::vector<std::shared_ptr<SubIndexReader>>
 IndexReader::get_sub_index_readers() {
   return sub_index_readers_;
 }
 
-int IndexReader::get_segement_files(std::vector<SegmentFiles>& files) {
+int IndexReader::get_segment_files(std::vector<SegmentFiles>& files) {
   struct dirent** namelist;
   int n;
 
@@ -101,15 +100,33 @@ int IndexReader::open() {
   option_.read_stat(index_stat_);
   option_.read_field_info(field_infos_);
   std::vector<SegmentFiles> files;
-
-  int ret = get_segement_files(files);
+  std::priority_queue<std::shared_ptr<SubIndexReader>,
+                      std::vector<std::shared_ptr<SubIndexReader>>,
+                      SubIndexReaderCompareWithUpdatetime>
+      pq;
+  int ret = get_segment_files(files);
   for (size_t i = 0; i < files.size(); ++i) {
-    std::shared_ptr<SegmentIndexReader> segment_reader =
+    std::shared_ptr<SubIndexReader> segment_reader =
         std::shared_ptr<SegmentIndexReader>(
             new SegmentIndexReader(files[i], field_infos_));
     int ret = segment_reader->open();
     if (ret < 0) continue;
-    sub_index_readers_.push_back(segment_reader);
+    pq.push(segment_reader);
+    // sub_index_readers_.push_back(segment_reader);
+  }
+
+  int max_segment_used = option_.mode <= 0 ? pq.size() : option_.mode;
+  while (!pq.empty() && sub_index_readers_.size() < max_segment_used) {
+    auto reader = pq.top();
+    sub_index_readers_.push_back(reader);
+    pq.pop();
+  }
+
+  while (!pq.empty()) {
+    auto reader = pq.top();
+    reader->close();
+    if (option_.auto_evict) reader->unlink();
+    pq.pop();
   }
   return 0;
 }
@@ -123,6 +140,12 @@ int IndexReader::close() {
     reader->close();
   }
   sub_index_readers_.clear();
+  return 0;
+}
+
+int IndexReader::reopen() {
+  close();
+  open();
   return 0;
 }
 

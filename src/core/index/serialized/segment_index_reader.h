@@ -19,7 +19,9 @@ class SegmentIndexReader : public SubIndexReader {
   std::shared_ptr<PointFieldsIndexReader> point_fields_reader() override;
   int open() override;
   int close() override;
+  int unlink() override;
   SegmentInfo get_segment_info() override;
+  SegmentFiles get_segment_files() override;
   private:
   int read_segment_info();
 

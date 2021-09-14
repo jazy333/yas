@@ -83,7 +83,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     size_t size = fvd->size();
     fvm->append(&size, sizeof(size));  // field value offset;
     size_t field_value_len;
-    BitPackingCompression bpc(num_bits, min_value_);
+    BitPackingCompression bpc(num_bits, min_value_,igcd);
     size_t out_size = values_.size();
 
     std::unique_ptr<uint64_t[]> compress_out_ptr(

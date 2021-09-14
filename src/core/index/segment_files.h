@@ -3,7 +3,8 @@
 
 namespace yas {
 struct SegmentFiles {
-  std::string invert_index_file;  // invert index
+  // invert index
+  std::string invert_index_file;  
   // bkd tree files
   std::string kdm;
   std::string kdi;
