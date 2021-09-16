@@ -13,6 +13,7 @@ set(LIB_SEARCH_SRC term_stat.cpp index_searcher.cpp)
 add_library(search SHARED ${LIB_SEARCH_SRC})
 target_link_libraries(search pthread algorithm tokenizer index match common)
 set_target_properties(search PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
+SET_TARGET_PROPERTIES(search PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
 
 add_subdirectory(match)
 add_subdirectory(relevance)

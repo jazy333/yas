@@ -5,6 +5,7 @@ SET (LIB_RELEVANCE_SRC bm25_relevance.cpp tfidf_relevance.cpp boolean_relevance.
                    bm25_scorer.cpp boolean_scorer.cpp tfidf_scorer.cpp)
 add_library(relevance SHARED ${LIB_RELEVANCE_SRC})
 set_target_properties(relevance PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
+SET_TARGET_PROPERTIES(relevance PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
 target_link_libraries(relevance pthread search common ) 
 
 #unit test

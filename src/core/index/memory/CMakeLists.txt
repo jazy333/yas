@@ -14,5 +14,6 @@ add_library(memory_index SHARED ${LIB_MEMORY_INDEX_SRC})
 
 target_link_libraries(memory_index common pthread algorithm)
 set_target_properties(memory_index PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
+SET_TARGET_PROPERTIES(memory_index PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
 
 install(TARGETS memory_index DESTINATION lib)

@@ -18,6 +18,7 @@ class IndexSearcher {
   std::shared_ptr<Query> rewrite(std::shared_ptr<Query> query);
   void set_reader(std::shared_ptr<IndexReader> reader);
   //std::shared_ptr<IndexReader> get_reader();
+  IndexStat get_index_stat();
   void auto_reload();
 
  private:

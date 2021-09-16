@@ -6,6 +6,7 @@ add_library(tokenizer SHARED ${LIB_TOKENIZER_SRC})
 
 target_link_libraries(tokenizer common)
 set_target_properties(tokenizer PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
+SET_TARGET_PROPERTIES(tokenizer PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
 
 #unit test
 set(TEST_TOKENIZER_SRC term_test.cpp simple_tokenizer_test.cpp delimeter_tokenizer_test.cpp)

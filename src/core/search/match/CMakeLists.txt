@@ -7,6 +7,8 @@ SET (LIB_MATCH_SRC  and_posting_list.cpp sequence_posting_list.cpp any_posting_l
                      match_set.cpp)
 add_library(match SHARED ${LIB_MATCH_SRC})
 target_link_libraries(match common)
+SET_TARGET_PROPERTIES(match PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
+
 #unit test
 SET (TEST_MATCH_SRC and_posting_list_test.cpp sequence_posting_list_test.cpp 
                         any_posting_list_test.cpp none_posting_list_test.cpp

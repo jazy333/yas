@@ -137,7 +137,7 @@ void IndexReader::add(std::shared_ptr<SubIndexReader> reader) {
 
 int IndexReader::close() {
   for (auto&& reader : sub_index_readers_) {
-    reader->close();
+    if (reader) reader->close();
   }
   sub_index_readers_.clear();
   return 0;

@@ -16,4 +16,6 @@ set(LIB_QUERY_SRC any_match_query.cpp aug_and_scorer.cpp
 add_library(query SHARED ${LIB_QUERY_SRC})
 target_link_libraries(query pthread algorithm match relevance)
 set_target_properties(query PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
+SET_TARGET_PROPERTIES(query PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
+
 install(TARGETS query DESTINATION lib)

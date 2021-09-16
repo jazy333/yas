@@ -23,6 +23,7 @@ target_link_libraries(serialized_index common pthread algorithm
                         memory_index match)
                         
 set_target_properties(serialized_index PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
+SET_TARGET_PROPERTIES(serialized_index PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
 
 install(TARGETS serialized_index DESTINATION lib)
 

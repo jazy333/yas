@@ -22,12 +22,13 @@ TEST(IndexSearcher, search) {
     std::cout << "get a key" << std::endl;
   IndexOption option;
   option.current_segment_no = 0;
-  option.dir = "data/index/";
+  option.dir = "/search/workspace/ios_instant_index/index/data/service/merge/";
   option.segment_prefix = "merge.";
   option.mode=1;
+  std::shared_ptr<IndexSearcher> searcher;
   auto reader=std::make_shared<IndexReader>(option);
   reader->open();
-  IndexSearcher searcher(reader);
+  searcher=std::make_shared<IndexSearcher>(reader);
   sleep(320);
   auto tokenizer = std::unique_ptr<Tokenizer>(new DelimeterTokenizer());
   std::string text = "系统";
@@ -47,7 +48,7 @@ TEST(IndexSearcher, search) {
 
   BooleanQuery query(expressions);
   MatchSet result;
-  searcher.search(&query, result);
+  searcher->search(&query, result);
   // EXPECT_EQ(398, result.size());
   MatchedDoc doc;
   while (result.next(doc)) {

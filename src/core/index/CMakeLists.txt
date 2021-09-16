@@ -14,6 +14,7 @@ add_library(index SHARED ${LIB_INDEX_SRC})
 target_link_libraries(index common pthread algorithm  document hash_db 
                         log serialized_index memory_index compression)
 set_target_properties(index PROPERTIES INSTALL_RPATH ${CMAKE_SOURCE_DIR}/lib)
+SET_TARGET_PROPERTIES(index PROPERTIES VERSION 1.0.0.0 SOVERSION 1)
 
 add_subdirectory(memory)
 add_subdirectory(serialized)
@@ -22,7 +23,7 @@ add_subdirectory(serialized)
 set (TEST_INDEX_SRC index_reader_test.cpp index_writer_test.cpp index_merger_test.cpp)
 
 add_executable(index_test ${TEST_INDEX_SRC}) 
-target_link_libraries(index_test gtest gtest_main serialized_index document db index)
+target_link_libraries(index_test gtest gtest_main serialized_index document db index common)
 
 
 install(TARGETS index DESTINATION lib)
