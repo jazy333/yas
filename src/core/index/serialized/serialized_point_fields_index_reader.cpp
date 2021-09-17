@@ -31,12 +31,17 @@ PointFieldIndexReader* SerializedPointFieldsIndexReader::get_reader(
 }
 
 int SerializedPointFieldsIndexReader::open() {
+  if (meta_file_.empty() || index_file_.empty() || data_file_.empty())
+    return -1;
   kdm_ = std::shared_ptr<MMapFile>(new MMapFile());
-  kdm_->open(meta_file_, false);
+  int ret = kdm_->open(meta_file_, false);
+  if (ret < 0) return ret;
   kdi_ = std::shared_ptr<MMapFile>(new MMapFile());
-  kdi_->open(index_file_, false);
+  ret = kdi_->open(index_file_, false);
+  if (ret < 0) return ret;
   kdd_ = std::shared_ptr<MMapFile>(new MMapFile());
-  kdd_->open(data_file_, false);
+  ret = kdd_->open(data_file_, false);
+  if (ret < 0) return ret;
   loff_t off = 0;
   while (true) {
     PointFieldMeta pfm;

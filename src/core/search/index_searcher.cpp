@@ -18,16 +18,13 @@
 
 namespace yas {
 IndexSearcher::IndexSearcher(std::shared_ptr<IndexReader> reader)
-    : reader_(reader) {
-  //std::thread reload(&IndexSearcher::auto_reload, this);
-  //reload.detach();
-}
+    : reader_(reader) {}
 
 IndexSearcher::IndexSearcher() : reader_(nullptr) {}
 
 IndexSearcher::~IndexSearcher() {}
 
-void IndexSearcher::search(Query* q, MatchSet& set) {
+void IndexSearcher::search(Query* q, MatchSet& set, int max_size) {
   SharedLock<SharedMutex> lock(shared_mutex_);
   if (!reader_) return;
   std::vector<std::shared_ptr<SubIndexReader>> sub_index_readers =
@@ -51,8 +48,8 @@ void IndexSearcher::search(Query* q, MatchSet& set) {
         id_reader->get(md.docid_, value);
         id.assign(value.begin(), value.end());
       }
-      std::cout << "docid:" << md.docid_ << ",score:" << md.score_
-                << ",id:" << id << std::endl;
+      // std::cout << "docid:" << md.docid_ << ",score:" << md.score_
+      //        << ",id:" << id << std::endl;
       for (auto&& kv : hits) {
         md.match_term_counts[kv.first] = kv.second;
         std::string doc_len_field = "__" + kv.first + "_dl";
@@ -65,6 +62,7 @@ void IndexSearcher::search(Query* q, MatchSet& set) {
         }
       }
       set.add(md);
+      if (set.size() >= max_size) return;
     }
   }
 }
@@ -76,6 +74,10 @@ std::shared_ptr<Query> IndexSearcher::rewrite(std::shared_ptr<Query> query) {
     query = query->rewrite();
   } while (query.get() != original.get());
   return query;
+}
+
+void IndexSearcher::search(Query* q, MatchSet& set) {
+  search(q, set, std::numeric_limits<int>::max());
 }
 
 void IndexSearcher::set_reader(std::shared_ptr<IndexReader> reader) {
@@ -111,7 +113,7 @@ void IndexSearcher::auto_reload() {
   }
 
   int commit_fd = open(commit_file.c_str(), O_RDONLY | O_NONBLOCK);
-  int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+  int epoll_fd = epoll_create(200);
   if (epoll_fd < 0) {
     LOG_ERROR("create epoll error:%s\n", strerror(errno));
     return;
@@ -121,7 +123,7 @@ void IndexSearcher::auto_reload() {
   int result;
   struct epoll_event event;
   memset(&event, 0, sizeof(event));
-  event.events = EPOLLIN|EPOLLET;
+  event.events = EPOLLIN | EPOLLET;
   event.data.fd = commit_fd;
   result = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, commit_fd, &event);
   struct epoll_event events[16];
@@ -158,6 +160,12 @@ void IndexSearcher::auto_reload() {
   close(commit_fd);
   close(epoll_fd);
   LOG_INFO("auto_reload exists");
+}
+
+int IndexSearcher::enable_auto_reload() {
+  std::thread reload(&IndexSearcher::auto_reload, this);
+  reload.detach();
+  return 0;
 }
 
 }  // namespace yas
