@@ -119,7 +119,7 @@ void BlockTermReader::next_unit(uint32_t target) {
           posting_list_data_start + current_entry_->posting_list_offset,
           in_size, current_unit_docids_.data(), out_size);
       sbc.set_init(
-          *(current_unit_docids_.rbegin()));  // set next unit 's first docid
+          current_unit_docids_.back());  // set next unit 's first docid
     } else {
       in_size = meta_->last_unit_posting_list_compress_size;
       position_len_start = vbc.decompress(

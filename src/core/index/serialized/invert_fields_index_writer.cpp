@@ -31,7 +31,7 @@ void InvertFieldsIndexWriter::flush(
   size_t unit_reserve_size = 2000;
   auto unit_ptr = std::unique_ptr<uint8_t[]>(new uint8_t[unit_reserve_size]());
   uint8_t* unit = unit_ptr.get();
-  uint32_t max_doc = *(docids.rbegin());
+  uint32_t max_doc = docids.back();
   size_t doc_num = docids.size();
   SIMDBinaryCompression<true> bc_posting_list;
   SIMDBinaryCompression<false> bc_position_length;
@@ -202,7 +202,7 @@ int InvertFieldsIndexWriter::add(uint32_t docid, std::shared_ptr<Field> field) {
       position_lists_[key] = position_lists;
 
     } else {
-      uint32_t last = *(posting_lists_[key].rbegin());
+      uint32_t last = posting_lists_[key].back();
       if (docid == last) {
         position_lists_[key].rbegin()->push_back(position);
       } else {

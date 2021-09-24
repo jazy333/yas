@@ -73,7 +73,7 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
 
   if (min_length_ != max_length_) {
     // write value len index compress
-    uint8_t max_bits = gccbits(*(lens.rbegin()));
+    uint8_t max_bits = gccbits(lens.back());
     fvm->append(&max_bits, sizeof(max_bits));
     BitPackingCompression bc(max_bits, 0, 1);
     offset = fvd->size();

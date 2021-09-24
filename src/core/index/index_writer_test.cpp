@@ -25,7 +25,7 @@ TEST(IndexWriter, add) {
   int count = 0;
   while (std::getline(ifs, line)) {
     auto doc = std::unique_ptr<Document>(new Document);
-    if (*(line.rbegin()) == '\n') line = line.substr(0, line.size() - 1);
+    if (line.back() == '\n') line = line.substr(0, line.size() - 1);
 
     auto text = std::shared_ptr<TextField>(new TextField("content", line));
     text->set_index_type(1);

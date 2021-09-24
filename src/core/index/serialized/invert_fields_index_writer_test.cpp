@@ -38,7 +38,7 @@ TEST(InvertFieldsIndexWriter, flush) {
 
   uint32_t docid = 1;
   while (std::getline(ifs, line)) {
-    if (*(line.rbegin()) == '\n') line = line.substr(0, line.size() - 1);
+    if (line.back()== '\n') line = line.substr(0, line.size() - 1);
     auto text = std::shared_ptr<TextField>(new TextField("content", line));
     ifiw.add(docid++, text);
   }
