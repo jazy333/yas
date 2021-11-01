@@ -1,5 +1,9 @@
 #include "shared_mutex.h"
 
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <iostream>
 namespace yas {
 SharedMutex::SharedMutex(/* args */) { pthread_rwlock_init(&rwlock_, nullptr); }
 

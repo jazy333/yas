@@ -63,6 +63,9 @@ int MMapFile::open(const std::string& path, bool writable, bool trunc) {
     std::cout << "fstat error:" << std::strerror(errno) << std::endl;
     return -1;
   }
+
+  int flags = fcntl(fd, F_GETFL, 0);
+  fcntl(fd, F_SETFL, flags | O_NONBLOCK);
   int64_t file_size = st.st_size;
 
   int64_t map_size = map_size_;

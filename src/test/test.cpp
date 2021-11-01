@@ -103,9 +103,52 @@ class TestIntroSorter : public IntroSorter {
   vector<int> _data;
 };
 
+bool test_qb(const std::string& qua) {
+  // speed version check
+  size_t first = 0;
+  size_t qua_size = qua.size();
+  while (first < qua_size) {
+    size_t second = qua.find_first_of('&', first);
+    // 5==strlen("PR=SR")
+    size_t sub_len = std::min(second, qua_size) - first;
+    if (first != second && sub_len == 5) {
+      if (strncasecmp(qua.c_str() + first, "PR=SR", 5) == 0) {
+        return true;
+      }
+    }
+
+    if (first != second && sub_len == 6) {
+      if (strncasecmp(qua.c_str() + first, "PR=SME", 6) == 0) {
+        return  true;
+        break;
+      }
+    }
+    if (second == std::string::npos) {
+      break;
+    }
+    first = second + 1;
+  }
+  return false;
+}
+
 int main(int argc, char* argv[]) {
   // MurmurHash2 mh2;
   // mh2.hash64("test",20181220);
+  bool get = test_qb("pr=sme");
+  std::cout << "get:pr=sr:" << get << endl;
+  get = test_qb(
+      "PR=SME&PP=sogou.mobile.explorer&PPVN=11.9.5.5105&TBSVC=45001&CO=BK&COVC="
+      "045809&PB=GE&VE=GA&DE=PHONE&CHID=0&LCID=14891&MO= PCCM00 "
+      "&RL=1080*2340&OS=11&API=30&DS=64&RT=64&REF=qb_0&TM=00");
+  std::cout << "get:test2:" << get << endl;
+  get = test_qb(
+      "QV=3&PL=ADR&PR=SR&PP=sogou.mobile.explorer&PPVN=11.9.5.5105&TBSVC=45001&"
+      "CO=BK&COVC=045809&PB=GE&VE=GA&DE=PHONE&CHID=0&LCID=14891&MO= PCCM00 "
+      "&RL=1080*2340&OS=11&API=30&DS=64&RT=64&REF=qb_0&TM=00");
+  std::cout << "get:test3:" << get << endl;
+  get = test_qb("");
+  std::cout << "get:empty:" << get << endl;
+  exit(0);
   log_info("hello yas");
   log_error("test error %d,%s", errno, strerror(errno));
   log_info("%s", "hello yas");

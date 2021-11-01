@@ -168,4 +168,8 @@ int IndexSearcher::enable_auto_reload() {
   return 0;
 }
 
+void IndexSearcher::lock_shared() { shared_mutex_.lock_shared(); }
+
+void IndexSearcher::unlock_shared() { shared_mutex_.unlock_shared(); }
+
 }  // namespace yas

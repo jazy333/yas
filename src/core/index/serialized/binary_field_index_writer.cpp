@@ -79,13 +79,15 @@ void BinaryFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     offset = fvd->size();
     fvm->append(&offset, sizeof(offset));  // value lens data offset
     size_t compress_out_size = lens.size();
-    uint64_t* compress_out = new uint64_t[compress_out_size]();
+    
+    auto compress_ptr=std::unique_ptr<uint64_t[]>(new uint64_t[compress_out_size]());
+    uint64_t* compress_out = compress_ptr.get();
     compress_out_size = compress_out_size >> 3;
     bc.compress(lens.data(), lens.size(),
                 reinterpret_cast<uint8_t*>(compress_out), compress_out_size);
     fvd->append(compress_out, compress_out_size);
     fvm->append(&compress_out_size, sizeof(compress_out_size));
-    delete[] compress_out;
+    //delete[] compress_out;
   }
   fvd->close();
   fvm->close();

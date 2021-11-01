@@ -22,6 +22,8 @@ class IndexSearcher {
   IndexStat get_index_stat();
   int enable_auto_reload();
   void auto_reload();
+  void lock_shared();
+  void unlock_shared();
 
  private:
   std::shared_ptr<IndexReader> reader_;
