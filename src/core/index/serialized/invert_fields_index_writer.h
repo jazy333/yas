@@ -14,7 +14,7 @@
 namespace yas {
 class InvertFieldsIndexWriter : public FieldIndexWriter,
                                 public InvertFieldsIndexReader {
-  struct JumptTableEntry {
+  struct JumpTableEntry {
     uint32_t max_docid;
     uint64_t posting_list_offset;
     uint64_t position_list_offset;

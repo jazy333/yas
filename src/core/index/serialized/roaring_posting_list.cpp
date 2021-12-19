@@ -17,7 +17,7 @@ RoaringPostingList::RoaringPostingList(File* in, uint64_t off, uint64_t length,
   size_t jump_table_length = jump_table_entry_count * 2 * sizeof(int);
   loff_t jump_off = length - jump_table_length;
   jump_table_slice_ = std::unique_ptr<FileSlice>(
-      new FileSlice(in, jump_off, jump_table_length));
+      new FileSlice(in, off + jump_off, jump_table_length));
   block_slice_ = std::unique_ptr<FileSlice>(
       new FileSlice(in, off, length - jump_table_length));
 }
@@ -37,7 +37,7 @@ bool RoaringPostingList::advance_exact_in_block(uint32_t target) {
       auto iter = std::lower_bound(docids.begin(), docids.end(), target_in);
       if (iter != docids.end()) {
         if (*iter == target_in) {
-          size_t distance = std::distance(docids.begin(),iter);
+          size_t distance = std::distance(docids.begin(), iter);
           index_ = block_start_cardinality_ + distance;
           docid_ = block_ << 16 | *iter;
           return true;

@@ -4,6 +4,7 @@
 
 #include "bitpacking_compression.h"
 #include "common.h"
+#include "log.h"
 #include "mmap_file.h"
 #include "numeric_field.h"
 #include "roaring_posting_list.h"
@@ -11,12 +12,16 @@
 namespace yas {
 
 NumericFieldIndexWriter::NumericFieldIndexWriter() : first_(true) {
-  max_value_=std::numeric_limits<uint64_t>::min();
-  min_value_=std::numeric_limits<uint64_t>::max();
+  max_value_ = std::numeric_limits<uint64_t>::min();
+  min_value_ = std::numeric_limits<uint64_t>::max();
 }
 
 void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
                                     const IndexOption& option) {
+  if (values_.empty()) {
+    LOG_ERROR("values is empty");
+    return;
+  }
   int field_id = fi.get_field_id();
 
   std::string file_fvm = option.get_field_values_meta_file();
@@ -59,7 +64,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     for (int i = 0; i < values_.size(); ++i) {
       uint64_t v = values_[i];
       if (igcd == 0) {
-        igcd = v;
+        igcd = v - min_value_;
         continue;
       }
 
@@ -83,7 +88,7 @@ void NumericFieldIndexWriter::flush(FieldInfo fi, uint32_t max_doc,
     size_t size = fvd->size();
     fvm->append(&size, sizeof(size));  // field value offset;
     size_t field_value_len;
-    BitPackingCompression bpc(num_bits, min_value_,igcd);
+    BitPackingCompression bpc(num_bits, min_value_, igcd);
     size_t out_size = values_.size();
 
     std::unique_ptr<uint64_t[]> compress_out_ptr(

@@ -50,7 +50,7 @@ class SkipList {
       level_ = new_level;
     }
 
-    node_type* node = new node_type(new_level, key, value);
+    auto node = new node_type(new_level, key, value);
 
     for (int i = 0; i < new_level; ++i) {
       node->level[i] = update[i]->level[i];

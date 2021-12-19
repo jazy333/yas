@@ -59,7 +59,7 @@ struct IndexOption {
   int read_field_info(std::unordered_map<std::string, FieldInfo>& field_infos) {
     auto field_infos_handle = std::unique_ptr<File>(new MMapFile());
     field_infos_handle->open(dir + "/" + field_info_file, false);
-    int max_field_id = 0;
+    int max_field_id = 1;
     while (true) {
       FieldInfo fi;
       int field_name_len;
@@ -78,7 +78,7 @@ struct IndexOption {
       fi.set_field_name(field_name);
       fi.set_index_type(index_type);
       field_infos[field_name] = fi;
-      if (field_id > max_field_id) max_field_id = field_id;
+      if (field_id > max_field_id) max_field_id = field_id + 1;
     }
     field_infos_handle->close();
     return max_field_id;

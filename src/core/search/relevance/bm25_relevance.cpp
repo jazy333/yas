@@ -31,7 +31,9 @@ float BM25Relevance::idf(long doc_freq, long doc_count) {
 RelevanceScorer* BM25Relevance::scorer(float boost, IndexStat index_stat,
                                        TermStat term_stat) {
   float weight = idf(term_stat.get_doc_freq(), index_stat.doc_count);
-  float avgdl = index_stat.total_term_freq / index_stat.doc_count;
+  float avgdl = 1.0;
+  if (index_stat.doc_count != 0 && index_stat.total_term_freq != 0)
+    avgdl = index_stat.total_term_freq / index_stat.doc_count;
   init_length(avgdl);
   return new BM25Scorer(weight, part);
 }

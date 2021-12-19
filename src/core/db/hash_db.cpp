@@ -4,6 +4,7 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <unordered_set>
 
 #include "common/shared_lock.h"
 
@@ -233,15 +234,23 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
                         int64_t& child_offset, string* value,
                         size_t& old_value_size, bool& deleted) {
   current_offset = bottom_offset;
-  int status = 0;
+  int status = 1;
   // cout << "bottom offset:" << bottom_offset << endl;
+  std::unordered_set<int64_t> current_offset_sets;
+
   while (current_offset > 0) {
     string buf;
+    if (current_offset_sets.count(current_offset) == 1) {
+      std::cout << "got a exsits current key:" << current_offset << std::endl;
+    } else {
+      current_offset_sets.insert(current_offset);
+    }
     status = file_->read(current_offset, buf, sizeof(record_header));
     if (status <= 0) return status;
     const record_header* rh = (record_header*)(const_cast<char*>(buf.data()));
-    // cout << "rh keysize:" << rh->key_size_
-    //   << ",child offset:" << rh->child_offset_ << endl;
+    // cout <<"current_offset:"<<current_offset<< ",rh keysize:" <<
+    // rh->key_size_
+    //  << ",child offset:" << rh->child_offset_ << endl;
     int type = rh->type_;
     if (key.size() == rh->key_size_) {
       // cout << "key size equals" << endl;
@@ -252,7 +261,7 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
         LOG_ERROR("read key error");
         return status;
       }
-      // cout << "current_key:" << current_key << endl;
+      std::cout << "current_key:" << current_key << endl;
       if (key == current_key) {
         child_offset = rh->child_offset_;
         if (type == 1) {
@@ -269,8 +278,12 @@ int HashDB::find_record(int64_t bottom_offset, const string& key,
         }
         return status;
       }
-      parent_offset = current_offset;
     }
+    if (current_offset_sets.count(rh->child_offset_) == 1) {
+      std::cout << "child alread found:current_key=" << current_offset
+                << ",child offset:" << rh->child_offset_ << std::endl;
+    }
+    parent_offset = current_offset;
     current_offset = rh->child_offset_;
   }
 
@@ -300,7 +313,8 @@ int HashDB::append_record(char type, const std::string& key,
   buf += value_size;
 
   int status = file_->append(arr.get(), real_size, offset);
-  return status;
+
+  return status != real_size ? -1 : status;
 }
 
 int HashDB::delete_record(const std::string& key, int64_t old_offset,
@@ -310,8 +324,12 @@ int HashDB::delete_record(const std::string& key, int64_t old_offset,
   bool deleted = false;
   int status = find_record(old_offset, key, parent_offset, current_offset,
                            child_offset, nullptr, old_value_size, deleted);
-  if (status >= 0 && current_offset != 0) {
+  if (status > 0 && current_offset != 0) {
     status = write_child_offset(parent_offset, child_offset);
+    if (parent_offset == child_offset) {
+      LOG_ERROR("parent_offset==child_offset,%ld,%ld", parent_offset,
+                child_offset);
+    }
   }
   return status;
 }
@@ -400,6 +418,9 @@ int HashDB::do_process(int type, const std::string& key,
 
   if (status > 0) {
     // update the bucket index,the offset is the last record's initial size
+    if (offset == old_offset) {
+      LOG_ERROR("old offset=%ld equals current offset=%ld", old_offset, offset);
+    }
     status = write_bucket_index(bucket_index, offset);
     if (status > 0) {
       // delete from the list when update previously
@@ -410,7 +431,7 @@ int HashDB::do_process(int type, const std::string& key,
       return -1;
     }
   } else {
-    LOG_ERROR("append_record error");
+    LOG_ERROR("append_record error,%s", strerror(errno));
     return -1;
   }
 
@@ -675,7 +696,7 @@ int HashDB::Iterator::first() {
 
 int HashDB::Iterator::next() {
   SharedLock<SharedMutex> scope_shared_lock(db_->mutex_);
-  keys_.erase(keys_.begin());
+  if (!keys_.empty()) keys_.erase(keys_.begin());
   int status = read_keys();
   return status;
 }

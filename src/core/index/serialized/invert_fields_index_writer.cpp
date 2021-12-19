@@ -39,13 +39,13 @@ void InvertFieldsIndexWriter::flush(
   VariableByteCompression<false> vbc_no_delta;
   std::vector<uint8_t> compressed_postinglist_buffer;
   std::vector<uint8_t> compressed_positionlist_buffer;
-  std::vector<JumptTableEntry> jump_table;
+  std::vector<JumpTableEntry> jump_table;
   uint32_t last_unit_docids_compress_size = 0;
   uint32_t last_unit_positions_compress_size = 0;
   int i = 0;
   size_t unit_docid_num = 0;
   for (int i = 0; i < doc_num; i += unit_docid_num) {
-    JumptTableEntry entry;
+    JumpTableEntry entry;
     unit_reserve_size = 2000;
     if (i + 128 <= doc_num) {
       unit_docid_num = 128;
@@ -137,16 +137,16 @@ void InvertFieldsIndexWriter::flush(
                 sizeof(last_unit_positions_compress_size));
   uint32_t jump_table_entry_count = jump_table.size();
   uint64_t posting_list_offset =
-      jump_table_entry_count * sizeof(JumptTableEntry);
+      jump_table_entry_count * sizeof(JumpTableEntry);
   uint64_t position_list_offset =
-      jump_table_entry_count * sizeof(JumptTableEntry) +
+      jump_table_entry_count * sizeof(JumpTableEntry) +
       compressed_postinglist_buffer.size();
   buffer.append(&posting_list_offset, sizeof(posting_list_offset));
   buffer.append(&position_list_offset, sizeof(position_list_offset));
   buffer.append(&jump_table_entry_count, sizeof(jump_table_entry_count));
 
   buffer.append(jump_table.data(),
-                jump_table_entry_count * sizeof(JumptTableEntry));
+                jump_table_entry_count * sizeof(JumpTableEntry));
   buffer.append(compressed_postinglist_buffer.data(),
                 compressed_postinglist_buffer.size());
   buffer.append(compressed_positionlist_buffer.data(),

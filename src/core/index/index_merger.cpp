@@ -86,6 +86,8 @@ int IndexMerger::merge_invert(
       std::string key, value;
       iter->get(key, value);
       if (out_db->test(key) == 0) {
+        LOG_INFO("got a exsist ,key=%s",key.c_str());
+        if (iter->next() == -1) break;
         continue;
       }
       term_readers[i] =
@@ -226,21 +228,22 @@ int IndexMerger::commit() {
     }
   }
 
-  const int open_mode = O_WRONLY|O_NONBLOCK ;
+  const int open_mode = O_WRONLY | O_NONBLOCK;
   int pipe_fd = open(commit_file.c_str(), open_mode);
   if (pipe_fd < 0) {
-    LOG_ERROR("open fifo file,may be no reader:%s,%s\n", commit_file.c_str(), strerror(errno));
+    LOG_ERROR("open fifo file,may be no reader:%s,%s\n", commit_file.c_str(),
+              strerror(errno));
     return -1;
   }
 
   char sig = 1;
   int ret = write(pipe_fd, &sig, sizeof(sig));
-  LOG_INFO("write %d data to fifo",ret);
+  LOG_INFO("write %d data to fifo", ret);
   if (ret <= 0) {
     LOG_ERROR("write signal error:%s,%s\n", commit_file.c_str(),
               strerror(errno));
   }
-  //sleep(10);
+  // sleep(10);
   close(pipe_fd);
 
   return ret;
@@ -316,7 +319,6 @@ int IndexMerger::merge() {
           merge_binary(field_value_readers, new_to_old, field_info, max_docid);
         break;
       }
-
       case 4: {  // point
         break;
       }

@@ -191,9 +191,11 @@ int MMapFile::write(int64_t off, const void* buf, size_t size) {
   if (off < 0) {
     new_off = file_size_;
   }
+  ssize_t ret=size;
   int64_t write_end = new_off + size;
   if (write_end > file_size_ || write_end > map_size_) {
-    ssize_t ret = pwrite_with_check(fd_, buf, size, new_off);
+    ret = pwrite_with_check(fd_, buf, size, new_off);
+    if (ret == 0) return ret;
     if (off < 0)
       file_size_ += ret;
     else {
@@ -205,16 +207,14 @@ int MMapFile::write(int64_t off, const void* buf, size_t size) {
   } else
     std::memcpy(map_ + off, buf, size);
   pthread_rwlock_unlock(&rwlock_);
-  return size;
+  return ret;
 }
 
 int MMapFile::append(const void* buf, size_t size, int64_t* off) {
   if (off) {
     *off = file_size_;
   }
-  write(-1, buf, size);
-
-  return size;
+  return write(-1, buf, size);
 }
 
 int MMapFile::truncate(size_t size) {

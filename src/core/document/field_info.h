@@ -5,9 +5,9 @@ namespace yas {
 class FieldInfo {
  public:
   FieldInfo() = default;
-  FieldInfo(int field_id) : filed_id_(field_id) {}
-  int get_field_id() const { return filed_id_; }
-  void set_field_id(int field_id) { filed_id_ = field_id; }
+  FieldInfo(int field_id) : field_id_(field_id) {}
+  int get_field_id() const { return field_id_; }
+  void set_field_id(int field_id) { field_id_ = field_id; }
   std::string get_field_name() const { return field_name_; }
   void set_field_name(const std::string& field_name) {
     field_name_ = field_name;
@@ -16,7 +16,7 @@ class FieldInfo {
   void set_index_type(int index_type) { index_type_ = index_type; }
 
  private:
-  int filed_id_;
+  int field_id_;
   int index_type_;
   std::string field_name_;
 };
